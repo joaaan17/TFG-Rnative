@@ -19,7 +19,8 @@ export const iaPreguntasStyles = StyleSheet.create({
   helloText: {
     textAlign: 'center',
     color: AppColors.light.primary,
-    marginBottom: 8,
+    // Separa más “Hola Joan” del texto inferior para que quede más arriba (manteniendo el bloque centrado)
+    marginBottom: 28,
   },
   welcomeText: {
     // Negro “más claro” (gris oscuro) reutilizando tokens del design system
