@@ -20,10 +20,12 @@ export const Colors = {
     destructive: '#EF4444',
     destructiveText: '#FFFFFF',
     inputBackground: '#F5F5F5', // Gris claro para inputs
+    surfaceMuted: '#E0E0E0', // Gris (un tono más claro) para superficies (ej: headers/cards)
+    surfaceBorder: '#BDBDBD', // Gris más oscuro para separadores/bordes sutiles
     link: '#687076', // Color para links
     cardBackground: '#FFFFFF', // Fondo de cards
     headerBackground: '#1A5D3E', // Verde oscuro para header
-    mainBackground: '#000000',
+    mainBackground: '#ffffff',
   },
   dark: {
     text: '#ECEDEE',
@@ -38,6 +40,8 @@ export const Colors = {
     destructive: '#F87171',
     destructiveText: '#000000',
     inputBackground: '#2A2A2A',
+    surfaceMuted: '#2A2A2A',
+    surfaceBorder: '#3A3A3A',
     link: '#9BA1A6',
     cardBackground: '#1E1E1E',
     headerBackground: '#1A5D3E',

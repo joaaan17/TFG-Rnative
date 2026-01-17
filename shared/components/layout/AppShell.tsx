@@ -29,7 +29,10 @@ export function AppShell({ children }: AppShellProps) {
             if (pathname !== '/main') router.push('/main');
           }}
           onPressQuestion={() => {
-            router.push('/ia-preguntas');
+            if (pathname !== '/ia-preguntas') router.push('/ia-preguntas');
+          }}
+          onPressProfile={() => {
+            if (pathname !== '/profile') router.push('/profile');
           }}
         />
       </View>

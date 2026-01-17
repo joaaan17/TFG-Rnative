@@ -8,6 +8,6 @@ export const loginStyles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingHorizontal: 0,
     paddingBottom: -2,
-    backgroundColor: Colors.light.mainBackground,
+    backgroundColor: Colors.dark.mainBackground,
   },
 });
