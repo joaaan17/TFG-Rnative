@@ -9,7 +9,7 @@ export const profileStyles = StyleSheet.create({
   },
   scrollContent: {
     // Espacio extra para que el final del scroll no quede pegado a la menubar
-    paddingBottom: 96,
+    paddingBottom: 190,
   },
   /**
    * Card superior: ~30% de la altura del área de contenido (sin menubar).

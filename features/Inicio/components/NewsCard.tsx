@@ -7,9 +7,9 @@ import {
   CardContent,
   CardFooter,
   CardHeader,
-  CardTitle,
 } from '@/shared/components/ui/card';
 import { Text } from '@/shared/components/ui/text';
+import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
 
 import type { NewsItem } from '../news.types';
 import { newsCardStyles } from './NewsCard.styles';
@@ -23,9 +23,13 @@ export function NewsCard({ item, onPress }: NewsCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          <Text>{item.title}</Text>
-        </CardTitle>
+        <TypewriterTextComponent
+          text={item.title}
+          speed={35}
+          variant="h4"
+          useDefaultFontFamily={false}
+          className="border-0 pb-0"
+        />
 
         {item.imageUrl ? (
           <Image

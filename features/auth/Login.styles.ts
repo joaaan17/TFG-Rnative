@@ -1,6 +1,6 @@
 // features/auth/login.styles.ts
 import { StyleSheet } from 'react-native';
-import Colors from '@/design-system/colors';
+import AppColors from '@/design-system/colors';
 
 export const loginStyles = StyleSheet.create({
   container: {
@@ -8,6 +8,6 @@ export const loginStyles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingHorizontal: 0,
     paddingBottom: -2,
-    backgroundColor: Colors.dark.mainBackground,
+    backgroundColor: AppColors.dark.mainBackground,
   },
 });
