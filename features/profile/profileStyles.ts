@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import AppColors from '@/design-system/colors';
+import { TextStyles } from '@/design-system/typography';
 
 export const profileStyles = StyleSheet.create({
   container: {
@@ -85,8 +86,7 @@ export const profileStyles = StyleSheet.create({
     paddingTop: 18,
   },
   summaryTitle: {
-    opacity: 0.7,
-    letterSpacing: 1,
+    ...TextStyles.sectionLabel,
   },
   summaryGrid: {
     paddingTop: 14,

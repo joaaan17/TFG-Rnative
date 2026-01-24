@@ -4,8 +4,8 @@
  */
 
 import { useState } from 'react';
-import type { LoginState } from './auth.types';
-import { authService } from './auth.service';
+import type { LoginState } from '../domain/auth.types';
+import { authService } from '../infraestructure/auth.service';
 
 export function useAuthViewModel() {
   const [state, setState] = useState<LoginState>(authService.getInitialState());

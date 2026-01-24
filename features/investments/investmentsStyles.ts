@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import AppColors from '@/design-system/colors';
+import { TextStyles } from '@/design-system/typography';
 
 export const investmentsStyles = StyleSheet.create({
   container: {
@@ -30,8 +31,7 @@ export const investmentsStyles = StyleSheet.create({
     paddingTop: 10,
   },
   summaryTitle: {
-    opacity: 0.7,
-    letterSpacing: 1,
+    ...TextStyles.sectionLabel,
     paddingHorizontal: 10,
     paddingTop: 10,
   },

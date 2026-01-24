@@ -3,7 +3,7 @@
  * Maneja la lÃ³gica de datos (API, storage, etc.)
  */
 
-import type { LoginState, LoginCredentials } from './auth.types';
+import type { LoginState, LoginCredentials } from '../domain/auth.types';
 
 export const authService = {
   // MÃ©todo para login (a implementar con API real)

@@ -53,4 +53,15 @@ export const Typography = {
   },
 } as const;
 
+/**
+ * Estilos reutilizables de tipografía (para evitar duplicación en stylesheets).
+ * Ejemplo: labels de sección tipo "RESUMEN", "LOGROS MENSUALES", etc.
+ */
+export const TextStyles = {
+  sectionLabel: {
+    opacity: 0.7,
+    letterSpacing: 1,
+  },
+} as const;
+
 export default Typography;

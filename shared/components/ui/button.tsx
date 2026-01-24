@@ -1,5 +1,10 @@
 import * as React from 'react';
-import { Platform, Pressable } from 'react-native';
+import {
+  Platform,
+  Pressable,
+  type StyleProp,
+  type TextStyle,
+} from 'react-native';
 
 import { usePalette } from '@/shared/hooks/use-palette';
 import { cn } from '@/lib/utils';
@@ -35,6 +40,10 @@ const buttonVariants = cva(
           'h-11 rounded-md px-6 sm:h-10',
           Platform.select({ web: 'has-[>svg]:px-4' }),
         ),
+        xl: cn(
+          'h-14 rounded-md px-8 sm:h-12',
+          Platform.select({ web: 'has-[>svg]:px-6' }),
+        ),
         icon: 'h-10 w-10 sm:h-9 sm:w-9',
       },
     },
@@ -64,6 +73,7 @@ const buttonTextVariants = cva(
         default: '',
         sm: '',
         lg: '',
+        xl: '',
         icon: '',
       },
     },
@@ -76,9 +86,23 @@ const buttonTextVariants = cva(
 
 type ButtonProps = React.ComponentProps<typeof Pressable> &
   React.RefAttributes<typeof Pressable> &
-  VariantProps<typeof buttonVariants>;
+  VariantProps<typeof buttonVariants> & {
+    /**
+     * Estilos opcionales para el texto interno (tipografía, size, etc.).
+     * Se aplica automáticamente a los hijos `Text` del botón.
+     */
+    textStyle?: StyleProp<TextStyle>;
+  };
 
-function Button({ className, variant, size, children, style, ...props }: ButtonProps) {
+function Button({
+  className,
+  variant,
+  size,
+  children,
+  style,
+  textStyle,
+  ...props
+}: ButtonProps) {
   const palette = usePalette();
 
   const variantStyles = {
@@ -116,12 +140,24 @@ function Button({ className, variant, size, children, style, ...props }: ButtonP
   const resolvedVariant = variant ?? 'default';
   const textColor = textColors[resolvedVariant];
 
-  const content = React.Children.map(children, (child) => {
-    if (!React.isValidElement(child)) return child;
-    return React.cloneElement(child as React.ReactElement, {
-      style: [child.props.style, { color: textColor }],
-    });
-  });
+  const content =
+    typeof children === 'function'
+      ? children
+      : React.Children.map(children, (child) => {
+          if (!React.isValidElement(child)) return child;
+          const el = child as React.ReactElement<any>;
+          return React.cloneElement(el, {
+            style: [el.props?.style, textStyle, { color: textColor }],
+          });
+        });
+
+  const resolvedStyle =
+    typeof style === 'function'
+      ? (state: Parameters<NonNullable<typeof style>>[0]) => [
+          variantStyles[resolvedVariant],
+          style(state),
+        ]
+      : [variantStyles[resolvedVariant], style];
 
   return (
     <Pressable
@@ -130,7 +166,7 @@ function Button({ className, variant, size, children, style, ...props }: ButtonP
         buttonVariants({ variant, size }),
         className,
       )}
-      style={[variantStyles[resolvedVariant], style]}
+      style={resolvedStyle}
       role="button"
       {...props}
     >
