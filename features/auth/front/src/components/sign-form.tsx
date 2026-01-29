@@ -1,4 +1,3 @@
-import { SocialConnections } from '@/features/auth/components/social-connections';
 import { Button } from '@/shared/components/ui/button';
 import {
   Card,
@@ -11,21 +10,46 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Text } from '@/shared/components/ui/text';
 import * as React from 'react';
-import { Pressable, type TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, type TextInput, View } from 'react-native';
+
+import { SocialConnections } from './social-connections';
 
 export type SignInFormProps = {
+  email?: string;
+  password?: string;
+  onEmailChange?: (value: string) => void;
+  onPasswordChange?: (value: string) => void;
+  isLoading?: boolean;
+  error?: string | null;
+  onSubmit?: () => void | Promise<void>;
+  /**
+   * Legacy: antes el formulario solo disparaba navegación.
+   * Mantenido para no romper usos existentes.
+   */
   onContinue?: () => void;
 };
 
-export function SignInForm({ onContinue }: SignInFormProps) {
+export function SignInForm({
+  email,
+  password,
+  onEmailChange,
+  onPasswordChange,
+  isLoading,
+  error,
+  onSubmit,
+  onContinue,
+}: SignInFormProps) {
   const passwordInputRef = React.useRef<TextInput>(null);
 
   function onEmailSubmitEditing() {
     passwordInputRef.current?.focus();
   }
 
-  function onSubmit() {
-    // TODO: Submit form and navigate to protected screen if successful
+  async function handleSubmit() {
+    if (onSubmit) {
+      await onSubmit();
+      return;
+    }
     onContinue?.();
   }
 
@@ -50,6 +74,8 @@ export function SignInForm({ onContinue }: SignInFormProps) {
                 keyboardType="email-address"
                 autoComplete="email"
                 autoCapitalize="none"
+                value={email}
+                onChangeText={onEmailChange}
                 onSubmitEditing={onEmailSubmitEditing}
                 returnKeyType="next"
                 submitBehavior="submit"
@@ -76,11 +102,20 @@ export function SignInForm({ onContinue }: SignInFormProps) {
                 id="password"
                 secureTextEntry
                 returnKeyType="send"
-                onSubmitEditing={onSubmit}
+                value={password}
+                onChangeText={onPasswordChange}
+                onSubmitEditing={handleSubmit}
               />
             </View>
-            <Button className="w-full" onPress={onSubmit}>
-              <Text>Continue</Text>
+            {error ? (
+              <Text className="text-sm text-red-500">{error}</Text>
+            ) : null}
+            <Button
+              className="w-full"
+              onPress={handleSubmit}
+              disabled={Boolean(isLoading)}
+            >
+              {isLoading ? <ActivityIndicator /> : <Text>Continue</Text>}
             </Button>
           </View>
           <Text className="text-center text-sm">

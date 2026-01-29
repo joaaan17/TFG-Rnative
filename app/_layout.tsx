@@ -13,6 +13,7 @@ import { Platform } from 'react-native';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/shared/hooks/use-color-scheme';
+import { AuthProvider } from '@/features/auth/front/src/state/AuthContext';
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   // no-op
@@ -43,19 +44,21 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="main" options={{ headerShown: false }} />
-        <Stack.Screen name="ia-preguntas" options={{ headerShown: false }} />
-        <Stack.Screen name="profile" options={{ headerShown: false }} />
-        <Stack.Screen name="investments" options={{ headerShown: false }} />
-        <Stack.Screen name="batallas" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="modal"
-          options={{ presentation: 'modal', title: 'Modal' }}
-        />
-      </Stack>
-      <StatusBar style="auto" />
+      <AuthProvider>
+        <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="main" options={{ headerShown: false }} />
+          <Stack.Screen name="ia-preguntas" options={{ headerShown: false }} />
+          <Stack.Screen name="profile" options={{ headerShown: false }} />
+          <Stack.Screen name="investments" options={{ headerShown: false }} />
+          <Stack.Screen name="batallas" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="modal"
+            options={{ presentation: 'modal', title: 'Modal' }}
+          />
+        </Stack>
+        <StatusBar style="auto" />
+      </AuthProvider>
     </ThemeProvider>
   );
 }

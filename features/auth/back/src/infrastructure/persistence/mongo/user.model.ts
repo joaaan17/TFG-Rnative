@@ -1,0 +1,36 @@
+import mongoose, { Schema, type Model } from 'mongoose';
+
+export type UserDocument = mongoose.Document & {
+  email: string;
+  passwordHash: string;
+  name: string;
+};
+
+const UserSchema = new Schema<UserDocument>(
+  {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+      trim: true,
+      lowercase: true,
+    },
+    passwordHash: {
+      type: String,
+      required: true,
+    },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+export const UserModel: Model<UserDocument> =
+  (mongoose.models.User as Model<UserDocument>) ??
+  mongoose.model<UserDocument>('User', UserSchema);

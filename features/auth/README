@@ -1,0 +1,277 @@
+## Módulo Auth (Login) — Portable por “copiar carpeta” (estado actual)
+
+Este módulo está diseñado para que puedas **copiar `features/auth/` a otro proyecto** y que funcione con cambios mínimos. La idea es separar:
+
+- **Dominio / aplicación (estable y portable)**: reglas de negocio, casos de uso, contratos (puertos).
+- **Infraestructura (reemplazable)**: base de datos, hashing, tokens, framework HTTP.
+- **UI / ViewModel (portable con dependencias del proyecto)**: pantalla, formulario, estado.
+
+> Objetivo: que al migrar solo tengas que **cambiar el adaptador de base de datos** (y, según el proyecto, el adaptador HTTP y el “auth client” del front).
+
+---
+
+## Estructura de carpetas (responsabilidades reales)
+
+### `features/auth/back/` (backend modular: dominio puro + adaptadores)
+
+#### `src/domain/`
+- **`auth.types.ts`**: tipos del dominio (p.ej. `User`, `AuthToken`).
+- **`ports.ts`**: contratos (interfaces) que el dominio necesita pero no implementa:
+  - `AuthRepository`: acceso a usuarios (find/save)
+  - `PasswordService`: hash/compare
+  - `TokenService`: sign/verify
+
+#### `src/application/`
+- **`usecases/login.ts`**: caso de uso `LoginUseCase` (reglas: buscar usuario, comparar password, firmar token).
+
+#### `src/api/` (entrada HTTP agnóstica al framework)
+Este directorio define **la capa de entrada** sin depender de Express directamente. La idea es que este módulo sea exportable:
+- **`http.types.ts`**: contratos mínimos (`HttpRequest`, `HttpResponse`, `HttpRouter`) para no acoplarte a Express.
+- **`auth.controller.ts`**: controlador (toma request, llama al caso de uso, responde JSON).
+- **`api.routes.ts`**: función `registerAuthRoutes(router)` que registra `POST /login` en un router compatible con `HttpRouter`.
+
+> En un proyecto Node con Express, se crea un pequeño *adapter* (de 10–20 líneas) que convierta `express.Router()` a `HttpRouter` y delegue a este módulo.
+
+#### `src/config/` (wiring / composición)
+- **`auth.wiring.ts`**: *composition root* del módulo. Aquí se instancia y se inyecta todo:
+  - `AuthRepository` (persistencia)
+  - `PasswordService` (hash/compare)
+  - `TokenService` (JWT)
+  - y se construye `loginUseCase`.
+
+**Importante**: el wiring es el único sitio “permitido” donde se importan clases concretas de `infrastructure/**`.
+
+#### `src/infrastructure/` (adaptadores concretos, reemplazables)
+Aquí vive lo que **sí** cambia entre proyectos (DB, librería de hash, librería de JWT).
+
+- **`persistence/index.ts`**: `InMemoryAuthRepository` (útil para demo/tests y para mantener el módulo “copiable” sin levantar Mongo).
+- **`persistence/mongo/*`**: implementación real con Mongoose:
+  - `mongo/user.model.ts`: schema/model de usuario.
+  - `mongo/mongoRepository.ts`: `MongoAuthRepository` que implementa `AuthRepository` y **mapea `_id` → `id`** antes de devolver al dominio.
+- **`crypto/bcryptHasher.ts`**: `BcryptHasher` usando **`bcryptjs`** (sin binarios nativos, más fácil en Windows).
+- **`tokens/jwtTokerService.ts`**: `JwtTokenService` usando **`jsonwebtoken`**.
+
+---
+
+### `features/auth/front/` (frontend: MVVM + sesión persistente)
+
+#### `src/ui/`
+- **`LoginScreen.tsx`**: la pantalla (View).
+- **`Login.styles.ts`**: estilos.
+
+#### `src/state/`
+- **`AuthContext.tsx`**: Context global de sesión.
+  - Expone `useAuthSession()` y los métodos `signIn(token, user)` / `signOut()`.
+  - Persiste el token con `expo-secure-store` si está disponible; si no, usa `@react-native-async-storage/async-storage`.
+- **`useAuthViewModel.ts`**: ViewModel (estado + handlers) que llama al cliente HTTP (`authClient`) y, si hay éxito, ejecuta `signIn(...)` del contexto.
+
+#### `src/api/`
+- **`authClient.ts`**: cliente HTTP del frontend (aquí se centraliza `fetch`, baseURL, headers).
+
+#### `src/components/`
+- **`sign-form.tsx`**: UI del formulario (no debe contener lógica de red).
+- **`social-connections.tsx`**: botones/estrategias sociales (placeholder).
+
+#### `src/types/`
+- **`auth.types.ts`**: tipos de UI/estado (p.ej. `LoginState`, `LoginCredentials`).
+
+---
+
+## Cómo funciona el login (flujo actual, capa por capa)
+
+### 1) Entrada (API / Express)
+- `back/src/index.ts` levanta Express y monta el router en `'/api/auth'`.
+- `api/api.routes.ts` expone un `express.Router()` con `POST /login` llamando a `loginController`.
+- `api/auth.controller.ts` valida mínimamente el `body` (tipado `LoginBody`) y ejecuta:
+  - `loginUseCase.execute(email, password)`
+
+### 2) Aplicación (reglas)
+En `application/usecases/login.ts`:
+- Busca usuario por email (`AuthRepository.findByEmail`).
+- Compara contraseña (`PasswordService.compare`).
+- Si es válido, firma un token (`TokenService.sign`) y devuelve `{ token, user }`.
+
+### 3) Infra (implementaciones)
+Según el wiring:
+- Por defecto: `InMemoryAuthRepository`.
+- Alternativa: `MongoAuthRepository` (Mongoose) con mapping `_id` → `id`.
+
+### 4) Wiring (inyección manual)
+En `config/auth.wiring.ts` se construyen **una vez** las dependencias y se exporta:
+- `loginUseCase` listo para ser usado por el controller.
+
+---
+
+## Frontend: flujo real (MVVM + persistencia)
+
+### 1) View (UI)
+En `front/src/ui/LoginScreen.tsx`:
+- Muestra inputs de email/contraseña.
+- Muestra `ActivityIndicator` cuando `isLoading` está activo.
+- Muestra el `error` (si existe).
+- El botón llama a `handleLogin()` del ViewModel.
+
+### 2) ViewModel (estado + lógica de UI)
+En `front/src/state/useAuthViewModel.ts`:
+- Mantiene estado local: `email`, `password`, `isLoading`, `error`.
+- `handleLogin()`:
+  - valida inputs
+  - llama `authClient.login({ email, password })`
+  - si hay éxito: `signIn(token, user)` (AuthContext) y persiste sesión
+  - si falla: setea `error`
+
+### 3) API Layer (fetch)
+En `front/src/api/authClient.ts`:
+- Hace `POST /api/auth/login`
+- Si `status != 200`, lanza un `Error` con el `message` del backend.
+
+### 4) Context (sesión global)
+En `front/src/state/AuthContext.tsx`:
+- Restaura sesión al arrancar la app.
+- Guarda/elimina sesión en almacenamiento seguro.
+
+### 5) Provider global
+El `AuthProvider` envuelve la app en `app/_layout.tsx`, para que cualquier pantalla pueda usar `useAuthSession()`.
+
+---
+
+## URLs de desarrollo (Expo ↔ Backend)
+El backend corre en `http://localhost:3000`, pero **en React Native no siempre es “localhost”**:
+
+- **Android Emulator**: usa `http://10.0.2.2:3000`
+- **iOS Simulator**: usa `http://localhost:3000`
+- **Dispositivo físico**: usa tu IP LAN, por ejemplo `http://192.168.1.50:3000`
+
+Esto está centralizado en `front/src/api/authClient.ts`.
+
+---
+
+## Qué hace que sea “exportable”
+
+La parte más portable y estable es:
+- `back/src/domain/**`
+- `back/src/application/**`
+
+Y normalmente también:
+- `back/src/api/**` (si mantienes el contrato agnóstico y solo cambias el adapter)
+
+Lo que **sí** cambia según proyecto:
+- `back/src/infrastructure/persistence/**` (BD)
+- `front/src/api/**` (baseURL, fetch)
+- `front/src/state/AuthContext.tsx` (si el proyecto tiene otro sistema de sesión)
+- algunas dependencias de UI (`shared/`, `design-system/`, aliases)
+
+---
+
+## Pasos para copiar el módulo a otro proyecto
+
+### 1) Copiar carpeta
+Copiar **toda** la carpeta:
+
+- `features/auth/`
+
+### 2) Ajustar aliases/imports (solo si el proyecto destino no tiene lo mismo)
+Este módulo usa imports con alias:
+- `@/...` (raíz)
+- `@shared/*`, `@design-system/*`, `@features/*` (según `tsconfig.json`)
+
+En el proyecto destino debes tener:
+- Un `tsconfig.json` con `paths` equivalentes, o
+- Cambiar los imports del módulo a rutas relativas.
+
+También necesitas el plugin `module-resolver` en `babel.config.js` si quieres que los aliases funcionen en runtime (Expo).
+
+### 3) Front: definir el cliente/servicio de auth
+El ViewModel (`front/src/state/useAuthViewModel.ts`) depende del cliente HTTP (`authClient`) que:
+- haga `POST /login`
+- devuelva token y datos mínimos del usuario
+- gestione errores
+- y delegue la persistencia de sesión al `AuthContext` (token + usuario)
+
+La recomendación es:
+- `front/src/api/authClient.ts`: `fetch` + baseURL dinámica
+- `front/src/state/AuthContext.tsx`: persistencia y sesión global
+
+> Regla: el formulario (`sign-form.tsx`) no debe saber nada de HTTP; solo dispara callbacks del ViewModel.
+
+### 4) Back: cambiar la base de datos (lo principal)
+Para “cambiar la BD” **no toques el caso de uso**. Solo cambia el adaptador que implementa `AuthRepository` y el wiring.
+
+En este módulo ya tienes dos opciones:
+- **In-memory (por defecto)**: `back/src/infrastructure/persistence/index.ts` → `InMemoryAuthRepository`
+- **Mongo (Mongoose)**: `back/src/infrastructure/persistence/mongo/mongoRepository.ts` → `MongoAuthRepository`
+
+Responsabilidad del repo:
+- `findByEmail(email): User | null`
+- `save(user): void`
+
+Después, en `back/src/config/auth.wiring.ts`, cablea tu repo real cambiando la línea del repositorio (está comentado en el propio archivo).
+
+### 5) Back: configurar JWT y hashing
+Para JWT:
+- variable de entorno recomendada: `AUTH_JWT_SECRET`
+
+Opcional:
+- `AUTH_JWT_EXPIRES_IN`
+
+Para hashing:
+- asegúrate de que `user.passwordHash` en BD esté generado con el mismo algoritmo que `PasswordService.hash()` (aquí: `bcryptjs`).
+
+### 6) Back: enchufarlo a Express (adapter)
+Ahora mismo el módulo **ya incluye un servidor Express listo para arrancar** en `back/src/index.ts`:
+- `cors()` habilitado
+- `express.json()` para leer `req.body`
+- rutas montadas con prefijo `'/api/auth'`
+- conexión a Mongo con `mongoose.connect(authEnv.dbUri)`
+
+Por tanto, el endpoint queda como:
+- `POST /api/auth/login`
+
+> Aun así, se mantiene la separación: el caso de uso (`application`) no conoce Express ni Mongo.
+
+---
+
+## Ejecución local del backend (modo servidor Express)
+
+### Variables de entorno
+En `.env` (o en el entorno del sistema) define como mínimo:
+- `AUTH_DB_URI`: string de conexión a Mongo (obligatorio para arrancar)
+- `AUTH_JWT_SECRET`: secreto para firmar/verificar JWT (obligatorio en producción)
+
+Opcionales:
+- `AUTH_JWT_EXPIRES_IN` (por defecto `1d`)
+- `AUTH_BCRYPT_ROUNDS` (por defecto `10`)
+- `PORT` (por defecto `3000`)
+
+### Arranque
+Desde el proyecto destino (Node), ejecuta el entrypoint:
+- `back/src/index.ts`
+
+El servidor levantará:
+- `http://localhost:${PORT}`
+- `http://localhost:${PORT}/api/auth/login`
+
+---
+
+## Checklist de “migración rápida”
+
+- **Front**
+  - Aliases (`@/*`, `@shared/*`, etc.) configurados o imports convertidos a relativos
+  - `authClient` definido (URL correcta según emulador/dispositivo)
+  - `AuthProvider` envolviendo la app (`app/_layout.tsx`)
+  - `useAuthViewModel` llama a `authClient.login()` y `signIn()`
+  - Navegación tras login (según tu app: `router.replace('/main')`, etc.)
+
+- **Back**
+  - Seleccionar repo: `InMemoryAuthRepository` o `MongoAuthRepository`
+  - Si usas Mongo: conexión a Mongoose en tu servidor Node
+  - Secret `AUTH_JWT_SECRET`
+  - Adapter HTTP conectado al framework (Express/Fastify)
+
+---
+
+## Notas importantes
+
+- Este repo es Expo/React Native. Un backend real normalmente vive en **otro paquete** (monorepo) o repositorio.
+- Si tu objetivo final es “copiar carpeta y listo”, lo más robusto suele ser empaquetar esto como librería (npm) o workspace, pero el diseño por puertos ya te deja a un paso.
+
