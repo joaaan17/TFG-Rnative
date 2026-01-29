@@ -1,14 +1,20 @@
-import type { HttpRequest, HttpResponse } from './http.types';
-import { loginUseCase } from '../config/auth.wiring';
+import type { Request, Response } from 'express';
+import { loginUseCase, registerUseCase } from '../config/auth.wiring';
 
 type LoginBody = {
   email: string;
   password: string;
 };
 
+type RegisterBody = {
+  email: string;
+  password: string;
+  name: string;
+};
+
 export const loginController = async (
-  req: HttpRequest<LoginBody>,
-  res: HttpResponse,
+  req: Request<unknown, unknown, LoginBody>,
+  res: Response,
 ) => {
   try {
     const { email, password } = req.body;
@@ -21,6 +27,21 @@ export const loginController = async (
         error instanceof Error
           ? error.message
           : 'Email o contraseña incorrectos',
+    });
+  }
+};
+
+export const registerController = async (
+  req: Request<unknown, unknown, RegisterBody>,
+  res: Response,
+) => {
+  try {
+    const { email, password, name } = req.body;
+    const result = await registerUseCase.execute({ email, password, name });
+    res.status(201).json(result);
+  } catch (error) {
+    res.status(400).json({
+      message: error instanceof Error ? error.message : 'Error',
     });
   }
 };

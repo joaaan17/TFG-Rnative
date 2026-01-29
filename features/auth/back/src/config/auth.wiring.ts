@@ -2,6 +2,7 @@ import { LoginUseCase } from '../application/usecases/login';
 import { BcryptHasher } from '../infrastructure/crypto/bcryptHasher';
 import { JwtTokenService } from '../infrastructure/tokens/jwtTokerService';
 import { MongoAuthRepository } from '../infrastructure/persistence/mongo/mongoRepository';
+import { RegisterUseCase } from '../application/usecases/register';
 
 const authRepository = new MongoAuthRepository();
 const passwordService = new BcryptHasher();
@@ -14,4 +15,8 @@ export const loginUseCase = new LoginUseCase(
   tokenService,
 );
 
-// Aquí exportarías también el registerUseCase, etc.
+// Caso de uso de registro
+export const registerUseCase = new RegisterUseCase(
+  authRepository,
+  passwordService,
+);

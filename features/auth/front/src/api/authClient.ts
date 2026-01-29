@@ -1,5 +1,10 @@
 import { Platform } from 'react-native';
-import type { LoginBody, LoginResponse } from '../types/auth.types';
+import type {
+  LoginBody,
+  LoginResponse,
+  RegisterBody,
+  RegisterResponse,
+} from '../types/auth.types';
 
 function getBaseUrl() {
   // Android emulator: 10.0.2.2 apunta al host (tu PC).
@@ -44,4 +49,25 @@ export async function login(credentials: LoginBody): Promise<LoginResponse> {
   return data as LoginResponse;
 }
 
-export const authClient = { login };
+export async function register(data: RegisterBody): Promise<RegisterResponse> {
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  const json = await parseJsonSafe(response);
+
+  if (!response.ok) {
+    const message =
+      typeof json?.message === 'string'
+        ? json.message
+        : 'Error al registrarse';
+    throw new Error(message);
+  }
+
+  return json as RegisterResponse;
+}
+
+export const authClient = { login, register };

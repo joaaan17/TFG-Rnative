@@ -17,6 +17,14 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
+export interface RegisterBody {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export type RegisterResponse = AuthUser;
+
 export interface LoginState {
   email: string;
   password: string;

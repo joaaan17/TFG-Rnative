@@ -1,5 +1,7 @@
 import type { AuthRepository } from '../../domain/ports';
-import type { User } from '../../domain/auth.types';
+import crypto from 'crypto';
+
+import type { NewUser, User } from '../../domain/auth.types';
 
 /**
  * Repository de persistencia.
@@ -18,8 +20,16 @@ export class InMemoryAuthRepository implements AuthRepository {
     return InMemoryAuthRepository.usersByEmail.get(email) ?? null;
   }
 
-  async save(user: User): Promise<void> {
-    InMemoryAuthRepository.usersByEmail.set(user.email, user);
+  async save(user: NewUser): Promise<User> {
+    const saved: User = {
+      id: crypto.randomUUID(),
+      email: user.email.toLowerCase(),
+      passwordHash: user.passwordHash,
+      name: user.name,
+    };
+
+    InMemoryAuthRepository.usersByEmail.set(saved.email, saved);
+    return saved;
   }
 }
 

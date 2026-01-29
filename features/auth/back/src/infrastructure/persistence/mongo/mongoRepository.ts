@@ -1,5 +1,5 @@
 import type { AuthRepository } from '../../../domain/ports';
-import type { User } from '../../../domain/auth.types';
+import type { NewUser, User } from '../../../domain/auth.types';
 import { UserModel } from './user.model';
 
 /**
@@ -20,26 +20,20 @@ export class MongoAuthRepository implements AuthRepository {
     };
   }
 
-  async save(user: User): Promise<void> {
-    // Si viene con id, intentamos actualizar; si no, creamos.
-    if (user.id) {
-      await UserModel.findByIdAndUpdate(
-        user.id,
-        {
-          email: user.email.toLowerCase(),
-          passwordHash: user.passwordHash,
-          name: user.name,
-        },
-        { upsert: true, setDefaultsOnInsert: true },
-      ).exec();
-      return;
-    }
-
-    await UserModel.create({
+  async save(user: NewUser): Promise<User> {
+    // En Mongo, el `_id` lo genera la base de datos.
+    const created = await UserModel.create({
       email: user.email.toLowerCase(),
       passwordHash: user.passwordHash,
       name: user.name,
     });
+
+    return {
+      id: created._id.toString(),
+      email: created.email,
+      passwordHash: created.passwordHash,
+      name: created.name,
+    };
   }
 }
 

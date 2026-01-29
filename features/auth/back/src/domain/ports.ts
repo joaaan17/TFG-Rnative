@@ -1,9 +1,9 @@
-import type { User } from './auth.types';
+import type { NewUser, User } from './auth.types';
 
 // Contrato para la base de datos
 export interface AuthRepository {
   findByEmail(email: string): Promise<User | null>;
-  save(user: User): Promise<void>;
+  save(user: NewUser): Promise<User>;
 }
 
 // Contrato para encriptar contraseñas

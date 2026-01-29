@@ -1,4 +1,9 @@
 import 'dotenv/config';
+import path from 'path';
+import dotenv from 'dotenv';
+
+// Esto busca el .env subiendo 4 niveles desde este archivo para llegar a la raíz
+dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
 
 function requireEnv(variable: string, keyName: string): string {
   if (!variable) {

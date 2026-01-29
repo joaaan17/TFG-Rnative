@@ -15,13 +15,20 @@ import { ActivityIndicator, Pressable, type TextInput, View } from 'react-native
 import { SocialConnections } from './social-connections';
 
 export type SignInFormProps = {
+  isRegister?: boolean;
+  name?: string;
   email?: string;
   password?: string;
+  confirmPassword?: string;
+  onNameChange?: (value: string) => void;
   onEmailChange?: (value: string) => void;
   onPasswordChange?: (value: string) => void;
+  onConfirmPasswordChange?: (value: string) => void;
   isLoading?: boolean;
   error?: string | null;
   onSubmit?: () => void | Promise<void>;
+  onGoToRegister?: () => void;
+  onGoToLogin?: () => void;
   /**
    * Legacy: antes el formulario solo disparaba navegación.
    * Mantenido para no romper usos existentes.
@@ -30,19 +37,33 @@ export type SignInFormProps = {
 };
 
 export function SignInForm({
+  isRegister,
+  name,
   email,
   password,
+  confirmPassword,
+  onNameChange,
   onEmailChange,
   onPasswordChange,
+  onConfirmPasswordChange,
   isLoading,
   error,
   onSubmit,
+  onGoToRegister,
+  onGoToLogin,
   onContinue,
 }: SignInFormProps) {
+  const nameInputRef = React.useRef<TextInput>(null);
   const passwordInputRef = React.useRef<TextInput>(null);
+  const confirmPasswordInputRef = React.useRef<TextInput>(null);
 
   function onEmailSubmitEditing() {
     passwordInputRef.current?.focus();
+  }
+
+  function onNameSubmitEditing() {
+    // En modo register: tras nombre, pasamos a email.
+    // El email no tiene ref por compatibilidad web/native; el submitBehavior ya ayuda.
   }
 
   async function handleSubmit() {
@@ -58,14 +79,32 @@ export function SignInForm({
       <Card className="border-border/0 sm:border-border shadow-none sm:shadow-sm sm:shadow-black/5 rounded-t-xl !rounded-b-none">
         <CardHeader>
           <CardTitle className="text-center text-xl sm:text-left">
-            Inicia sesión
+            {isRegister ? 'Crear cuenta' : 'Inicia sesión'}
           </CardTitle>
           <CardDescription className="text-center sm:text-left">
-            ¡Bienvenido de nuevo! Por favor, inicia sesión para continuar
+            {isRegister
+              ? 'Regístrate para empezar a usar la app'
+              : '¡Bienvenido de nuevo! Por favor, inicia sesión para continuar'}
           </CardDescription>
         </CardHeader>
         <CardContent className="gap-6">
           <View className="gap-6">
+            {isRegister ? (
+              <View className="gap-1.5">
+                <Label htmlFor="name">Nombre</Label>
+                <Input
+                  ref={nameInputRef}
+                  id="name"
+                  placeholder="Tu nombre"
+                  autoCapitalize="words"
+                  value={name}
+                  onChangeText={onNameChange}
+                  onSubmitEditing={onNameSubmitEditing}
+                  returnKeyType="next"
+                  submitBehavior="submit"
+                />
+              </View>
+            ) : null}
             <View className="gap-1.5">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -84,29 +123,49 @@ export function SignInForm({
             <View className="gap-1.5">
               <View className="flex-row items-center">
                 <Label htmlFor="password">Contraseña</Label>
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="web:h-fit ml-auto h-4 px-1 py-0 sm:h-4"
-                  onPress={() => {
-                    // TODO: Navigate to forgot password screen
-                  }}
-                >
-                  <Text className="font-normal leading-4">
-                    ¿Olvidaste tu contraseña?
-                  </Text>
-                </Button>
+                {!isRegister ? (
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="web:h-fit ml-auto h-4 px-1 py-0 sm:h-4"
+                    onPress={() => {
+                      // TODO: Navigate to forgot password screen
+                    }}
+                  >
+                    <Text className="font-normal leading-4">
+                      ¿Olvidaste tu contraseña?
+                    </Text>
+                  </Button>
+                ) : null}
               </View>
               <Input
                 ref={passwordInputRef}
                 id="password"
                 secureTextEntry
-                returnKeyType="send"
+                returnKeyType={isRegister ? 'next' : 'send'}
                 value={password}
                 onChangeText={onPasswordChange}
-                onSubmitEditing={handleSubmit}
+                onSubmitEditing={
+                  isRegister
+                    ? () => confirmPasswordInputRef.current?.focus()
+                    : handleSubmit
+                }
               />
             </View>
+            {isRegister ? (
+              <View className="gap-1.5">
+                <Label htmlFor="confirmPassword">Repetir contraseña</Label>
+                <Input
+                  ref={confirmPasswordInputRef}
+                  id="confirmPassword"
+                  secureTextEntry
+                  returnKeyType="send"
+                  value={confirmPassword}
+                  onChangeText={onConfirmPasswordChange}
+                  onSubmitEditing={handleSubmit}
+                />
+              </View>
+            ) : null}
             {error ? (
               <Text className="text-sm text-red-500">{error}</Text>
             ) : null}
@@ -115,20 +174,33 @@ export function SignInForm({
               onPress={handleSubmit}
               disabled={Boolean(isLoading)}
             >
-              {isLoading ? <ActivityIndicator /> : <Text>Continue</Text>}
+              {isLoading ? (
+                <ActivityIndicator />
+              ) : (
+                <Text>{isRegister ? 'Registrarme' : 'Continue'}</Text>
+              )}
             </Button>
           </View>
           <Text className="text-center text-sm">
-            ¿No tienes una cuenta?{' '}
-            <Pressable
-              onPress={() => {
-                // TODO: Navigate to sign up screen
-              }}
-            >
-              <Text className="text-sm underline underline-offset-4">
-                Registrate
-              </Text>
-            </Pressable>
+            {isRegister ? (
+              <>
+                ¿Ya tienes una cuenta?{' '}
+                <Pressable onPress={onGoToLogin}>
+                  <Text className="text-sm underline underline-offset-4">
+                    Inicia sesión
+                  </Text>
+                </Pressable>
+              </>
+            ) : (
+              <>
+                ¿No tienes una cuenta?{' '}
+                <Pressable onPress={onGoToRegister}>
+                  <Text className="text-sm underline underline-offset-4">
+                    Registrate
+                  </Text>
+                </Pressable>
+              </>
+            )}
           </Text>
           <SocialConnections />
         </CardContent>

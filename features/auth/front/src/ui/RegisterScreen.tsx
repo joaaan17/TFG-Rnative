@@ -1,24 +1,28 @@
-﻿import React from 'react';
+import React from 'react';
 import { useRouter } from 'expo-router';
 
 import { ThemedView } from '@/shared/components/themed-view';
 import { loginStyles } from './Login.styles';
 
 import { SignInForm } from '../components/sign-form';
-import { useAuthSession } from '../state/AuthContext';
 import { useAuthViewModel } from '../state/useAuthViewModel';
+import { useAuthSession } from '../state/AuthContext';
 
-export function LoginScreen() {
+export function RegisterScreen() {
   const router = useRouter();
   const { session, isRestoring } = useAuthSession();
   const {
+    name,
     email,
     password,
+    confirmPassword,
+    setName,
     setEmail,
     setPassword,
+    setConfirmPassword,
     isLoading,
     error,
-    handleLogin,
+    handleRegister,
   } = useAuthViewModel();
 
   React.useEffect(() => {
@@ -31,19 +35,24 @@ export function LoginScreen() {
   return (
     <ThemedView style={loginStyles.container}>
       <SignInForm
+        isRegister
+        name={name}
         email={email}
         password={password}
+        confirmPassword={confirmPassword}
+        onNameChange={setName}
         onEmailChange={setEmail}
         onPasswordChange={setPassword}
+        onConfirmPasswordChange={setConfirmPassword}
         isLoading={isLoading}
         error={error}
-        onSubmit={handleLogin}
-        onGoToRegister={() => {
-          router.push('/register');
+        onSubmit={handleRegister}
+        onGoToLogin={() => {
+          router.replace('/');
         }}
       />
     </ThemedView>
   );
 }
 
-export default LoginScreen;
+export default RegisterScreen;

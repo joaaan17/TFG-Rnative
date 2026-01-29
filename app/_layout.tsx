@@ -47,6 +47,7 @@ export default function RootLayout() {
       <AuthProvider>
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="register" options={{ headerShown: false }} />
           <Stack.Screen name="main" options={{ headerShown: false }} />
           <Stack.Screen name="ia-preguntas" options={{ headerShown: false }} />
           <Stack.Screen name="profile" options={{ headerShown: false }} />
