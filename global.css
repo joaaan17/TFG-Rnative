@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ocultar barra de scroll en navegador para un aspecto más limpio tipo app */
+*::-webkit-scrollbar {
+  display: none;
+}
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

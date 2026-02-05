@@ -1,5 +1,10 @@
 import React from 'react';
-import { FlatList, ScrollView, View } from 'react-native';
+import {
+  FlatList,
+  ScrollView,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
 import AppShellComponent from '@/shared/components/layout/AppShell';
@@ -12,9 +17,12 @@ import NewsCardComponent from './components/NewsCard';
 import type { NewsItem } from './news.types';
 
 export function MainScreen() {
+  const { height: windowHeight } = useWindowDimensions();
   const [typewriterKey, setTypewriterKey] = React.useState(0);
   const [selectedNews, setSelectedNews] = React.useState<NewsItem | null>(null);
   const [isNewsModalOpen, setIsNewsModalOpen] = React.useState(false);
+  // Altura máxima del scroll para que el modal se adapte al contenido pero permita scroll si es largo
+  const scrollMaxHeight = Math.max(200, windowHeight * 0.6);
 
   // Re-dispara la animación cada vez que entras a esta pantalla (desde donde sea)
   useFocusEffect(
@@ -79,6 +87,7 @@ export function MainScreen() {
         data={news}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+        showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
           <NewsCardComponent
             item={item}
@@ -110,7 +119,7 @@ export function MainScreen() {
         </View>
 
         <ScrollView
-          style={{ flex: 1 }}
+          style={{ maxHeight: scrollMaxHeight }}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
           showsVerticalScrollIndicator={false}
         >

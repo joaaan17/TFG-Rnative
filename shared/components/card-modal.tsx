@@ -1,10 +1,12 @@
 import React from 'react';
 import {
   Animated,
+  Dimensions,
   Modal,
   Platform,
   Pressable,
   StyleSheet,
+  TouchableWithoutFeedback,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -54,6 +56,9 @@ export function CardModal({
   const palette = usePalette();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
+  // En Android, la pantalla puede tener barra de navegación; usamos screen para cubrir todo
+  const screenHeight =
+    Platform.OS === 'android' ? Dimensions.get('screen').height : windowHeight;
 
   const [mounted, setMounted] = React.useState(open);
   const [blurOpacityValue, setBlurOpacityValue] = React.useState(0);
@@ -61,7 +66,7 @@ export function CardModal({
   const blurOpacity = React.useRef(new Animated.Value(0)).current;
   const backdropOpacity = React.useRef(new Animated.Value(0)).current;
 
-  const maxHeight = Math.max(0, Math.min(1, maxHeightPct)) * windowHeight;
+  const maxHeight = Math.max(0, Math.min(1, maxHeightPct)) * screenHeight;
 
   // Calcular intensidad máxima del blur según si está bloqueado
   const maxBlurIntensity = closeOnBackdropPress ? 20 : 40;
@@ -89,7 +94,7 @@ export function CardModal({
 
     if (open) {
       // Iniciar desde valores invisibles
-      translateY.setValue(windowHeight);
+      translateY.setValue(screenHeight);
       blurOpacity.setValue(0);
       backdropOpacity.setValue(0);
 
@@ -117,7 +122,7 @@ export function CardModal({
     // Animar el cierre
     Animated.parallel([
       Animated.timing(translateY, {
-        toValue: windowHeight,
+        toValue: screenHeight,
         duration: 180,
         useNativeDriver: true,
       }),
@@ -134,7 +139,7 @@ export function CardModal({
     ]).start(({ finished }) => {
       if (finished) setMounted(false);
     });
-  }, [open, mounted, translateY, blurOpacity, backdropOpacity, windowHeight]);
+  }, [open, mounted, translateY, blurOpacity, backdropOpacity, screenHeight]);
 
   if (!mounted) return null;
 
@@ -147,6 +152,7 @@ export function CardModal({
       visible={mounted}
       animationType="none"
       onRequestClose={closeOnBackdropPress ? onClose : undefined}
+      statusBarTranslucent={Platform.OS === 'android'}
     >
       <View style={styles.root}>
         {/* BlurView para efecto de desenfoque real en iOS/Android con animación */}
@@ -212,39 +218,75 @@ export function CardModal({
             pointerEvents="none"
           />
         )}
-        <Pressable
-          style={StyleSheet.absoluteFill}
-          onPress={() => {
-            if (closeOnBackdropPress) onClose();
-          }}
-          disabled={!closeOnBackdropPress}
-        />
+        {Platform.OS === 'android' ? (
+          <TouchableWithoutFeedback
+            onPress={() => {
+              if (closeOnBackdropPress) onClose();
+            }}
+            disabled={!closeOnBackdropPress}
+            accessible={false}
+          >
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                closeOnBackdropPress && styles.backdropTouchable,
+              ]}
+              pointerEvents={closeOnBackdropPress ? 'auto' : 'none'}
+            />
+          </TouchableWithoutFeedback>
+        ) : (
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => {
+              if (closeOnBackdropPress) onClose();
+            }}
+            disabled={!closeOnBackdropPress}
+          />
+        )}
 
         <Animated.View
           style={[
-            styles.sheet,
+            styles.sheetWrapper,
             {
               transform: [{ translateY }],
-              paddingBottom: Math.max(insets.bottom, 12),
             },
           ]}
+          pointerEvents="box-none"
         >
-          <Card
-            className="rounded-t-xl rounded-b-none"
-            style={[
-              styles.card,
-              {
-                maxHeight,
+          <View style={[styles.sheet, { maxHeight }]}>
+            <Card
+              className="rounded-t-xl rounded-b-none"
+              style={[
+                styles.card,
+                {
+                  maxHeight,
+                  backgroundColor: palette.cardBackground,
+                  borderColor: palette.text,
+                },
+              ]}
+            >
+              <View pointerEvents="none" style={styles.dragHandleContainer}>
+                <View style={styles.dragHandle} />
+              </View>
+              <View
+                style={{
+                  maxHeight: maxHeight - 120,
+                  paddingBottom: Math.max(insets.bottom, 12),
+                }}
+              >
+                {children}
+              </View>
+            </Card>
+          </View>
+          {/* Relleno inferior para cubrir la barra de navegación en Android y eliminar la línea negra */}
+          {Platform.OS === 'android' && (
+            <View
+              style={{
+                height: Math.max(insets.bottom, 32),
                 backgroundColor: palette.cardBackground,
-                borderColor: palette.text,
-              },
-            ]}
-          >
-            <View pointerEvents="none" style={styles.dragHandleContainer}>
-              <View style={styles.dragHandle} />
-            </View>
-            <View style={{ flexShrink: 1 }}>{children}</View>
-          </Card>
+              }}
+            />
+          )}
         </Animated.View>
       </View>
     </Modal>
@@ -259,8 +301,17 @@ const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
   },
+  backdropTouchable: {
+    zIndex: 10,
+    elevation: 10,
+  },
+  sheetWrapper: {
+    width: '100%',
+    alignItems: 'stretch',
+  },
   sheet: {
     width: '100%',
+    overflow: 'hidden',
   },
   card: {
     width: '100%',

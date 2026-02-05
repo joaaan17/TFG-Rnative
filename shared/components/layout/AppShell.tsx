@@ -22,7 +22,15 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <ThemedView style={appShellStyles.container}>
-      <View style={[appShellStyles.content, { paddingBottom: menubarHeight }]}>
+      <View
+        style={[
+          appShellStyles.content,
+          {
+            paddingTop: insets.top,
+            paddingBottom: menubarHeight,
+          },
+        ]}
+      >
         {children}
       </View>
 
