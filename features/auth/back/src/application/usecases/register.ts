@@ -41,7 +41,10 @@ export class RegisterUseCase {
 
     // 6. Enviar el correo electrónico (después de persistir para no perder el código)
     // El caso de uso no sabe si es Gmail, SendGrid o Log, solo ordena enviarlo
-    await this.mailService.sendVerificationCode(savedUser.email, verificationCode);
+    await this.mailService.sendVerificationCode(
+      savedUser.email,
+      verificationCode,
+    );
 
     // 7. Retornar datos (sin el hash ni el código de verificación por seguridad)
     return {

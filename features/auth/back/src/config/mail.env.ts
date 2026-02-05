@@ -12,6 +12,8 @@ function envNumber(key: string, fallback: number) {
 }
 
 // Función para parsear y mostrar valores (sin exponer contraseñas completas)
+// Comentado para no mostrar en terminal, descomentar para debugging
+/*
 function parseEnvValue(key: string, value: string | undefined): string {
   if (!value) return '(no definido)';
   // Para contraseñas, mostrar solo primeros y últimos caracteres
@@ -91,6 +93,7 @@ if (rawValues.MAIL_PASS || rawValues.SMTP_PASS) {
 }
 console.log('  MAIL_FROM:', rawValues.MAIL_FROM || '(no definido)');
 console.log('  SMTP_FROM:', rawValues.SMTP_FROM || '(no definido)');
+*/
 
 export const mailEnv = {
   /**
@@ -117,6 +120,8 @@ export const mailEnv = {
 };
 
 // Mostrar valores parseados finales
+// Comentado para no mostrar en terminal, descomentar para debugging
+/*
 console.log('📧 [mail.env] Valores PARSEADOS (finales):');
 console.log('  mode:', mailEnv.mode);
 console.log('  smtp.host:', mailEnv.smtp.host || '(vacío)');
@@ -146,5 +151,6 @@ if (mailEnv.mode === 'smtp' && mailEnv.smtp.pass) {
 }
 
 console.log('  smtp.from:', mailEnv.smtp.from);
+*/
 
 export default mailEnv;

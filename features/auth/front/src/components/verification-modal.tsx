@@ -58,7 +58,12 @@ export function VerificationModal({
   };
 
   return (
-    <CardModal open={open} onClose={onClose} maxHeightPct={0.6}>
+    <CardModal
+      open={open}
+      onClose={onClose}
+      maxHeightPct={0.6}
+      closeOnBackdropPress={false}
+    >
       <View style={{ padding: 20, gap: 20 }}>
         <CardHeader style={{ paddingHorizontal: 0, paddingTop: 0 }}>
           <View
@@ -94,7 +99,6 @@ export function VerificationModal({
             <Input
               ref={codeInputRef}
               id="verification-code"
-              placeholder="000000"
               value={code}
               onChangeText={handleCodeChange}
               keyboardType="number-pad"
