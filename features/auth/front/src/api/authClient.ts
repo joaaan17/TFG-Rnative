@@ -70,4 +70,47 @@ export async function register(data: RegisterBody): Promise<RegisterResponse> {
   return json as RegisterResponse;
 }
 
-export const authClient = { login, register };
+export async function verifyCode(
+  email: string,
+  code: string,
+): Promise<{ token: string; user: LoginResponse['user'] }> {
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, code }),
+  });
+
+  const json = await parseJsonSafe(response);
+
+  if (!response.ok) {
+    const message =
+      typeof json?.message === 'string'
+        ? json.message
+        : 'Código inválido o expirado';
+    throw new Error(message);
+  }
+
+  return json as { token: string; user: LoginResponse['user'] };
+}
+
+export async function resendCode(email: string): Promise<void> {
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}/resend-code`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+
+  const json = await parseJsonSafe(response);
+
+  if (!response.ok) {
+    const message =
+      typeof json?.message === 'string'
+        ? json.message
+        : 'Error al reenviar código';
+    throw new Error(message);
+  }
+}
+
+export const authClient = { login, register, verifyCode, resendCode };

@@ -4,6 +4,8 @@ import type { NewUser, User } from './auth.types';
 export interface AuthRepository {
   findByEmail(email: string): Promise<User | null>;
   save(user: NewUser): Promise<User>;
+  verifyCode(email: string, code: string): Promise<User | null>;
+  updateVerificationCode(email: string, code: string): Promise<void>;
 }
 
 // Contrato para encriptar contraseñas
@@ -18,4 +20,8 @@ export interface TokenService {
   verify<TPayload extends Record<string, unknown> = Record<string, unknown>>(
     token: string,
   ): TPayload | null;
+}
+
+export interface MailService {
+  sendVerificationCode(email: string, code: string): Promise<void>;
 }

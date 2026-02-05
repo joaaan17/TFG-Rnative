@@ -3,6 +3,8 @@ export interface User {
   email: string;
   passwordHash: string;
   name: string;
+  isVerified: boolean;
+  verificationCode?: string | null;
 }
 
 /**

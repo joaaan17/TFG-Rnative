@@ -1,5 +1,7 @@
 ## Módulo Auth (Login) — Portable por “copiar carpeta” (estado actual)
 
+Comando para arrancar: npx tsx features/auth/back/src/index.ts
+
 Este módulo está diseñado para que puedas **copiar `features/auth/` a otro proyecto** y que funcione con cambios mínimos. La idea es separar:
 
 - **Dominio / aplicación (estable y portable)**: reglas de negocio, casos de uso, contratos (puertos).

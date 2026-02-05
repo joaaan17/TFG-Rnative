@@ -4,6 +4,8 @@ export type UserDocument = mongoose.Document & {
   email: string;
   passwordHash: string;
   name: string;
+  isVerified: boolean;
+  verificationCode?: string | null;
 };
 
 const UserSchema = new Schema<UserDocument>(
@@ -24,6 +26,16 @@ const UserSchema = new Schema<UserDocument>(
       type: String,
       required: true,
       trim: true,
+    },
+    isVerified: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    verificationCode: {
+      type: String,
+      required: false,
+      default: null,
     },
   },
   {

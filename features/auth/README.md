@@ -94,6 +94,39 @@ Solución aplicada (patrón escalable):
 
 Esto hace el módulo portable: en SQL también sería natural que `save(NewUser)` devuelva `User` con `id` persistido.
 
+### 3) Email de verificación (Nodemailer) sin romper Hexagonal
+El envío de email se implementa como **puerto de salida**:
+
+- **Puerto (Domain)**: `back/src/domain/ports.ts` define `MailService`.
+- **Caso de uso (Application)**: `RegisterUseCase` recibe `MailService` por constructor y solo llama `sendVerificationCode(...)`.
+- **Adaptadores (Infrastructure)**:
+  - `back/src/infrastructure/mail/nodemailerService.ts`: implementación real con Nodemailer + SMTP.
+  - `back/src/infrastructure/mail/consoleMailService.ts`: implementación “dummy” para desarrollo (imprime en consola).
+- **Wiring (Config)**: `back/src/config/auth.wiring.ts` decide qué adaptador usar según env (`MAIL_MODE`).
+
+Además, para que el flujo sea consistente, el registro persiste `verificationCode` e `isVerified`:
+- `back/src/domain/auth.types.ts`: `User/NewUser` incluyen `isVerified` y `verificationCode`.
+- `back/src/infrastructure/persistence/mongo/user.model.ts`: schema con `isVerified` (default `false`) y `verificationCode` (default `null`).
+
+#### Variables de entorno (Mail)
+Modo simple (recomendado para dev):
+
+```env
+MAIL_MODE=console
+```
+
+Modo SMTP (Nodemailer):
+
+```env
+MAIL_MODE=smtp
+MAIL_HOST=smtp.tu-proveedor.com
+MAIL_PORT=587
+MAIL_SECURE=false
+MAIL_USER=tu_usuario
+MAIL_PASS=tu_password
+MAIL_FROM="Tu App <no-reply@tuapp.com>"
+```
+
 ### 3) Controladores alineados con Express
 En `api/auth.controller.ts`:
 

@@ -17,6 +17,8 @@ export class MongoAuthRepository implements AuthRepository {
       email: doc.email,
       passwordHash: doc.passwordHash,
       name: doc.name,
+      isVerified: doc.isVerified,
+      verificationCode: doc.verificationCode ?? null,
     };
   }
 
@@ -26,6 +28,8 @@ export class MongoAuthRepository implements AuthRepository {
       email: user.email.toLowerCase(),
       passwordHash: user.passwordHash,
       name: user.name,
+      isVerified: user.isVerified,
+      verificationCode: user.verificationCode ?? null,
     });
 
     return {
@@ -33,7 +37,39 @@ export class MongoAuthRepository implements AuthRepository {
       email: created.email,
       passwordHash: created.passwordHash,
       name: created.name,
+      isVerified: created.isVerified,
+      verificationCode: created.verificationCode ?? null,
     };
+  }
+
+  async verifyCode(email: string, code: string): Promise<User | null> {
+    const doc = await UserModel.findOne({
+      email: email.toLowerCase(),
+      verificationCode: code,
+    }).exec();
+
+    if (!doc) return null;
+
+    // Marcar como verificado y limpiar el código
+    doc.isVerified = true;
+    doc.verificationCode = null;
+    await doc.save();
+
+    return {
+      id: doc._id.toString(),
+      email: doc.email,
+      passwordHash: doc.passwordHash,
+      name: doc.name,
+      isVerified: doc.isVerified,
+      verificationCode: null,
+    };
+  }
+
+  async updateVerificationCode(email: string, code: string): Promise<void> {
+    await UserModel.updateOne(
+      { email: email.toLowerCase() },
+      { verificationCode: code },
+    ).exec();
   }
 }
 

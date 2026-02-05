@@ -1,5 +1,10 @@
 import type { Request, Response } from 'express';
-import { loginUseCase, registerUseCase } from '../config/auth.wiring';
+import {
+  loginUseCase,
+  registerUseCase,
+  verifyUseCase,
+  resendCodeUseCase,
+} from '../config/auth.wiring';
 
 type LoginBody = {
   email: string;
@@ -10,6 +15,15 @@ type RegisterBody = {
   email: string;
   password: string;
   name: string;
+};
+
+type VerifyBody = {
+  email: string;
+  code: string;
+};
+
+type ResendCodeBody = {
+  email: string;
 };
 
 export const loginController = async (
@@ -42,6 +56,39 @@ export const registerController = async (
   } catch (error) {
     res.status(400).json({
       message: error instanceof Error ? error.message : 'Error',
+    });
+  }
+};
+
+export const verifyController = async (
+  req: Request<unknown, unknown, VerifyBody>,
+  res: Response,
+) => {
+  try {
+    const { email, code } = req.body;
+    const result = await verifyUseCase.execute(email, code);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({
+      message:
+        error instanceof Error
+          ? error.message
+          : 'Código inválido o expirado',
+    });
+  }
+};
+
+export const resendCodeController = async (
+  req: Request<unknown, unknown, ResendCodeBody>,
+  res: Response,
+) => {
+  try {
+    const { email } = req.body;
+    const result = await resendCodeUseCase.execute(email);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({
+      message: error instanceof Error ? error.message : 'Error al reenviar',
     });
   }
 };

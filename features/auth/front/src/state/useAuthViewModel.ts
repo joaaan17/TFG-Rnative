@@ -60,21 +60,13 @@ export function useAuthViewModel() {
         email: cleanEmail,
         password,
       });
-
-      // UX: auto-login. El backend de register devuelve datos públicos,
-      // así que llamamos a login para obtener token.
-      const loginResult = await authClient.login({
-        email: cleanEmail,
-        password,
-      });
-
-      await signIn(loginResult.token, loginResult.user);
+      // No hacemos auto-login aquí, el RegisterScreen mostrará el modal de verificación
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setIsLoading(false);
     }
-  }, [confirmPassword, email, name, password, signIn]);
+  }, [confirmPassword, email, name, password]);
 
   return {
     name,

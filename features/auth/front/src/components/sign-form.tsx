@@ -124,18 +124,18 @@ export function SignInForm({
               <View className="flex-row items-center">
                 <Label htmlFor="password">Contraseña</Label>
                 {!isRegister ? (
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="web:h-fit ml-auto h-4 px-1 py-0 sm:h-4"
-                    onPress={() => {
-                      // TODO: Navigate to forgot password screen
-                    }}
-                  >
-                    <Text className="font-normal leading-4">
-                      ¿Olvidaste tu contraseña?
-                    </Text>
-                  </Button>
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="web:h-fit ml-auto h-4 px-1 py-0 sm:h-4"
+                  onPress={() => {
+                    // TODO: Navigate to forgot password screen
+                  }}
+                >
+                  <Text className="font-normal leading-4">
+                    ¿Olvidaste tu contraseña?
+                  </Text>
+                </Button>
                 ) : null}
               </View>
               <Input
@@ -193,12 +193,12 @@ export function SignInForm({
               </>
             ) : (
               <>
-                ¿No tienes una cuenta?{' '}
+            ¿No tienes una cuenta?{' '}
                 <Pressable onPress={onGoToRegister}>
-                  <Text className="text-sm underline underline-offset-4">
-                    Registrate
-                  </Text>
-                </Pressable>
+              <Text className="text-sm underline underline-offset-4">
+                Registrate
+              </Text>
+            </Pressable>
               </>
             )}
           </Text>
