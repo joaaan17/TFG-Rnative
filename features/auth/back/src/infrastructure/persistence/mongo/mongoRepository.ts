@@ -65,11 +65,45 @@ export class MongoAuthRepository implements AuthRepository {
     };
   }
 
+  async verifyCodeOnly(email: string, code: string): Promise<boolean> {
+    // Solo verificar que el código es correcto, sin marcar como verificado
+    const doc = await UserModel.findOne({
+      email: email.toLowerCase(),
+      verificationCode: code,
+    }).exec();
+
+    return doc !== null;
+  }
+
   async updateVerificationCode(email: string, code: string): Promise<void> {
     await UserModel.updateOne(
       { email: email.toLowerCase() },
-      { verificationCode: code },
+      { verificationCode: code || null },
     ).exec();
+  }
+
+  async updatePassword(
+    email: string,
+    passwordHash: string,
+  ): Promise<User | null> {
+    const updated = await UserModel.findOneAndUpdate(
+      { email: email.toLowerCase() },
+      { $set: { passwordHash } },
+      { new: true, runValidators: true },
+    ).exec();
+
+    if (!updated) {
+      return null;
+    }
+
+    return {
+      id: updated._id.toString(),
+      email: updated.email,
+      passwordHash: updated.passwordHash,
+      name: updated.name,
+      isVerified: updated.isVerified,
+      verificationCode: updated.verificationCode ?? null,
+    };
   }
 }
 

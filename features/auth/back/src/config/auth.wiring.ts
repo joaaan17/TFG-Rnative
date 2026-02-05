@@ -5,6 +5,9 @@ import { MongoAuthRepository } from '../infrastructure/persistence/mongo/mongoRe
 import { RegisterUseCase } from '../application/usecases/register';
 import { VerifyUseCase } from '../application/usecases/verify';
 import { ResendCodeUseCase } from '../application/usecases/resend-code';
+import { ResetPasswordUseCase } from '../application/usecases/reset-password';
+import { SendPasswordResetCodeUseCase } from '../application/usecases/send-password-reset-code';
+import { VerifyPasswordResetCodeUseCase } from '../application/usecases/verify-password-reset-code';
 import { NodemailerService } from '../infrastructure/mail/nodemailerService';
 import { ConsoleMailService } from '../infrastructure/mail/consoleMailService';
 import { mailEnv } from './mail.env';
@@ -70,3 +73,19 @@ export const resendCodeUseCase = new ResendCodeUseCase(
   authRepository,
   mailService,
 );
+
+// Caso de uso de reset de contraseña
+export const resetPasswordUseCase = new ResetPasswordUseCase(
+  authRepository,
+  passwordService,
+);
+
+// Caso de uso para enviar código de recuperación de contraseña
+export const sendPasswordResetCodeUseCase = new SendPasswordResetCodeUseCase(
+  authRepository,
+  mailService,
+);
+
+// Caso de uso para verificar código de recuperación de contraseña
+export const verifyPasswordResetCodeUseCase =
+  new VerifyPasswordResetCodeUseCase(authRepository);

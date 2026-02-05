@@ -31,7 +31,7 @@ export function RegisterScreen() {
     React.useState(false);
   const [registeredEmail, setRegisteredEmail] = React.useState('');
 
-  const verification = useVerificationViewModel(registeredEmail);
+  const verification = useVerificationViewModel(registeredEmail, 'register');
 
   // Modificar handleRegister para mostrar el modal en lugar de auto-login
   const handleRegisterWithVerification = React.useCallback(async () => {
@@ -94,7 +94,9 @@ export function RegisterScreen() {
         email={registeredEmail}
         code={verification.code}
         onCodeChange={verification.setCode}
-        onVerify={verification.handleVerify}
+        onVerify={async () => {
+          await verification.handleVerify();
+        }}
         onResend={verification.handleResend}
         isLoading={verification.isLoading}
         isResending={verification.isResending}

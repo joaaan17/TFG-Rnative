@@ -61,9 +61,7 @@ export async function register(data: RegisterBody): Promise<RegisterResponse> {
 
   if (!response.ok) {
     const message =
-      typeof json?.message === 'string'
-        ? json.message
-        : 'Error al registrarse';
+      typeof json?.message === 'string' ? json.message : 'Error al registrarse';
     throw new Error(message);
   }
 
@@ -113,4 +111,84 @@ export async function resendCode(email: string): Promise<void> {
   }
 }
 
-export const authClient = { login, register, verifyCode, resendCode };
+export async function resetPassword(
+  email: string,
+  code: string,
+  newPassword: string,
+): Promise<{ message: string }> {
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, code, newPassword }),
+  });
+
+  const json = await parseJsonSafe(response);
+
+  if (!response.ok) {
+    const message =
+      typeof json?.message === 'string'
+        ? json.message
+        : 'Error al resetear contraseña';
+    throw new Error(message);
+  }
+
+  return json as { message: string };
+}
+
+export async function sendPasswordResetCode(
+  email: string,
+): Promise<{ message: string }> {
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}/send-password-reset-code`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+
+  const json = await parseJsonSafe(response);
+
+  if (!response.ok) {
+    const message =
+      typeof json?.message === 'string'
+        ? json.message
+        : 'Error al enviar código de recuperación';
+    throw new Error(message);
+  }
+
+  return json as { message: string };
+}
+
+export async function verifyPasswordResetCode(
+  email: string,
+  code: string,
+): Promise<{ message: string }> {
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}/verify-password-reset-code`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, code }),
+  });
+
+  const json = await parseJsonSafe(response);
+
+  if (!response.ok) {
+    const message =
+      typeof json?.message === 'string'
+        ? json.message
+        : 'Código de verificación incorrecto';
+    throw new Error(message);
+  }
+
+  return json as { message: string };
+}
+
+export const authClient = {
+  login,
+  register,
+  verifyCode,
+  resendCode,
+  resetPassword,
+  sendPasswordResetCode,
+  verifyPasswordResetCode,
+};

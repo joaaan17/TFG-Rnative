@@ -58,6 +58,27 @@ export class InMemoryAuthRepository implements AuthRepository {
     };
     InMemoryAuthRepository.usersByEmail.set(user.email, updated);
   }
+
+  async verifyCodeOnly(email: string, code: string): Promise<boolean> {
+    const user = InMemoryAuthRepository.usersByEmail.get(email.toLowerCase());
+    if (!user) return false;
+    return user.verificationCode === code;
+  }
+
+  async updatePassword(
+    email: string,
+    passwordHash: string,
+  ): Promise<User | null> {
+    const user = InMemoryAuthRepository.usersByEmail.get(email.toLowerCase());
+    if (!user) return null;
+
+    const updated: User = {
+      ...user,
+      passwordHash,
+    };
+    InMemoryAuthRepository.usersByEmail.set(user.email, updated);
+    return updated;
+  }
 }
 
 export default InMemoryAuthRepository;

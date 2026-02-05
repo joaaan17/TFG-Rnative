@@ -255,7 +255,7 @@ Uso:
 
 ```tsx
 import ProfileIcon from '@/shared/icons/profile.svg';
-<ProfileIcon width={24} height={24} fill="#000" />
+<ProfileIcon width={24} height={24} fill="#000" />;
 ```
 
 ### Animaciones / Gestos
@@ -406,4 +406,3 @@ Cuando añadas cosas nuevas:
 - **Reutilizable**: va en `shared/`
 - **Tokens**: van en `design-system/` (evitar hardcodear colores/espaciados)
 - **Imports**: usa `@/` siempre (consistencia y refactor más fácil)
-

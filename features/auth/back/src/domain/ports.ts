@@ -5,7 +5,9 @@ export interface AuthRepository {
   findByEmail(email: string): Promise<User | null>;
   save(user: NewUser): Promise<User>;
   verifyCode(email: string, code: string): Promise<User | null>;
+  verifyCodeOnly(email: string, code: string): Promise<boolean>;
   updateVerificationCode(email: string, code: string): Promise<void>;
+  updatePassword(email: string, passwordHash: string): Promise<User | null>;
 }
 
 // Contrato para encriptar contraseñas

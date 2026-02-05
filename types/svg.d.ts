@@ -4,4 +4,3 @@ declare module '*.svg' {
   const ReactComponent: React.FC<SvgProps>;
   export default ReactComponent;
 }
-

@@ -20,7 +20,7 @@ export type VerificationModalProps = {
   email: string;
   code: string;
   onCodeChange: (code: string) => void;
-  onVerify: () => Promise<void>;
+  onVerify: () => Promise<void | unknown>;
   onResend: () => Promise<void>;
   isLoading?: boolean;
   isResending?: boolean;
@@ -61,7 +61,7 @@ export function VerificationModal({
     <CardModal
       open={open}
       onClose={onClose}
-      maxHeightPct={0.6}
+      maxHeightPct={0.9}
       closeOnBackdropPress={false}
     >
       <View style={{ padding: 20, gap: 20 }}>

@@ -4,4 +4,3 @@
 import MainScreen from '@/features/Inicio/MainScreen';
 
 export default MainScreen;
-

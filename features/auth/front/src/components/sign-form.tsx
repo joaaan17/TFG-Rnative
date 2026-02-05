@@ -10,7 +10,12 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Text } from '@/shared/components/ui/text';
 import * as React from 'react';
-import { ActivityIndicator, Pressable, type TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  type TextInput,
+  View,
+} from 'react-native';
 
 import { SocialConnections } from './social-connections';
 
@@ -29,6 +34,7 @@ export type SignInFormProps = {
   onSubmit?: () => void | Promise<void>;
   onGoToRegister?: () => void;
   onGoToLogin?: () => void;
+  onForgotPassword?: () => void;
   /**
    * Legacy: antes el formulario solo disparaba navegación.
    * Mantenido para no romper usos existentes.
@@ -51,6 +57,7 @@ export function SignInForm({
   onSubmit,
   onGoToRegister,
   onGoToLogin,
+  onForgotPassword,
   onContinue,
 }: SignInFormProps) {
   const nameInputRef = React.useRef<TextInput>(null);
@@ -124,18 +131,18 @@ export function SignInForm({
               <View className="flex-row items-center">
                 <Label htmlFor="password">Contraseña</Label>
                 {!isRegister ? (
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="web:h-fit ml-auto h-4 px-1 py-0 sm:h-4"
-                  onPress={() => {
-                    // TODO: Navigate to forgot password screen
-                  }}
-                >
-                  <Text className="font-normal leading-4">
-                    ¿Olvidaste tu contraseña?
-                  </Text>
-                </Button>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="web:h-fit ml-auto h-4 px-1 py-0 sm:h-4"
+                    onPress={() => {
+                      onForgotPassword?.();
+                    }}
+                  >
+                    <Text className="font-normal leading-4">
+                      ¿Olvidaste tu contraseña?
+                    </Text>
+                  </Button>
                 ) : null}
               </View>
               <Input
@@ -193,12 +200,12 @@ export function SignInForm({
               </>
             ) : (
               <>
-            ¿No tienes una cuenta?{' '}
+                ¿No tienes una cuenta?{' '}
                 <Pressable onPress={onGoToRegister}>
-              <Text className="text-sm underline underline-offset-4">
-                Registrate
-              </Text>
-            </Pressable>
+                  <Text className="text-sm underline underline-offset-4">
+                    Registrate
+                  </Text>
+                </Pressable>
               </>
             )}
           </Text>

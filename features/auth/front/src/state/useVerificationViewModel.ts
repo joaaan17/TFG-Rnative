@@ -5,14 +5,20 @@ import { useAuthSession } from './AuthContext';
 
 const VERIFICATION_TIMEOUT = 10 * 60; // 10 minutos en segundos
 
-export function useVerificationViewModel(email: string) {
+export type VerificationMode = 'register' | 'reset-password';
+
+export function useVerificationViewModel(
+  email: string,
+  mode: VerificationMode = 'register',
+) {
   const { signIn } = useAuthSession();
 
   const [code, setCode] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
   const [isResending, setIsResending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [timeRemaining, setTimeRemaining] = React.useState(VERIFICATION_TIMEOUT);
+  const [timeRemaining, setTimeRemaining] =
+    React.useState(VERIFICATION_TIMEOUT);
 
   // Temporizador
   React.useEffect(() => {
@@ -42,13 +48,22 @@ export function useVerificationViewModel(email: string) {
 
     try {
       const result = await authClient.verifyCode(email, code);
-      await signIn(result.token, result.user);
+      
+      // Si es modo registro, hacer login automáticamente
+      if (mode === 'register') {
+        await signIn(result.token, result.user);
+      }
+      // Si es modo reset-password, solo verificar el código (no hacer login)
+      // El componente padre manejará el siguiente paso
+      
+      return result; // Devolver el resultado para que el componente padre pueda usarlo
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Código inválido');
+      throw err; // Re-lanzar para que el componente padre pueda manejar el error
     } finally {
       setIsLoading(false);
     }
-  }, [code, email, signIn]);
+  }, [code, email, signIn, mode]);
 
   const handleResend = React.useCallback(async () => {
     if (timeRemaining > 0) {

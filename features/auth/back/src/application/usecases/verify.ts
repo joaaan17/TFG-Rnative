@@ -12,10 +12,7 @@ export class VerifyUseCase {
 
   async execute(email: string, code: string) {
     // 1. Verificar el código
-    const user = await this.repository.verifyCode(
-      email.toLowerCase(),
-      code,
-    );
+    const user = await this.repository.verifyCode(email.toLowerCase(), code);
 
     if (!user) {
       throw new Error('Código inválido o expirado');

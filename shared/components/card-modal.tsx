@@ -139,7 +139,7 @@ export function CardModal({
   if (!mounted) return null;
 
   // Verificar si BlurView está disponible
-  const isBlurAvailable =Platform.OS !== 'web' && BlurViewComponent !== null;
+  const isBlurAvailable = Platform.OS !== 'web' && BlurViewComponent !== null;
 
   return (
     <Modal
@@ -235,7 +235,6 @@ export function CardModal({
               styles.card,
               {
                 maxHeight,
-                height: maxHeight,
                 backgroundColor: palette.cardBackground,
                 borderColor: palette.text,
               },
@@ -244,7 +243,7 @@ export function CardModal({
             <View pointerEvents="none" style={styles.dragHandleContainer}>
               <View style={styles.dragHandle} />
             </View>
-            {children}
+            <View style={{ flexShrink: 1 }}>{children}</View>
           </Card>
         </Animated.View>
       </View>

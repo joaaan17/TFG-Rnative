@@ -68,6 +68,37 @@ export function useAuthViewModel() {
     }
   }, [confirmPassword, email, name, password]);
 
+  const [forgotPasswordEmail, setForgotPasswordEmail] = React.useState('');
+  const [isSendingResetCode, setIsSendingResetCode] = React.useState(false);
+  const [forgotPasswordError, setForgotPasswordError] = React.useState<
+    string | null
+  >(null);
+
+  const handleSendResetCode = React.useCallback(async () => {
+    const cleanEmail = forgotPasswordEmail.trim();
+
+    if (!cleanEmail) {
+      setForgotPasswordError('El email es obligatorio');
+      return;
+    }
+
+    setIsSendingResetCode(true);
+    setForgotPasswordError(null);
+
+    try {
+      // Usar el endpoint específico para recuperación de contraseña
+      await authClient.sendPasswordResetCode(cleanEmail);
+      setForgotPasswordError(null);
+    } catch (err) {
+      setForgotPasswordError(
+        err instanceof Error ? err.message : 'Error al enviar código',
+      );
+      throw err; // Re-lanzar para que LoginScreen pueda manejar el flujo
+    } finally {
+      setIsSendingResetCode(false);
+    }
+  }, [forgotPasswordEmail]);
+
   return {
     name,
     email,
@@ -81,6 +112,12 @@ export function useAuthViewModel() {
     error,
     handleLogin,
     handleRegister,
+    // Forgot password
+    forgotPasswordEmail,
+    setForgotPasswordEmail,
+    isSendingResetCode,
+    forgotPasswordError,
+    handleSendResetCode,
   };
 }
 

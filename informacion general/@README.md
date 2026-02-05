@@ -60,23 +60,26 @@ lib/
 ```
 
 ## Alias y paths
+
 - `@/*` apunta a la raíz.
 - Alias específicos: `@shared/*`, `@features/*`, `@design-system/*`, `@config/*`, `@constants/*`, `@lib/*`.
 - `components.json` (shadcn): `components`, `ui`, `hooks`, `utils` → `shared` / `lib`.
 
 ## Rol de los principales
+
 - `app/_layout.tsx`: Stack root; usa `useColorScheme` forzado a light; quita `dark` en web; registra stack (index, modal).
 - `app/index.tsx`: Ruta inicial; exporta `LoginScreen` desde `features/auth`.
 - `features/auth/*`: Login completo (View + ViewModel + service + tipos + barrel).
 - `shared/components/ui/*`: Base UI reusables con tokens del design system.
 - `shared/hooks/*`: Color scheme forzado + palette + helper de colores.
 - `design-system/*`: Tokens de color, spacing, tipografía; re-export en `theme.ts`.
-- `config/env.ts`: Vars de entorno (EXPO_PUBLIC_API_URL, NODE_ENV, __DEV__).
+- `config/env.ts`: Vars de entorno (EXPO_PUBLIC_API_URL, NODE_ENV, **DEV**).
 - `config/routes.ts`: Mapa de rutas nominal.
 - `constants/app.ts`: APP_NAME, APP_VERSION.
 - `lib/utils.ts`: `cn` para combinar clases/tailwind.
 
 ## MVVM por feature (ligero)
+
 - `*Screen.tsx` (View): UI/render; consume el ViewModel.
 - `use*ViewModel.ts` (ViewModel): estado, efectos, handlers; llama a services.
 - `*.service.ts` (Model/data): datos (API/storage/mock) y estado inicial.
@@ -84,6 +87,7 @@ lib/
 - `index.ts`: barrel export.
 
 ## Reglas prácticas
+
 - Rutas delgadas en `app/`: solo importan y exportan pantallas desde `features/`.
 - Reutilizable en `shared/` cuando se usa en 2+ features.
 - Tokens globales en `design-system/` (nunca hardcodear colores/espaciados).

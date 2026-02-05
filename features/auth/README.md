@@ -71,12 +71,14 @@ Este documento explica **todo lo que se ha implementado** en `features/auth/` y 
 ## Backend: qué se cambió y por qué (detalle)
 
 ### 1) Separación Clean / Hexagonal
+
 La lógica de negocio vive en `application/usecases/*` y **solo habla con interfaces** de `domain/ports.ts`.
 
 - **No hay imports de Express** en `application/` ni en `domain/`.
 - **No hay imports de Mongo/Mongoose** en `application/` ni en `domain/`.
 
 ### 2) Solución escalable al problema del `id` en Mongo (registro)
+
 Se detectó un problema típico:
 
 - En Mongo, el identificador real es `_id` (ObjectId) y lo genera la base de datos.
@@ -95,6 +97,7 @@ Solución aplicada (patrón escalable):
 Esto hace el módulo portable: en SQL también sería natural que `save(NewUser)` devuelva `User` con `id` persistido.
 
 ### 3) Email de verificación (Nodemailer) sin romper Hexagonal
+
 El envío de email se implementa como **puerto de salida**:
 
 - **Puerto (Domain)**: `back/src/domain/ports.ts` define `MailService`.
@@ -105,10 +108,12 @@ El envío de email se implementa como **puerto de salida**:
 - **Wiring (Config)**: `back/src/config/auth.wiring.ts` decide qué adaptador usar según env (`MAIL_MODE`).
 
 Además, para que el flujo sea consistente, el registro persiste `verificationCode` e `isVerified`:
+
 - `back/src/domain/auth.types.ts`: `User/NewUser` incluyen `isVerified` y `verificationCode`.
 - `back/src/infrastructure/persistence/mongo/user.model.ts`: schema con `isVerified` (default `false`) y `verificationCode` (default `null`).
 
 #### Variables de entorno (Mail)
+
 Modo simple (recomendado para dev):
 
 ```env
@@ -128,6 +133,7 @@ MAIL_FROM="Tu App <no-reply@tuapp.com>"
 ```
 
 ### 3) Controladores alineados con Express
+
 En `api/auth.controller.ts`:
 
 - Se tipó `req.body` correctamente usando `Request<..., ..., BodyType>` de Express.
@@ -135,6 +141,7 @@ En `api/auth.controller.ts`:
 - Se evitó el error de TS donde `Request/Response` apuntaba a tipos del DOM (y `req.body` era `ReadableStream`).
 
 ### 4) Rutas y servidor
+
 En `back/src/index.ts`:
 
 - `app.use(cors())`
@@ -152,24 +159,28 @@ Endpoints:
 ## Frontend: qué se cambió y por qué (detalle)
 
 ### 1) Tipos alineados con el backend
+
 Se definió:
 
 - `LoginBody` para el request
 - `LoginResponse` para la respuesta real (`token` + `user`)
 
 ### 2) Cliente HTTP robusto
+
 En `authClient.ts`:
 
 - Base URL dinámica para que funcione en emulador Android (`10.0.2.2`) y simulador iOS (`localhost`).
 - Si el backend devuelve error, se lanza `Error(message)` con el `message` del backend.
 
 ### 3) Sesión persistente (AuthContext)
+
 Se implementó un contexto global con:
 
 - Restauración al iniciar la app (`readSession()`)
 - Guardado/borrado en SecureStore o AsyncStorage (`writeSession()`)
 
 ### 4) MVVM (ViewModel) conectado
+
 `useAuthViewModel.ts`:
 
 - maneja loading/error
@@ -177,6 +188,7 @@ Se implementó un contexto global con:
 - persiste sesión vía `signIn()`
 
 ### 5) UI con el diseño anterior
+
 Se mantuvo el look original con `SignInForm` y `Login.styles.ts`, pero ahora el formulario se conecta a la lógica real.
 
 ---
@@ -184,6 +196,7 @@ Se mantuvo el look original con `SignInForm` y `Login.styles.ts`, pero ahora el 
 ## Cómo arrancar y probar
 
 ### 1) Variables de entorno (backend)
+
 Crear `.env` en `TFG-Rnative/`:
 
 ```env
@@ -193,6 +206,7 @@ PORT=3000
 ```
 
 ### 2) Arrancar backend
+
 Desde `TFG-Rnative`:
 
 ```bash
@@ -200,6 +214,7 @@ npx tsx features/auth/back/src/index.ts
 ```
 
 ### 3) Probar endpoints
+
 - Register:
   - `POST http://localhost:3000/api/auth/register`
   - body: `{ "email": "...", "password": "...", "name": "..." }`
@@ -208,6 +223,7 @@ npx tsx features/auth/back/src/index.ts
   - body: `{ "email": "...", "password": "..." }`
 
 ### 4) Arrancar frontend
+
 ```bash
 npm run start
 ```
@@ -227,4 +243,3 @@ Para llevar esto a otro proyecto:
   - `back/src/infrastructure/persistence/**` (BD)
   - `front/src/api/authClient.ts` (URL / configuración)
   - `front/src/state/AuthContext.tsx` (si el proyecto usa otro sistema de sesión)
-

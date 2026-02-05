@@ -8,4 +8,3 @@ export const newsCardStyles = StyleSheet.create({
     marginTop: 12,
   },
 });
-
