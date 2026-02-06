@@ -75,12 +75,21 @@ export const profileStyles = StyleSheet.create({
   },
   addFriendsWrapper: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
     paddingHorizontal: 16,
     paddingTop: 18,
   },
+  addFriendsRowSecond: {
+    flexDirection: 'row',
+    gap: 56,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
   addFriendsButton: {
     flex: 1,
+  },
+  addFriendsButtonFullWidth: {
+    width: '100%',
   },
   summaryWrapper: {
     paddingHorizontal: 16,

@@ -1,5 +1,4 @@
-import type { Relationship } from './relationship.types';
-import type { ProfileSummary } from './relationship.types';
+import type { ProfileSummary, Relationship } from './relationship.types';
 
 export interface RelationshipRepository {
   findByPair(userAId: string, userBId: string): Promise<Relationship | null>;
@@ -9,7 +8,11 @@ export interface RelationshipRepository {
     requesterId: string;
     status: string;
   }): Promise<Relationship>;
-  updateStatus(userAId: string, userBId: string, status: string): Promise<Relationship>;
+  updateStatus(
+    userAId: string,
+    userBId: string,
+    status: string,
+  ): Promise<Relationship>;
   deleteByPair(userAId: string, userBId: string): Promise<void>;
   findAcceptedFriendIds(userId: string): Promise<string[]>;
   findPendingRequesterIds(userId: string): Promise<string[]>;

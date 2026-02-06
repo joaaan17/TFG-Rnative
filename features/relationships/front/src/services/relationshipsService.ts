@@ -18,6 +18,25 @@ export const relationshipsService = {
     return relationshipsClient.requestFriendship(trimmed, token);
   },
 
+  async getFriends(
+    token: string,
+    search?: string,
+    page?: number,
+    limit?: number,
+  ): Promise<{
+    items: PendingRequestItem[];
+    page: number;
+    limit: number;
+  }> {
+    if (!token?.trim()) throw new Error('Token requerido');
+    return relationshipsClient.getFriends(
+      token,
+      search ?? '',
+      page ?? 1,
+      limit ?? 20,
+    );
+  },
+
   async getPendingRequests(
     token: string,
   ): Promise<{ items: PendingRequestItem[] }> {

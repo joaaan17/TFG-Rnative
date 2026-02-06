@@ -1,7 +1,8 @@
 import { Platform } from 'react-native';
 
 function getBaseUrl() {
-  if (Platform.OS === 'android') return 'http://10.0.2.2:3000/api/relationships';
+  if (Platform.OS === 'android')
+    return 'http://10.0.2.2:3000/api/relationships';
   if (Platform.OS === 'ios' || Platform.OS === 'web')
     return 'http://localhost:3000/api/relationships';
   return 'http://localhost:3000/api/relationships';
@@ -41,7 +42,12 @@ export const relationshipsClient = {
   },
 
   async getPendingRequests(token: string): Promise<{
-    items: { userId: string; name: string; username?: string; avatarUrl?: string }[];
+    items: {
+      userId: string;
+      name: string;
+      username?: string;
+      avatarUrl?: string;
+    }[];
   }> {
     const baseUrl = getBaseUrl();
     const response = await fetch(`${baseUrl}/pending-requests`, {
@@ -58,7 +64,12 @@ export const relationshipsClient = {
       throw new Error(msg);
     }
     return (data ?? { items: [] }) as {
-      items: { userId: string; name: string; username?: string; avatarUrl?: string }[];
+      items: {
+        userId: string;
+        name: string;
+        username?: string;
+        avatarUrl?: string;
+      }[];
     };
   },
 
@@ -85,6 +96,52 @@ export const relationshipsClient = {
       throw new Error(msg);
     }
     return data as { id: string; status: string };
+  },
+
+  async getFriends(
+    token: string,
+    search = '',
+    page = 1,
+    limit = 20,
+  ): Promise<{
+    items: {
+      userId: string;
+      name: string;
+      username?: string;
+      avatarUrl?: string;
+    }[];
+    page: number;
+    limit: number;
+  }> {
+    const baseUrl = getBaseUrl();
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+    if (search.trim()) params.set('search', search.trim().slice(0, 50));
+    const response = await fetch(`${baseUrl}/friends?${params}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const raw = await parseJsonSafe(response);
+    const data = raw?.data ?? raw;
+    if (!response.ok) {
+      const msg =
+        typeof (raw as { error?: string })?.error === 'string'
+          ? (raw as { error: string }).error
+          : 'Error al cargar amigos';
+      throw new Error(msg);
+    }
+    return (data ?? { items: [], page: 1, limit: 20 }) as {
+      items: {
+        userId: string;
+        name: string;
+        username?: string;
+        avatarUrl?: string;
+      }[];
+      page: number;
+      limit: number;
+    };
   },
 
   async rejectFriendship(fromUserId: string, token: string): Promise<void> {

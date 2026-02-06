@@ -11,13 +11,13 @@ import { Text } from '@/shared/components/ui/text';
 import { usePalette } from '@/shared/hooks/use-palette';
 import AgregarIcon from '@/shared/icons/agregar.svg';
 import ExpIcon from '@/shared/icons/exp.svg';
-import FriendsIcon from '@/shared/icons/friends.svg';
 import LigaIcon from '@/shared/icons/liga.svg';
 import RachaIcon from '@/shared/icons/racha.svg';
 import SettingsIcon from '@/shared/icons/settings.svg';
 
 import { profileStyles } from './Profile.styles';
 import { AddFriendsModal } from '../components/add-friends-modal';
+import { FriendsListModal } from '../components/friends-list-modal';
 import { PendingRequestsModal } from '../components/pending-requests-modal';
 import { ProfileAvatar } from '../components/profileAvatar';
 import { SettingsModal } from '../components/settings-modal';
@@ -66,6 +66,12 @@ export function ProfileScreen() {
     showRequestsModal,
     setShowRequestsModal,
     closeRequestsModal,
+    showFriendsModal,
+    setShowFriendsModal,
+    closeFriendsModal,
+    friendsList,
+    friendsLoading,
+    friendsError,
     pendingRequests,
     pendingLoading,
     pendingError,
@@ -206,6 +212,16 @@ export function ProfileScreen() {
           </Button>
         </View>
 
+        <View style={profileStyles.addFriendsRowSecond}>
+          <Button
+            size="sm"
+            style={profileStyles.addFriendsButtonFullWidth}
+            onPress={() => setShowFriendsModal(true)}
+          >
+            <Text>Ver Amigos</Text>
+          </Button>
+        </View>
+
         <View style={profileStyles.summaryWrapper}>
           <Text variant="muted" style={profileStyles.summaryTitle}>
             RESUMEN
@@ -287,6 +303,14 @@ export function ProfileScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <FriendsListModal
+        open={showFriendsModal}
+        onClose={closeFriendsModal}
+        items={friendsList}
+        loading={friendsLoading}
+        error={friendsError}
+      />
 
       <PendingRequestsModal
         open={showRequestsModal}

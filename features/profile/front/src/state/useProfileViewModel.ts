@@ -16,6 +16,7 @@ export function useProfileViewModel() {
   const [showSettingsModal, setShowSettingsModal] = React.useState(false);
   const [showAddFriendsModal, setShowAddFriendsModal] = React.useState(false);
   const [showRequestsModal, setShowRequestsModal] = React.useState(false);
+  const [showFriendsModal, setShowFriendsModal] = React.useState(false);
   const [pendingRequests, setPendingRequests] = React.useState<
     PendingRequestItem[]
   >([]);
@@ -24,6 +25,11 @@ export function useProfileViewModel() {
   const [processingIds, setProcessingIds] = React.useState<Set<string>>(
     () => new Set(),
   );
+  const [friendsList, setFriendsList] = React.useState<PendingRequestItem[]>(
+    [],
+  );
+  const [friendsLoading, setFriendsLoading] = React.useState(false);
+  const [friendsError, setFriendsError] = React.useState<string | null>(null);
   const [searchFriendsValue, setSearchFriendsValue] = React.useState('');
   const [searchResults, setSearchResults] = React.useState<ProfileSearchItem[]>(
     [],
@@ -113,6 +119,12 @@ export function useProfileViewModel() {
     setPendingError(null);
   }, []);
 
+  const closeFriendsModal = React.useCallback(() => {
+    setShowFriendsModal(false);
+    setFriendsList([]);
+    setFriendsError(null);
+  }, []);
+
   React.useEffect(() => {
     const token = session?.token;
     if (!token || !showRequestsModal) return;
@@ -129,6 +141,23 @@ export function useProfileViewModel() {
       })
       .finally(() => setPendingLoading(false));
   }, [session?.token, showRequestsModal]);
+
+  React.useEffect(() => {
+    const token = session?.token;
+    if (!token || !showFriendsModal) return;
+    setFriendsLoading(true);
+    setFriendsError(null);
+    relationshipsService
+      .getFriends(token, '', 1, 50)
+      .then((res) => setFriendsList(res.items))
+      .catch((err) => {
+        setFriendsList([]);
+        setFriendsError(
+          err instanceof Error ? err.message : 'Error al cargar amigos',
+        );
+      })
+      .finally(() => setFriendsLoading(false));
+  }, [session?.token, showFriendsModal]);
 
   const handleAcceptRequest = React.useCallback(
     (fromUserId: string) => {
@@ -242,6 +271,12 @@ export function useProfileViewModel() {
     showRequestsModal,
     setShowRequestsModal,
     closeRequestsModal,
+    showFriendsModal,
+    setShowFriendsModal,
+    closeFriendsModal,
+    friendsList,
+    friendsLoading,
+    friendsError,
     pendingRequests,
     pendingLoading,
     pendingError,
