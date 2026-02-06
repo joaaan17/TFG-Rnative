@@ -1,10 +1,13 @@
-﻿/**
+/**
  * Tipos para la feature Auth
  */
 export interface LoginBody {
   email: string;
   password: string;
 }
+
+/** Alias para LoginBody (credenciales de inicio de sesión) */
+export type LoginCredentials = LoginBody;
 
 export type AuthUser = {
   id: string;

@@ -9,18 +9,13 @@ export const profileStyles = StyleSheet.create({
     backgroundColor: AppColors.light.mainBackground,
   },
   scrollContent: {
-    // Espacio extra para que el final del scroll no quede pegado a la menubar
     paddingBottom: 190,
   },
-  /**
-   * Card superior: ~30% de la altura del área de contenido (sin menubar).
-   * Sin borde y con color gris del design system.
-   */
   topCard: {
     height: '30%',
     width: '100%',
-    borderWidth: 0, // sobreescribe el borde por defecto de Card
-    borderRadius: 0, // mantiene una estética suave arriba
+    borderWidth: 0,
+    borderRadius: 0,
     backgroundColor: AppColors.light.inputBackground,
   },
   topCardHeader: {
@@ -28,7 +23,7 @@ export const profileStyles = StyleSheet.create({
     paddingHorizontal: 0,
   },
   topCardTitle: {
-    color: AppColors.light.primary, // negro sobre gris
+    color: AppColors.light.primary,
   },
   topCardCenter: {
     position: 'absolute',

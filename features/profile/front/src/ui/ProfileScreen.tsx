@@ -14,8 +14,8 @@ import LigaIcon from '@/shared/icons/liga.svg';
 import RachaIcon from '@/shared/icons/racha.svg';
 import SettingsIcon from '@/shared/icons/settings.svg';
 
-import { profileStyles } from './profileStyles';
-import { ProfileAvatar } from './components/profileAvatar';
+import { profileStyles } from './Profile.styles';
+import { ProfileAvatar } from '../components/profileAvatar';
 
 export function ProfileScreen() {
   const palette = usePalette();

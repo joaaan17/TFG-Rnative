@@ -17,9 +17,6 @@ router.post('/verify', verifyController);
 router.post('/resend-code', resendCodeController);
 router.post('/reset-password', resetPasswordController);
 router.post('/send-password-reset-code', sendPasswordResetCodeController);
-router.post(
-  '/verify-password-reset-code',
-  verifyPasswordResetCodeController,
-);
+router.post('/verify-password-reset-code', verifyPasswordResetCodeController);
 
 export default router;

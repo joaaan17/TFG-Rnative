@@ -1,13 +1,15 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import { authEnv } from './config/auth.env';
-import authRoutes from './api/api.routes';
+import { authEnv } from '../features/auth/back/src/config/auth.env';
+import authRoutes from '../features/auth/back/src/api/api.routes';
+import profileRoutes from '../features/profile/back/src/api/api.routes';
 
 const app = express();
-app.use(cors()); // Permite peticiones desde otros dominios/puertos
+app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
 
 // --- 3. Inicialización (Base de Datos + Servidor) ---
 const startServer = async () => {

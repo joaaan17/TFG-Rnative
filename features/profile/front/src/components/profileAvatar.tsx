@@ -5,25 +5,10 @@ import ProfileIcon from '@/shared/icons/profile.svg';
 import { usePalette } from '@/shared/hooks/use-palette';
 
 export type ProfileAvatarProps = {
-  /**
-   * Tamaño total (círculo exterior).
-   */
   size?: number;
-  /**
-   * Grosor del borde del círculo exterior.
-   */
   outerRingWidth?: number;
-  /**
-   * Tamaño del círculo interior (fondo del icono).
-   */
   innerSize?: number;
-  /**
-   * Tamaño del icono.
-   */
   iconSize?: number;
-  /**
-   * Si es false, se renderiza solo el anillo exterior (sin círculo interior ni icono).
-   */
   showInner?: boolean;
 };
 

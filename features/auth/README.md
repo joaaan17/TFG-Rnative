@@ -1,245 +1,266 @@
-## Auth (Login + Register) — Implementación completa (Backend + Frontend)
+# Módulo Auth — Documentación completa
 
-Este documento explica **todo lo que se ha implementado** en `features/auth/` y cómo encaja con el patrón que estáis usando:
-
-- **Backend**: Node.js + Express + Mongoose, con separación tipo **Clean Architecture / Hexagonal** (dominio y casos de uso no dependen de Express/Mongo).
-- **Frontend**: Expo (React Native) con **MVVM**, consumiendo el backend y persistiendo sesión (token) en almacenamiento seguro.
+Este documento describe **en detalle** cómo funciona el módulo de autenticación en `features/auth/`, incluyendo Login, Registro, Verificación de email y Recuperación de contraseña.
 
 ---
 
-## Estructura de carpetas (estado actual)
+## Índice
 
-### Backend — `features/auth/back/src/`
-
-- **`domain/`** (contratos puros)
-  - `auth.types.ts`: `User`, `AuthToken`, `NewUser`
-  - `ports.ts`: `AuthRepository`, `PasswordService`, `TokenService`
-- **`application/usecases/`** (reglas de negocio)
-  - `login.ts`: `LoginUseCase`
-  - `register.ts`: `RegisterUseCase`
-- **`infrastructure/`** (adaptadores concretos)
-  - `persistence/mongo/`
-    - `user.model.ts`: Schema/Model Mongoose
-    - `mongoRepository.ts`: `MongoAuthRepository` (mapea `_id` → `id`)
-  - `crypto/bcryptHasher.ts`: `BcryptHasher` usando `bcryptjs`
-  - `tokens/jwtTokerService.ts`: `JwtTokenService` usando `jsonwebtoken`
-  - `persistence/index.ts`: `InMemoryAuthRepository` (útil en tests/demos)
-- **`config/`** (wiring manual)
-  - `auth.env.ts`: lectura de variables `AUTH_DB_URI`, `AUTH_JWT_SECRET`, etc.
-  - `auth.wiring.ts`: instancia repositorio/servicios + exporta `loginUseCase` y `registerUseCase`
-- **`api/`** (entrada HTTP con Express)
-  - `api.routes.ts`: `express.Router()` con `POST /login` y `POST /register`
-  - `auth.controller.ts`: `loginController` + `registerController` (solo llaman a los casos de uso)
-- **`index.ts`**: servidor Express + CORS + JSON + conexión Mongoose + montaje de rutas `/api/auth`
-
-### Frontend — `features/auth/front/src/`
-
-- **`types/auth.types.ts`**
-  - `LoginBody` `{ email, password }`
-  - `LoginResponse` `{ token, user }`
-  - `AuthUser` `{ id, email, name }`
-- **`api/authClient.ts`**
-  - `login(credentials)` usando `fetch`
-  - **Base URL dinámica**:
-    - Android emulator → `http://10.0.2.2:3000`
-    - iOS simulator/web → `http://localhost:3000`
-    - físico → IP LAN (se deja comentado para ajustar)
-- **`state/AuthContext.tsx`**
-  - Context global con `signIn`, `signOut`, `useAuthSession()`
-  - Persistencia:
-    - `expo-secure-store` si está disponible
-    - fallback a `@react-native-async-storage/async-storage`
-- **`state/useAuthViewModel.ts`** (MVVM)
-  - Estado: `email`, `password`, `isLoading`, `error`
-  - `handleLogin()`:
-    - valida inputs
-    - llama `authClient.login`
-    - si ok → `signIn(token, user)`
-    - si error → `error`
-- **`components/sign-form.tsx`**
-  - Mantiene el **diseño original** (Card + inputs + social)
-  - Ahora acepta props para conectarse al ViewModel:
-    - `email`, `password`, `onEmailChange`, `onPasswordChange`, `isLoading`, `error`, `onSubmit`
-- **`ui/LoginScreen.tsx`**
-  - Renderiza `SignInForm` dentro de `ThemedView` con `Login.styles.ts`
-  - Navega a `'/main'` cuando existe `session` (AuthContext)
-- **Provider global**
-  - `app/_layout.tsx` envuelve la app con `<AuthProvider />`
+1. [Arquitectura general](#arquitectura-general)
+2. [Backend — Estructura y flujos](#backend--estructura-y-flujos)
+3. [Frontend — Estructura y flujos](#frontend--estructura-y-flujos)
+4. [Flujos de usuario](#flujos-de-usuario)
+5. [Configuración y arranque](#configuración-y-arranque)
+6. [Portabilidad del módulo](#portabilidad-del-módulo)
 
 ---
 
-## Backend: qué se cambió y por qué (detalle)
+## Arquitectura general
 
-### 1) Separación Clean / Hexagonal
+El módulo sigue dos patrones:
 
-La lógica de negocio vive en `application/usecases/*` y **solo habla con interfaces** de `domain/ports.ts`.
+- **Backend**: Clean Architecture / Hexagonal — el dominio y los casos de uso no dependen de Express, Mongo ni Nodemailer.
+- **Frontend**: MVVM — separación entre Vista (UI), ViewModel (lógica) y Model (tipos + API).
 
-- **No hay imports de Express** en `application/` ni en `domain/`.
-- **No hay imports de Mongo/Mongoose** en `application/` ni en `domain/`.
-
-### 2) Solución escalable al problema del `id` en Mongo (registro)
-
-Se detectó un problema típico:
-
-- En Mongo, el identificador real es `_id` (ObjectId) y lo genera la base de datos.
-- Antes, el registro intentaba generar un `id` manual (`randomUUID`) y el repositorio Mongo intentaba usarlo como `_id`, lo cual no es robusto.
-
-Solución aplicada (patrón escalable):
-
-- Se añadió `NewUser` (sin `id`) en `domain/auth.types.ts`.
-- El puerto se ajustó:
-  - `AuthRepository.save(user: NewUser): Promise<User>`
-- El adaptador Mongo:
-  - hace `UserModel.create(...)`
-  - devuelve un `User` del dominio con `id = created._id.toString()`
-  - cumple la regla: **mapper `_id` → `id`**
-
-Esto hace el módulo portable: en SQL también sería natural que `save(NewUser)` devuelva `User` con `id` persistido.
-
-### 3) Email de verificación (Nodemailer) sin romper Hexagonal
-
-El envío de email se implementa como **puerto de salida**:
-
-- **Puerto (Domain)**: `back/src/domain/ports.ts` define `MailService`.
-- **Caso de uso (Application)**: `RegisterUseCase` recibe `MailService` por constructor y solo llama `sendVerificationCode(...)`.
-- **Adaptadores (Infrastructure)**:
-  - `back/src/infrastructure/mail/nodemailerService.ts`: implementación real con Nodemailer + SMTP.
-  - `back/src/infrastructure/mail/consoleMailService.ts`: implementación “dummy” para desarrollo (imprime en consola).
-- **Wiring (Config)**: `back/src/config/auth.wiring.ts` decide qué adaptador usar según env (`MAIL_MODE`).
-
-Además, para que el flujo sea consistente, el registro persiste `verificationCode` e `isVerified`:
-
-- `back/src/domain/auth.types.ts`: `User/NewUser` incluyen `isVerified` y `verificationCode`.
-- `back/src/infrastructure/persistence/mongo/user.model.ts`: schema con `isVerified` (default `false`) y `verificationCode` (default `null`).
-
-#### Variables de entorno (Mail)
-
-Modo simple (recomendado para dev):
-
-```env
-MAIL_MODE=console
+```
+features/auth/
+├── back/src/          # Backend Node.js + Express + Mongoose
+│   ├── domain/        # Contratos puros (tipos, interfaces)
+│   ├── application/   # Casos de uso (reglas de negocio)
+│   ├── infrastructure/# Adaptadores (Mongo, Bcrypt, JWT, Nodemailer)
+│   ├── config/        # Wiring (inyección de dependencias)
+│   └── api/           # Controladores y rutas Express
+└── front/src/         # Frontend Expo (React Native)
+    ├── types/         # Tipos TypeScript
+    ├── api/           # Cliente HTTP (authClient)
+    ├── state/         # AuthContext + ViewModels
+    ├── components/    # Formularios, modales
+    └── ui/            # Pantallas (Login, Register)
 ```
 
-Modo SMTP (Nodemailer):
+---
 
-```env
-MAIL_MODE=smtp
-MAIL_HOST=smtp.tu-proveedor.com
-MAIL_PORT=587
-MAIL_SECURE=false
-MAIL_USER=tu_usuario
-MAIL_PASS=tu_password
-MAIL_FROM="Tu App <no-reply@tuapp.com>"
-```
+## Backend — Estructura y flujos
 
-### 3) Controladores alineados con Express
+### 1. Dominio (`back/src/domain/`)
 
-En `api/auth.controller.ts`:
+**`auth.types.ts`** — Entidades del dominio:
 
-- Se tipó `req.body` correctamente usando `Request<..., ..., BodyType>` de Express.
-- Se importó `registerUseCase` desde el wiring.
-- Se evitó el error de TS donde `Request/Response` apuntaba a tipos del DOM (y `req.body` era `ReadableStream`).
+- **`User`**: Usuario persistido con `id`, `email`, `passwordHash`, `name`, `isVerified`, `verificationCode`.
+- **`NewUser`**: Usuario antes de persistir (sin `id`); Mongo genera el `_id`.
+- **`AuthToken`**: Token JWT y tiempo de expiración.
 
-### 4) Rutas y servidor
+**`ports.ts`** — Contratos (interfaces) que el dominio espera:
 
-En `back/src/index.ts`:
+| Puerto | Métodos principales | Uso |
+|--------|---------------------|-----|
+| `AuthRepository` | `findByEmail`, `save`, `verifyCode`, `verifyCodeOnly`, `updateVerificationCode`, `updatePassword` | Persistencia de usuarios |
+| `PasswordService` | `hash`, `compare` | Bcrypt para contraseñas |
+| `TokenService` | `sign`, `verify` | JWT para sesiones |
+| `MailService` | `sendVerificationCode` | Envío de emails |
 
-- `app.use(cors())`
-- `app.use(express.json())`
-- `app.use('/api/auth', authRoutes)`
-- `mongoose.connect(authEnv.dbUri)`
+### 2. Casos de uso (`back/src/application/usecases/`)
 
-Endpoints:
+| Caso de uso | Archivo | Responsabilidad |
+|-------------|---------|-----------------|
+| **Login** | `login.ts` | Buscar usuario, comparar contraseña, generar JWT. No valida `isVerified`. |
+| **Register** | `register.ts` | Comprobar email no existente, generar código 6 dígitos, hashear contraseña, guardar con `isVerified: false`, enviar email. |
+| **Verify** | `verify.ts` | Validar código, marcar `isVerified: true`, limpiar `verificationCode`, devolver JWT. |
+| **ResendCode** | `resend-code.ts` | Solo si `!isVerified`. Generar nuevo código, actualizar en BD, enviar email. |
+| **SendPasswordResetCode** | `send-password-reset-code.ts` | Buscar usuario, generar código, actualizar en BD, enviar email. No comprueba `isVerified`. |
+| **VerifyPasswordResetCode** | `verify-password-reset-code.ts` | Comprobar código con `verifyCodeOnly` (sin modificar `isVerified` ni el código). |
+| **ResetPassword** | `reset-password.ts` | Validar código, hashear nueva contraseña, actualizar en BD, limpiar `verificationCode`. |
 
-- `POST /api/auth/login`
-- `POST /api/auth/register`
+**Diferencia importante** entre verificación de registro y recuperación de contraseña:
+
+- **Registro**: `verifyCode` marca al usuario como verificado y limpia el código.
+- **Recuperación**: `verifyCodeOnly` solo valida; `ResetPasswordUseCase` actualiza la contraseña y limpia el código.
+
+### 3. Infraestructura (`back/src/infrastructure/`)
+
+| Adaptador | Archivo | Implementación |
+|-----------|---------|----------------|
+| Persistencia | `mongo/mongoRepository.ts` | Mongoose. Mapea `_id` → `id` al devolver `User`. |
+| Modelo | `mongo/user.model.ts` | Schema con `email`, `passwordHash`, `name`, `isVerified`, `verificationCode`. |
+| Contraseñas | `crypto/bcryptHasher.ts` | `bcryptjs` para hash y compare. |
+| Tokens | `tokens/jwtTokerService.ts` | `jsonwebtoken` para sign y verify. |
+| Email (producción) | `mail/nodemailerService.ts` | Nodemailer + SMTP. |
+| Email (desarrollo) | `mail/consoleMailService.ts` | Solo `console.log`, sin envío real. |
+
+### 4. Configuración (`back/src/config/`)
+
+**`auth.env.ts`** — Variables obligatorias:
+
+- `AUTH_DB_URI`: URI de MongoDB.
+- `AUTH_JWT_SECRET`: Secreto para firmar JWTs.
+
+**`mail.env.ts`** — Email:
+
+- `MAIL_MODE` o `SMTP_MODE`: `console` o `smtp`.
+- Si `smtp`: `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS`, `MAIL_FROM` (o prefijo `SMTP_`).
+
+**`auth.wiring.ts`** — Composición:
+
+- Instancia `MongoAuthRepository`, `BcryptHasher`, `JwtTokenService`.
+- Selecciona `NodemailerService` o `ConsoleMailService` según `mailEnv`.
+- Instancia todos los casos de uso e inyecta dependencias.
+
+### 5. API (`back/src/api/`)
+
+**Rutas** (`api.routes.ts`):
+
+| Método | Ruta | Caso de uso |
+|--------|------|-------------|
+| POST | `/login` | LoginUseCase |
+| POST | `/register` | RegisterUseCase |
+| POST | `/verify` | VerifyUseCase |
+| POST | `/resend-code` | ResendCodeUseCase |
+| POST | `/send-password-reset-code` | SendPasswordResetCodeUseCase |
+| POST | `/verify-password-reset-code` | VerifyPasswordResetCodeUseCase |
+| POST | `/reset-password` | ResetPasswordUseCase |
+
+Montaje en `index.ts`: `app.use('/api/auth', authRoutes)`.
 
 ---
 
-## Frontend: qué se cambió y por qué (detalle)
+## Frontend — Estructura y flujos
 
-### 1) Tipos alineados con el backend
+### 1. Tipos (`front/src/types/auth.types.ts`)
 
-Se definió:
+- `LoginBody`: `{ email, password }`
+- `LoginResponse`: `{ token, user: AuthUser }`
+- `AuthUser`: `{ id, email, name }`
+- `RegisterBody`: `{ name, email, password }`
+- `RegisterResponse`: igual que `AuthUser`
 
-- `LoginBody` para el request
-- `LoginResponse` para la respuesta real (`token` + `user`)
+### 2. Cliente HTTP (`front/src/api/authClient.ts`)
 
-### 2) Cliente HTTP robusto
+- **Base URL dinámica**:
+  - Android emulator → `http://10.0.2.2:3000/api/auth`
+  - iOS / web → `http://localhost:3000/api/auth`
+  - Dispositivo físico → cambiar manualmente a tu IP LAN.
 
-En `authClient.ts`:
+- **Métodos**: `login`, `register`, `verifyCode`, `resendCode`, `sendPasswordResetCode`, `verifyPasswordResetCode`, `resetPassword`.
 
-- Base URL dinámica para que funcione en emulador Android (`10.0.2.2`) y simulador iOS (`localhost`).
-- Si el backend devuelve error, se lanza `Error(message)` con el `message` del backend.
+- **Manejo de errores**: si `!response.ok`, lanza `Error` con el `message` del backend.
 
-### 3) Sesión persistente (AuthContext)
+### 3. Estado global (`front/src/state/AuthContext.tsx`)
 
-Se implementó un contexto global con:
+- `AuthProvider`: envuelve la app (configurado en `app/_layout.tsx`).
+- `useAuthSession()`: expone `session`, `isRestoring`, `signIn`, `signOut`.
+- Persistencia: `expo-secure-store` si está disponible, sino `AsyncStorage`.
+- Al iniciar la app, `readSession()` restaura la sesión si existe.
 
-- Restauración al iniciar la app (`readSession()`)
-- Guardado/borrado en SecureStore o AsyncStorage (`writeSession()`)
+### 4. ViewModels (MVVM)
 
-### 4) MVVM (ViewModel) conectado
+| ViewModel | Archivo | Responsabilidad |
+|-----------|---------|-----------------|
+| **useAuthViewModel** | `useAuthViewModel.ts` | Login, registro, “olvidé contraseña”. Estados: email, password, loading, error. `handleLogin` llama a `authClient.login` y `signIn`. `handleRegister` llama a `authClient.register` (sin auto-login). `handleSendResetCode` llama a `authClient.sendPasswordResetCode`. |
+| **useVerificationViewModel** | `useVerificationViewModel.ts` | Código de 6 dígitos, temporizador 10 min, reenvío. `mode: 'register' | 'reset-password'`. En modo `register`, `handleVerify` hace `signIn` tras verificar. En modo `reset-password`, solo devuelve el resultado para que el padre abra el modal de nueva contraseña. |
+| **useResetPasswordViewModel** | `useResetPasswordViewModel.ts` | Nueva contraseña, repetir contraseña, validación, llamada a `authClient.resetPassword`. |
 
-`useAuthViewModel.ts`:
+### 5. Componentes y pantallas
 
-- maneja loading/error
-- llama al backend
-- persiste sesión vía `signIn()`
-
-### 5) UI con el diseño anterior
-
-Se mantuvo el look original con `SignInForm` y `Login.styles.ts`, pero ahora el formulario se conecta a la lógica real.
+| Componente | Archivo | Uso |
+|------------|---------|-----|
+| **SignInForm** | `sign-form.tsx` | Formulario reutilizable. Con `isRegister` muestra nombre y repetir contraseña. Props: `onForgotPassword`, `onGoToRegister`, `onGoToLogin`. |
+| **ForgotPasswordModal** | `forgot-password-modal.tsx` | Modal para introducir email y enviar código de recuperación. |
+| **VerificationModal** | `verification-modal.tsx` | Modal para introducir código de 6 dígitos, con temporizador y botón “Reenviar”. |
+| **ResetPasswordModal** | `reset-password-modal.tsx` | Modal para nueva contraseña y repetir contraseña. |
+| **LoginScreen** | `ui/LoginScreen.tsx` | Formulario de login + flujo completo de “Olvidé contraseña”. |
+| **RegisterScreen** | `ui/RegisterScreen.tsx` | Formulario de registro + modal de verificación. |
 
 ---
 
-## Cómo arrancar y probar
+## Flujos de usuario
 
-### 1) Variables de entorno (backend)
+### Flujo 1: Login
 
-Crear `.env` en `TFG-Rnative/`:
+1. Usuario introduce email y contraseña en `SignInForm`.
+2. `handleLogin` → `authClient.login` → `POST /api/auth/login`.
+3. Si éxito: `signIn(token, user)` guarda sesión y redirige a `/main`.
+4. Si error: se muestra el mensaje del backend.
+
+### Flujo 2: Registro con verificación
+
+1. Usuario introduce nombre, email, contraseña y repetir contraseña.
+2. `handleRegisterWithVerification` → `handleRegister` → `authClient.register` → `POST /api/auth/register`.
+3. Backend: guarda usuario con `isVerified: false`, envía código por email.
+4. Se abre `VerificationModal` con el email registrado.
+5. Usuario introduce el código de 6 dígitos.
+6. `handleVerify` → `authClient.verifyCode` → `POST /api/auth/verify`.
+7. Backend: marca `isVerified: true`, devuelve JWT.
+8. `signIn(token, user)` y redirección a `/main`.
+
+### Flujo 3: Olvidé mi contraseña
+
+1. En Login, el usuario pulsa “¿Olvidaste tu contraseña?”.
+2. Se abre `ForgotPasswordModal`; introduce su email.
+3. `handleSendCode` → `authClient.sendPasswordResetCode` → `POST /api/auth/send-password-reset-code`.
+4. Se cierra el modal de email y se abre `VerificationModal`.
+5. Usuario introduce el código recibido.
+6. `handleVerifyCode` → `authClient.verifyPasswordResetCode` → `POST /api/auth/verify-password-reset-code`.
+7. Si OK: se guarda el código, se cierra el modal de verificación y se abre `ResetPasswordModal`.
+8. Usuario introduce nueva contraseña y repetir.
+9. `handleResetPassword` → `authClient.resetPassword` → `POST /api/auth/reset-password`.
+10. Si OK: se cierran todos los modales y el usuario puede iniciar sesión con la nueva contraseña.
+
+---
+
+## Configuración y arranque
+
+### Variables de entorno (backend)
+
+Crear `.env` en la raíz del proyecto (ej. `TFG-Rnative/`):
 
 ```env
+# Obligatorias
 AUTH_DB_URI=mongodb://127.0.0.1:27017/tu_db
-AUTH_JWT_SECRET=tu_secreto_largo
+AUTH_JWT_SECRET=tu_secreto_largo_y_aleatorio
+
+# Opcionales
 PORT=3000
+AUTH_JWT_EXPIRES_IN=1d
+AUTH_BCRYPT_ROUNDS=10
+
+# Email (desarrollo)
+MAIL_MODE=console
+
+# Email (producción)
+# MAIL_MODE=smtp
+# MAIL_HOST=smtp.gmail.com
+# MAIL_PORT=587
+# MAIL_SECURE=false
+# MAIL_USER=tu_email@gmail.com
+# MAIL_PASS=tu_app_password
+# MAIL_FROM="Tu App <no-reply@tuapp.com>"
 ```
 
-### 2) Arrancar backend
-
-Desde `TFG-Rnative`:
+### Arrancar backend
 
 ```bash
 npx tsx features/auth/back/src/index.ts
 ```
 
-### 3) Probar endpoints
-
-- Register:
-  - `POST http://localhost:3000/api/auth/register`
-  - body: `{ "email": "...", "password": "...", "name": "..." }`
-- Login:
-  - `POST http://localhost:3000/api/auth/login`
-  - body: `{ "email": "...", "password": "..." }`
-
-### 4) Arrancar frontend
+### Arrancar frontend
 
 ```bash
 npm run start
 ```
 
-> Si pruebas en **dispositivo físico**, cambia el base URL en `front/src/api/authClient.ts` por tu IP LAN.
+### Dispositivo físico
+
+- Cambiar la base URL en `front/src/api/authClient.ts` por tu IP LAN (ej. `http://192.168.1.50:3000/api/auth`).
 
 ---
 
-## Notas de portabilidad (“copiar carpeta”)
+## Portabilidad del módulo
 
-Para llevar esto a otro proyecto:
+Para reutilizar este módulo en otro proyecto:
 
-- Lo más estable/portable:
-  - `back/src/domain/**`
-  - `back/src/application/**`
-- Lo que suele cambiar:
-  - `back/src/infrastructure/persistence/**` (BD)
-  - `front/src/api/authClient.ts` (URL / configuración)
-  - `front/src/state/AuthContext.tsx` (si el proyecto usa otro sistema de sesión)
+- **Más estables**: `back/src/domain/**`, `back/src/application/**`.
+- **Adaptables**:
+  - `back/src/infrastructure/persistence/**` (BD distinta).
+  - `front/src/api/authClient.ts` (URL, headers).
+  - `front/src/state/AuthContext.tsx` (otro sistema de sesión).
+  - Integración con el router principal (`app/_layout.tsx`, rutas `/`, `/register`, `/main`).
