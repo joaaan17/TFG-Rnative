@@ -15,9 +15,22 @@ import type { NewUser, User } from '../../domain/auth.types';
  */
 export class InMemoryAuthRepository implements AuthRepository {
   private static usersByEmail = new Map<string, User>();
+  private static usersById = new Map<string, User>();
+
+  async findById(id: string): Promise<User | null> {
+    return InMemoryAuthRepository.usersById.get(id) ?? null;
+  }
 
   async findByEmail(email: string): Promise<User | null> {
     return InMemoryAuthRepository.usersByEmail.get(email) ?? null;
+  }
+
+  async deleteById(id: string): Promise<void> {
+    const user = InMemoryAuthRepository.usersById.get(id);
+    if (user) {
+      InMemoryAuthRepository.usersByEmail.delete(user.email);
+      InMemoryAuthRepository.usersById.delete(id);
+    }
   }
 
   async save(user: NewUser): Promise<User> {
@@ -31,6 +44,7 @@ export class InMemoryAuthRepository implements AuthRepository {
     };
 
     InMemoryAuthRepository.usersByEmail.set(saved.email, saved);
+    InMemoryAuthRepository.usersById.set(saved.id, saved);
     return saved;
   }
 
@@ -45,6 +59,7 @@ export class InMemoryAuthRepository implements AuthRepository {
       verificationCode: null,
     };
     InMemoryAuthRepository.usersByEmail.set(user.email, verified);
+    InMemoryAuthRepository.usersById.set(user.id, verified);
     return verified;
   }
 
@@ -57,6 +72,7 @@ export class InMemoryAuthRepository implements AuthRepository {
       verificationCode: code,
     };
     InMemoryAuthRepository.usersByEmail.set(user.email, updated);
+    InMemoryAuthRepository.usersById.set(user.id, updated);
   }
 
   async verifyCodeOnly(email: string, code: string): Promise<boolean> {
@@ -77,6 +93,7 @@ export class InMemoryAuthRepository implements AuthRepository {
       passwordHash,
     };
     InMemoryAuthRepository.usersByEmail.set(user.email, updated);
+    InMemoryAuthRepository.usersById.set(user.id, updated);
     return updated;
   }
 }

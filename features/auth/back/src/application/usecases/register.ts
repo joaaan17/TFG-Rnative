@@ -2,6 +2,7 @@ import type {
   AuthRepository,
   PasswordService,
   MailService,
+  OnUserRegistered,
 } from '../../domain/ports';
 import type { NewUser } from '../../domain/auth.types';
 
@@ -9,10 +10,16 @@ export class RegisterUseCase {
   constructor(
     private repository: AuthRepository,
     private passwordService: PasswordService,
-    private mailService: MailService, // <--- Nueva dependencia inyectada
+    private mailService: MailService,
+    private onUserRegistered?: OnUserRegistered,
   ) {}
 
-  async execute(data: { email: string; password: string; name: string }) {
+  async execute(data: {
+    email: string;
+    password: string;
+    name: string;
+    username: string;
+  }) {
     // 1. Validar si el usuario ya existe
     const existingUser = await this.repository.findByEmail(data.email);
     if (existingUser) throw new Error('El usuario ya existe');
@@ -40,13 +47,22 @@ export class RegisterUseCase {
     const savedUser = await this.repository.save(newUser);
 
     // 6. Enviar el correo electrónico (después de persistir para no perder el código)
-    // El caso de uso no sabe si es Gmail, SendGrid o Log, solo ordena enviarlo
     await this.mailService.sendVerificationCode(
       savedUser.email,
       verificationCode,
     );
 
-    // 7. Retornar datos (sin el hash ni el código de verificación por seguridad)
+    // 7. Crear perfil asociado si hay listener configurado
+    if (this.onUserRegistered) {
+      await this.onUserRegistered.execute({
+        userId: savedUser.id,
+        name: savedUser.name,
+        username: data.username,
+        joinedAt: new Date().toISOString(),
+      });
+    }
+
+    // 8. Retornar datos (sin el hash ni el código de verificación por seguridad)
     return {
       id: savedUser.id,
       email: savedUser.email,

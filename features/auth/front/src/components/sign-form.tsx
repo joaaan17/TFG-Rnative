@@ -22,10 +22,12 @@ import { SocialConnections } from './social-connections';
 export type SignInFormProps = {
   isRegister?: boolean;
   name?: string;
+  username?: string;
   email?: string;
   password?: string;
   confirmPassword?: string;
   onNameChange?: (value: string) => void;
+  onUsernameChange?: (value: string) => void;
   onEmailChange?: (value: string) => void;
   onPasswordChange?: (value: string) => void;
   onConfirmPasswordChange?: (value: string) => void;
@@ -45,10 +47,12 @@ export type SignInFormProps = {
 export function SignInForm({
   isRegister,
   name,
+  username,
   email,
   password,
   confirmPassword,
   onNameChange,
+  onUsernameChange,
   onEmailChange,
   onPasswordChange,
   onConfirmPasswordChange,
@@ -61,6 +65,8 @@ export function SignInForm({
   onContinue,
 }: SignInFormProps) {
   const nameInputRef = React.useRef<TextInput>(null);
+  const usernameInputRef = React.useRef<TextInput>(null);
+  const emailInputRef = React.useRef<TextInput>(null);
   const passwordInputRef = React.useRef<TextInput>(null);
   const confirmPasswordInputRef = React.useRef<TextInput>(null);
 
@@ -69,8 +75,11 @@ export function SignInForm({
   }
 
   function onNameSubmitEditing() {
-    // En modo register: tras nombre, pasamos a email.
-    // El email no tiene ref por compatibilidad web/native; el submitBehavior ya ayuda.
+    if (isRegister) usernameInputRef.current?.focus();
+  }
+
+  function onUsernameSubmitEditing() {
+    emailInputRef.current?.focus();
   }
 
   async function handleSubmit() {
@@ -97,24 +106,42 @@ export function SignInForm({
         <CardContent className="gap-6">
           <View className="gap-6">
             {isRegister ? (
-              <View className="gap-1.5">
-                <Label htmlFor="name">Nombre</Label>
-                <Input
-                  ref={nameInputRef}
-                  id="name"
-                  placeholder="Tu nombre"
-                  autoCapitalize="words"
-                  value={name}
-                  onChangeText={onNameChange}
-                  onSubmitEditing={onNameSubmitEditing}
-                  returnKeyType="next"
-                  submitBehavior="submit"
-                />
-              </View>
+              <>
+                <View className="gap-1.5">
+                  <Label htmlFor="name">Nombre</Label>
+                  <Input
+                    ref={nameInputRef}
+                    id="name"
+                    placeholder="Tu nombre"
+                    autoCapitalize="words"
+                    value={name}
+                    onChangeText={onNameChange}
+                    onSubmitEditing={onNameSubmitEditing}
+                    returnKeyType="next"
+                    submitBehavior="submit"
+                  />
+                </View>
+                <View className="gap-1.5">
+                  <Label htmlFor="username">Usuario (@)</Label>
+                  <Input
+                    ref={usernameInputRef}
+                    id="username"
+                    placeholder="nombre_usuario"
+                    autoCapitalize="none"
+                    autoComplete="username"
+                    value={username}
+                    onChangeText={onUsernameChange}
+                    onSubmitEditing={onUsernameSubmitEditing}
+                    returnKeyType="next"
+                    submitBehavior="submit"
+                  />
+                </View>
+              </>
             ) : null}
             <View className="gap-1.5">
               <Label htmlFor="email">Email</Label>
               <Input
+                ref={emailInputRef}
                 id="email"
                 placeholder="m@example.com"
                 keyboardType="email-address"

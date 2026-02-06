@@ -7,6 +7,15 @@ export class InMemoryProfileRepository implements ProfileRepository {
   async findById(id: string): Promise<Profile | null> {
     return InMemoryProfileRepository.profilesById.get(id) ?? null;
   }
+
+  async save(profile: Profile): Promise<Profile> {
+    InMemoryProfileRepository.profilesById.set(profile.id, profile);
+    return profile;
+  }
+
+  async deleteById(id: string): Promise<void> {
+    InMemoryProfileRepository.profilesById.delete(id);
+  }
 }
 
 export default InMemoryProfileRepository;

@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { authClient } from '../api/authClient';
+import { authService } from '../services/authService';
 import { useAuthSession } from './AuthContext';
 
 const VERIFICATION_TIMEOUT = 10 * 60; // 10 minutos en segundos
@@ -20,46 +20,26 @@ export function useVerificationViewModel(
   const [timeRemaining, setTimeRemaining] =
     React.useState(VERIFICATION_TIMEOUT);
 
-  // Temporizador
   React.useEffect(() => {
     if (timeRemaining <= 0) return;
-
     const interval = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimeRemaining((prev) => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
-
     return () => clearInterval(interval);
   }, [timeRemaining]);
 
   const handleVerify = React.useCallback(async () => {
-    if (code.length !== 6) {
-      setError('El código debe tener 6 dígitos');
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
-
     try {
-      const result = await authClient.verifyCode(email, code);
-      
-      // Si es modo registro, hacer login automáticamente
+      const result = await authService.verifyCode(email, code);
       if (mode === 'register') {
         await signIn(result.token, result.user);
       }
-      // Si es modo reset-password, solo verificar el código (no hacer login)
-      // El componente padre manejará el siguiente paso
-      
-      return result; // Devolver el resultado para que el componente padre pueda usarlo
+      return result;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Código inválido');
-      throw err; // Re-lanzar para que el componente padre pueda manejar el error
+      setError(authService.extractErrorMessage(err, 'Código inválido'));
+      throw err;
     } finally {
       setIsLoading(false);
     }
@@ -70,16 +50,14 @@ export function useVerificationViewModel(
       setError('Espera antes de reenviar el código');
       return;
     }
-
     setIsResending(true);
     setError(null);
-
     try {
-      await authClient.resendCode(email);
-      setTimeRemaining(VERIFICATION_TIMEOUT); // Reiniciar temporizador
-      setCode(''); // Limpiar código anterior
+      await authService.resendCode(email);
+      setTimeRemaining(VERIFICATION_TIMEOUT);
+      setCode('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al reenviar');
+      setError(authService.extractErrorMessage(err, 'Error al reenviar'));
     } finally {
       setIsResending(false);
     }

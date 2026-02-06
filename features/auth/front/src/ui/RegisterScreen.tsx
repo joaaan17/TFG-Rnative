@@ -15,10 +15,12 @@ export function RegisterScreen() {
   const { session, isRestoring } = useAuthSession();
   const {
     name,
+    username,
     email,
     password,
     confirmPassword,
     setName,
+    setUsername,
     setEmail,
     setPassword,
     setConfirmPassword,
@@ -36,9 +38,10 @@ export function RegisterScreen() {
   // Modificar handleRegister para mostrar el modal en lugar de auto-login
   const handleRegisterWithVerification = React.useCallback(async () => {
     const cleanName = name.trim();
+    const cleanUsername = username.trim();
     const cleanEmail = email.trim();
 
-    if (!cleanName || !cleanEmail || !password || !confirmPassword) {
+    if (!cleanName || !cleanUsername || !cleanEmail || !password || !confirmPassword) {
       return;
     }
 
@@ -52,7 +55,7 @@ export function RegisterScreen() {
     // Mostrar modal de verificación
     setRegisteredEmail(cleanEmail);
     setShowVerificationModal(true);
-  }, [name, email, password, confirmPassword, handleRegister]);
+  }, [name, username, email, password, confirmPassword, handleRegister]);
 
   React.useEffect(() => {
     if (isRestoring) return;
@@ -73,10 +76,12 @@ export function RegisterScreen() {
       <SignInForm
         isRegister
         name={name}
+        username={username}
         email={email}
         password={password}
         confirmPassword={confirmPassword}
         onNameChange={setName}
+        onUsernameChange={setUsername}
         onEmailChange={setEmail}
         onPasswordChange={setPassword}
         onConfirmPasswordChange={setConfirmPassword}

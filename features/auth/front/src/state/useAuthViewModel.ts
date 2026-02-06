@@ -1,12 +1,13 @@
-﻿import * as React from 'react';
+import * as React from 'react';
 
-import { authClient } from '../api/authClient';
+import { authService } from '../services/authService';
 import { useAuthSession } from './AuthContext';
 
 export function useAuthViewModel() {
   const { signIn } = useAuthSession();
 
   const [name, setName] = React.useState('');
+  const [username, setUsername] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [confirmPassword, setConfirmPassword] = React.useState('');
@@ -14,97 +15,45 @@ export function useAuthViewModel() {
   const [error, setError] = React.useState<string | null>(null);
 
   const handleLogin = React.useCallback(async () => {
-    const cleanEmail = email.trim();
-
-    if (!cleanEmail || !password) {
-      setError('Email y contraseña son obligatorios');
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
-
     try {
-      const result = await authClient.login({
-        email: cleanEmail,
-        password,
-      });
+      const result = await authService.login(email, password);
       await signIn(result.token, result.user);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      setError(authService.extractErrorMessage(err, 'Error desconocido'));
     } finally {
       setIsLoading(false);
     }
   }, [email, password, signIn]);
 
   const handleRegister = React.useCallback(async () => {
-    const cleanName = name.trim();
-    const cleanEmail = email.trim();
-
-    if (!cleanName || !cleanEmail || !password || !confirmPassword) {
-      setError('Nombre, email y contraseña son obligatorios');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden');
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
-
     try {
-      await authClient.register({
-        name: cleanName,
-        email: cleanEmail,
+      await authService.register(
+        name,
+        username,
+        email,
         password,
-      });
-      // No hacemos auto-login aquí, el RegisterScreen mostrará el modal de verificación
+        confirmPassword,
+      );
+      // RegisterScreen mostrará el modal de verificación
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      setError(authService.extractErrorMessage(err, 'Error desconocido'));
     } finally {
       setIsLoading(false);
     }
-  }, [confirmPassword, email, name, password]);
-
-  const [forgotPasswordEmail, setForgotPasswordEmail] = React.useState('');
-  const [isSendingResetCode, setIsSendingResetCode] = React.useState(false);
-  const [forgotPasswordError, setForgotPasswordError] = React.useState<
-    string | null
-  >(null);
-
-  const handleSendResetCode = React.useCallback(async () => {
-    const cleanEmail = forgotPasswordEmail.trim();
-
-    if (!cleanEmail) {
-      setForgotPasswordError('El email es obligatorio');
-      return;
-    }
-
-    setIsSendingResetCode(true);
-    setForgotPasswordError(null);
-
-    try {
-      // Usar el endpoint específico para recuperación de contraseña
-      await authClient.sendPasswordResetCode(cleanEmail);
-      setForgotPasswordError(null);
-    } catch (err) {
-      setForgotPasswordError(
-        err instanceof Error ? err.message : 'Error al enviar código',
-      );
-      throw err; // Re-lanzar para que LoginScreen pueda manejar el flujo
-    } finally {
-      setIsSendingResetCode(false);
-    }
-  }, [forgotPasswordEmail]);
+  }, [confirmPassword, email, name, password, username]);
 
   return {
     name,
+    username,
     email,
     password,
     confirmPassword,
     setName,
+    setUsername,
     setEmail,
     setPassword,
     setConfirmPassword,
@@ -112,12 +61,6 @@ export function useAuthViewModel() {
     error,
     handleLogin,
     handleRegister,
-    // Forgot password
-    forgotPasswordEmail,
-    setForgotPasswordEmail,
-    isSendingResetCode,
-    forgotPasswordError,
-    handleSendResetCode,
   };
 }
 

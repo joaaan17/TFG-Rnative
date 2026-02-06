@@ -1,4 +1,9 @@
+import {
+  createProfileUseCase,
+  deleteProfileUseCase,
+} from '../../../../profile/back/src/config/profile.wiring';
 import { LoginUseCase } from '../application/usecases/login';
+import { DeleteUserUseCase } from '../application/usecases/delete-user';
 import { BcryptHasher } from '../infrastructure/crypto/bcryptHasher';
 import { JwtTokenService } from '../infrastructure/tokens/jwtTokerService';
 import { MongoAuthRepository } from '../infrastructure/persistence/mongo/mongoRepository';
@@ -14,7 +19,7 @@ import { mailEnv } from './mail.env';
 
 const authRepository = new MongoAuthRepository();
 const passwordService = new BcryptHasher();
-const tokenService = new JwtTokenService();
+export const tokenService = new JwtTokenService();
 
 // Validar configuración de email antes de crear el servicio
 if (mailEnv.mode === 'smtp') {
@@ -58,11 +63,12 @@ export const loginUseCase = new LoginUseCase(
   tokenService,
 );
 
-// Caso de uso de registro
+// Caso de uso de registro (crea perfil automáticamente)
 export const registerUseCase = new RegisterUseCase(
   authRepository,
   passwordService,
   mailService,
+  createProfileUseCase,
 );
 
 // Caso de uso de verificación
@@ -89,3 +95,9 @@ export const sendPasswordResetCodeUseCase = new SendPasswordResetCodeUseCase(
 // Caso de uso para verificar código de recuperación de contraseña
 export const verifyPasswordResetCodeUseCase =
   new VerifyPasswordResetCodeUseCase(authRepository);
+
+// Caso de uso para eliminar usuario (borra perfil en cascada)
+export const deleteUserUseCase = new DeleteUserUseCase(
+  authRepository,
+  deleteProfileUseCase,
+);

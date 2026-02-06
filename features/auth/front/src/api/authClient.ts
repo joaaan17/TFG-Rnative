@@ -183,6 +183,29 @@ export async function verifyPasswordResetCode(
   return json as { message: string };
 }
 
+export async function deleteUser(
+  userId: string,
+  token: string,
+): Promise<void> {
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}/users/${userId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await parseJsonSafe(response);
+
+  if (!response.ok) {
+    const message =
+      typeof data?.message === 'string'
+        ? data.message
+        : 'Error al eliminar cuenta';
+    throw new Error(message);
+  }
+}
+
 export const authClient = {
   login,
   register,
@@ -191,4 +214,5 @@ export const authClient = {
   resetPassword,
   sendPasswordResetCode,
   verifyPasswordResetCode,
+  deleteUser,
 };

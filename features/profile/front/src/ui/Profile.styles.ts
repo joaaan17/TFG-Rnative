@@ -50,6 +50,10 @@ export const profileStyles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 10,
   },
+  errorText: {
+    marginTop: 4,
+    fontSize: 12,
+  },
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -70,11 +74,13 @@ export const profileStyles = StyleSheet.create({
     marginTop: 0,
   },
   addFriendsWrapper: {
+    flexDirection: 'row',
+    gap: 12,
     paddingHorizontal: 16,
     paddingTop: 18,
   },
   addFriendsButton: {
-    width: '100%',
+    flex: 1,
   },
   summaryWrapper: {
     paddingHorizontal: 16,
@@ -113,6 +119,11 @@ export const profileStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingTop: 14,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

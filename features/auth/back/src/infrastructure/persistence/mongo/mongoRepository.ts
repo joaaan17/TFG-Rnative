@@ -8,12 +8,33 @@ import { UserModel } from './user.model';
  * Regla importante: mapear `_id` (ObjectId) a `id` (string) antes de devolver al dominio.
  */
 export class MongoAuthRepository implements AuthRepository {
+  async findById(id: string): Promise<User | null> {
+    const doc = await UserModel.findById(id).exec();
+    if (!doc) return null;
+    return this.mapDocToUser(doc);
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     const doc = await UserModel.findOne({ email: email.toLowerCase() }).exec();
     if (!doc) return null;
 
+    return this.mapDocToUser(doc);
+  }
+
+  async deleteById(id: string): Promise<void> {
+    await UserModel.findByIdAndDelete(id).exec();
+  }
+
+  private mapDocToUser(doc: {
+    _id: unknown;
+    email: string;
+    passwordHash: string;
+    name: string;
+    isVerified: boolean;
+    verificationCode?: string | null;
+  }): User {
     return {
-      id: doc._id.toString(),
+      id: String(doc._id),
       email: doc.email,
       passwordHash: doc.passwordHash,
       name: doc.name,
@@ -32,14 +53,7 @@ export class MongoAuthRepository implements AuthRepository {
       verificationCode: user.verificationCode ?? null,
     });
 
-    return {
-      id: created._id.toString(),
-      email: created.email,
-      passwordHash: created.passwordHash,
-      name: created.name,
-      isVerified: created.isVerified,
-      verificationCode: created.verificationCode ?? null,
-    };
+    return this.mapDocToUser(created);
   }
 
   async verifyCode(email: string, code: string): Promise<User | null> {
@@ -55,14 +69,7 @@ export class MongoAuthRepository implements AuthRepository {
     doc.verificationCode = null;
     await doc.save();
 
-    return {
-      id: doc._id.toString(),
-      email: doc.email,
-      passwordHash: doc.passwordHash,
-      name: doc.name,
-      isVerified: doc.isVerified,
-      verificationCode: null,
-    };
+    return this.mapDocToUser(doc);
   }
 
   async verifyCodeOnly(email: string, code: string): Promise<boolean> {
@@ -92,18 +99,8 @@ export class MongoAuthRepository implements AuthRepository {
       { new: true, runValidators: true },
     ).exec();
 
-    if (!updated) {
-      return null;
-    }
-
-    return {
-      id: updated._id.toString(),
-      email: updated.email,
-      passwordHash: updated.passwordHash,
-      name: updated.name,
-      isVerified: updated.isVerified,
-      verificationCode: updated.verificationCode ?? null,
-    };
+    if (!updated) return null;
+    return this.mapDocToUser(updated);
   }
 }
 

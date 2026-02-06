@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 
 import AppShellComponent from '@/shared/components/layout/AppShell';
 import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
@@ -10,16 +11,91 @@ import { Text } from '@/shared/components/ui/text';
 import { usePalette } from '@/shared/hooks/use-palette';
 import AgregarIcon from '@/shared/icons/agregar.svg';
 import ExpIcon from '@/shared/icons/exp.svg';
+import FriendsIcon from '@/shared/icons/friends.svg';
 import LigaIcon from '@/shared/icons/liga.svg';
 import RachaIcon from '@/shared/icons/racha.svg';
 import SettingsIcon from '@/shared/icons/settings.svg';
 
 import { profileStyles } from './Profile.styles';
+import { AddFriendsModal } from '../components/add-friends-modal';
+import { PendingRequestsModal } from '../components/pending-requests-modal';
 import { ProfileAvatar } from '../components/profileAvatar';
+import { SettingsModal } from '../components/settings-modal';
+import { useProfileViewModel } from '../state/useProfileViewModel';
+
+function formatJoinedText(username?: string, joinedAt?: string): string {
+  const userPart = username ? `@${username} ` : '';
+  const year = joinedAt
+    ? new Date(joinedAt).getFullYear()
+    : new Date().getFullYear();
+  return `${userPart}SE UNIÓ EN ${year}.`;
+}
+
+function formatPatrimonio(value: number): string {
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1)}M`;
+  }
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(1)}K`;
+  }
+  return value.toLocaleString('es-ES');
+}
 
 export function ProfileScreen() {
   const palette = usePalette();
+  const router = useRouter();
+  const {
+    profile,
+    user,
+    isLoading,
+    error,
+    showSettingsModal,
+    setShowSettingsModal,
+    closeSettingsModal,
+    clearDeleteError,
+    showAddFriendsModal,
+    setShowAddFriendsModal,
+    closeAddFriendsModal,
+    searchFriendsValue,
+    setSearchFriendsValue,
+    searchResults,
+    searchLoading,
+    searchError,
+    requestedIds,
+    handleRequestFriend,
+    showRequestsModal,
+    setShowRequestsModal,
+    closeRequestsModal,
+    pendingRequests,
+    pendingLoading,
+    pendingError,
+    processingIds,
+    handleAcceptRequest,
+    handleRejectRequest,
+    handleSignOut,
+    handleDeleteAccount,
+    isDeleting,
+    deleteError,
+  } = useProfileViewModel();
   const [typewriterKey, setTypewriterKey] = React.useState(0);
+
+  const displayName = profile?.name ?? user?.name ?? '';
+  const joinedText = formatJoinedText(profile?.username, profile?.joinedAt);
+
+  const handleSettingsSignOut = React.useCallback(async () => {
+    await handleSignOut();
+    closeSettingsModal();
+    router.replace('/');
+  }, [handleSignOut, closeSettingsModal, router]);
+
+  const handleSettingsConfirmDelete = React.useCallback(async () => {
+    const ok = await handleDeleteAccount();
+    if (ok) {
+      closeSettingsModal();
+      router.replace('/');
+    }
+    return ok;
+  }, [handleDeleteAccount, closeSettingsModal, router]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -27,6 +103,16 @@ export function ProfileScreen() {
       return undefined;
     }, []),
   );
+
+  if (isLoading) {
+    return (
+      <AppShellComponent>
+        <View style={[profileStyles.container, profileStyles.loadingContainer]}>
+          <ActivityIndicator size="large" color={palette.primary} />
+        </View>
+      </AppShellComponent>
+    );
+  }
 
   return (
     <AppShellComponent>
@@ -39,7 +125,7 @@ export function ProfileScreen() {
           <CardHeader style={profileStyles.topCardHeader}>
             <TypewriterTextComponent
               key={typewriterKey}
-              text="Joan"
+              text={displayName || 'Usuario'}
               speed={40}
               variant="h4"
               className="border-0 pb-0"
@@ -58,22 +144,25 @@ export function ProfileScreen() {
             accessibilityLabel="Ajustes"
             hitSlop={10}
             style={profileStyles.settingsButton}
-            onPress={() => {
-              // TODO: navegación a ajustes
-            }}
+            onPress={() => setShowSettingsModal(true)}
           >
             <SettingsIcon width={24} height={24} fill={palette.text} />
           </Pressable>
         </Card>
 
         <View style={profileStyles.joinedTextWrapper}>
-          <Text variant="muted">@JOAAAN_17 SE UNIÓ EN 2025.</Text>
+          <Text variant="muted">{joinedText}</Text>
+          {error ? (
+            <Text variant="muted" style={profileStyles.errorText}>
+              {error}
+            </Text>
+          ) : null}
         </View>
 
         <View style={profileStyles.statsRow}>
           <View style={profileStyles.statItem}>
             <Text variant="h3" style={profileStyles.statValue}>
-              0
+              {profile?.bf ?? 0}
             </Text>
             <Text variant="muted" style={profileStyles.statLabel}>
               B/F
@@ -82,7 +171,7 @@ export function ProfileScreen() {
 
           <View style={profileStyles.statItem}>
             <Text variant="h3" style={profileStyles.statValue}>
-              0
+              {profile?.following ?? 0}
             </Text>
             <Text variant="muted" style={profileStyles.statLabel}>
               Siguiendo
@@ -91,7 +180,7 @@ export function ProfileScreen() {
 
           <View style={profileStyles.statItem}>
             <Text variant="h3" style={profileStyles.statValue}>
-              0
+              {profile?.followers ?? 0}
             </Text>
             <Text variant="muted" style={profileStyles.statLabel}>
               Seguidores
@@ -100,9 +189,20 @@ export function ProfileScreen() {
         </View>
 
         <View style={profileStyles.addFriendsWrapper}>
-          <Button size="sm" style={profileStyles.addFriendsButton}>
+          <Button
+            size="sm"
+            style={profileStyles.addFriendsButton}
+            onPress={() => setShowAddFriendsModal(true)}
+          >
             <AgregarIcon width={22} height={22} />
             <Text>Agregar Amigos</Text>
+          </Button>
+          <Button
+            size="sm"
+            style={profileStyles.addFriendsButton}
+            onPress={() => setShowRequestsModal(true)}
+          >
+            <Text>Ver Solicitudes</Text>
           </Button>
         </View>
 
@@ -121,13 +221,13 @@ export function ProfileScreen() {
                     height={18}
                   />
                   <Text variant="h4" style={profileStyles.summaryValue}>
-                    365 días
+                    {profile?.bf ?? 0} días
                   </Text>
                 </View>
               </View>
               <View style={profileStyles.summaryItem}>
                 <Text variant="h4" style={profileStyles.summaryValue}>
-                  25
+                  {profile?.nivel ?? 1}
                 </Text>
               </View>
             </View>
@@ -141,7 +241,7 @@ export function ProfileScreen() {
                     height={20}
                   />
                   <Text variant="h4" style={profileStyles.summaryValue}>
-                    Oro
+                    {profile?.division ?? 'Bronce'}
                   </Text>
                 </View>
               </View>
@@ -153,7 +253,7 @@ export function ProfileScreen() {
                     height={18}
                   />
                   <Text variant="h4" style={profileStyles.summaryValue}>
-                    12321321 EXP
+                    {formatPatrimonio(profile?.patrimonio ?? 0)}
                   </Text>
                 </View>
               </View>
@@ -187,6 +287,41 @@ export function ProfileScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <PendingRequestsModal
+        open={showRequestsModal}
+        onClose={closeRequestsModal}
+        items={pendingRequests}
+        loading={pendingLoading}
+        error={pendingError}
+        onAccept={handleAcceptRequest}
+        onReject={handleRejectRequest}
+        processingIds={processingIds}
+      />
+
+      <AddFriendsModal
+        open={showAddFriendsModal}
+        onClose={closeAddFriendsModal}
+        searchValue={searchFriendsValue}
+        onSearchChange={setSearchFriendsValue}
+        searchResults={searchResults}
+        searchLoading={searchLoading}
+        searchError={searchError}
+        requestedIds={requestedIds}
+        onRequestFriend={handleRequestFriend}
+      />
+
+      <SettingsModal
+        open={showSettingsModal}
+        onClose={closeSettingsModal}
+        user={user}
+        profile={profile}
+        onRequestSignOut={handleSettingsSignOut}
+        onConfirmDelete={handleSettingsConfirmDelete}
+        onCancelDelete={clearDeleteError}
+        isDeleting={isDeleting}
+        deleteError={deleteError}
+      />
     </AppShellComponent>
   );
 }

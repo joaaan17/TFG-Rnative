@@ -10,6 +10,8 @@ export type ProfileAvatarProps = {
   innerSize?: number;
   iconSize?: number;
   showInner?: boolean;
+  /** Solo muestra el icono, sin esfera ni anillo */
+  iconOnly?: boolean;
 };
 
 export function ProfileAvatar({
@@ -18,8 +20,28 @@ export function ProfileAvatar({
   innerSize = 72,
   iconSize = 36,
   showInner = true,
+  iconOnly = false,
 }: ProfileAvatarProps) {
   const palette = usePalette();
+
+  if (iconOnly) {
+    return (
+      <View
+        style={{
+          width: size,
+          height: size,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <ProfileIcon
+          width={iconSize}
+          height={iconSize}
+          fill={palette.text}
+        />
+      </View>
+    );
+  }
 
   return (
     <View

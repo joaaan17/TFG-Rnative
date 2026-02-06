@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { authClient } from '../api/authClient';
+
+import { authService } from '../services/authService';
 
 export function useResetPasswordViewModel(email: string, code: string) {
   const [password, setPassword] = React.useState('');
@@ -8,35 +9,17 @@ export function useResetPasswordViewModel(email: string, code: string) {
   const [error, setError] = React.useState<string | null>(null);
 
   const handleResetPassword = React.useCallback(async () => {
-    const cleanPassword = password.trim();
-    const cleanConfirmPassword = confirmPassword.trim();
-
-    if (!cleanPassword || !cleanConfirmPassword) {
-      setError('Las contraseñas son obligatorias');
-      return;
-    }
-
-    if (cleanPassword !== cleanConfirmPassword) {
-      setError('Las contraseñas no coinciden');
-      return;
-    }
-
-    if (cleanPassword.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
-
     try {
-      await authClient.resetPassword(email, code, cleanPassword);
-      // Éxito - el componente padre manejará la redirección
+      await authService.resetPassword(email, code, password, confirmPassword);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Error al cambiar la contraseña',
+      const msg = authService.extractErrorMessage(
+        err,
+        'Error al cambiar la contraseña',
       );
-      throw err; // Re-lanzar para que el componente padre pueda manejar el flujo
+      setError(msg);
+      throw err;
     } finally {
       setIsLoading(false);
     }

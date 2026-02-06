@@ -1,12 +1,264 @@
 import * as React from 'react';
+import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
+import { authService } from '@/features/auth/front/src/services/authService';
+import { relationshipsService } from '@/features/relationships/front/src/services/relationshipsService';
+import { profileService } from '../services/profileService';
+import type { ProfileUser, ProfileSearchItem } from '../types/profile.types';
+import type { PendingRequestItem } from '@/features/relationships/front/src/services/relationshipsService';
+
+const { getProfile, searchProfiles, extractErrorMessage } = profileService;
 
 export function useProfileViewModel() {
-  const [isLoading, setIsLoading] = React.useState(false);
+  const { session, signOut } = useAuthSession();
+  const [profile, setProfile] = React.useState<ProfileUser | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [showSettingsModal, setShowSettingsModal] = React.useState(false);
+  const [showAddFriendsModal, setShowAddFriendsModal] = React.useState(false);
+  const [showRequestsModal, setShowRequestsModal] = React.useState(false);
+  const [pendingRequests, setPendingRequests] = React.useState<
+    PendingRequestItem[]
+  >([]);
+  const [pendingLoading, setPendingLoading] = React.useState(false);
+  const [pendingError, setPendingError] = React.useState<string | null>(null);
+  const [processingIds, setProcessingIds] = React.useState<Set<string>>(
+    () => new Set(),
+  );
+  const [searchFriendsValue, setSearchFriendsValue] = React.useState('');
+  const [searchResults, setSearchResults] = React.useState<ProfileSearchItem[]>(
+    [],
+  );
+  const [searchLoading, setSearchLoading] = React.useState(false);
+  const [searchError, setSearchError] = React.useState<string | null>(null);
+  const [requestedIds, setRequestedIds] = React.useState<Set<string>>(
+    () => new Set(),
+  );
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [deleteError, setDeleteError] = React.useState<string | null>(null);
+
+  const handleSignOut = React.useCallback(async () => {
+    await signOut();
+  }, [signOut]);
+
+  const handleDeleteAccount = React.useCallback(async (): Promise<boolean> => {
+    const userId = session?.user?.id;
+    const token = session?.token;
+    if (!userId || !token) {
+      setDeleteError('Sesión expirada, inicia sesión de nuevo');
+      return false;
+    }
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await authService.deleteAccount(userId, token);
+      await signOut();
+      return true;
+    } catch (err) {
+      setDeleteError(
+        authService.extractErrorMessage(err, 'Error al eliminar cuenta'),
+      );
+      return false;
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [session?.user?.id, session?.token, signOut]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const userId = session?.user?.id;
+    if (!userId) {
+      setIsLoading(false);
+      return;
+    }
+    setError(null);
+    setIsLoading(true);
+    getProfile(userId)
+      .then((data) => {
+        if (!cancelled) setProfile(data);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(extractErrorMessage(err, 'Error al cargar perfil'));
+          setProfile(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
+
+  const closeSettingsModal = React.useCallback(() => {
+    setShowSettingsModal(false);
+    setDeleteError(null);
+  }, []);
+
+  const clearDeleteError = React.useCallback(() => {
+    setDeleteError(null);
+  }, []);
+
+  const closeAddFriendsModal = React.useCallback(() => {
+    setShowAddFriendsModal(false);
+    setSearchFriendsValue('');
+    setSearchResults([]);
+    setSearchError(null);
+    setRequestedIds(new Set());
+  }, []);
+
+  const closeRequestsModal = React.useCallback(() => {
+    setShowRequestsModal(false);
+    setPendingRequests([]);
+    setPendingError(null);
+  }, []);
+
+  React.useEffect(() => {
+    const token = session?.token;
+    if (!token || !showRequestsModal) return;
+    setPendingLoading(true);
+    setPendingError(null);
+    relationshipsService
+      .getPendingRequests(token)
+      .then((res) => setPendingRequests(res.items))
+      .catch((err) => {
+        setPendingRequests([]);
+        setPendingError(
+          err instanceof Error ? err.message : 'Error al cargar solicitudes',
+        );
+      })
+      .finally(() => setPendingLoading(false));
+  }, [session?.token, showRequestsModal]);
+
+  const handleAcceptRequest = React.useCallback(
+    (fromUserId: string) => {
+      const token = session?.token;
+      if (!token) return;
+      setProcessingIds((prev) => new Set(prev).add(fromUserId));
+      relationshipsService
+        .acceptFriendship(fromUserId, token)
+        .then(() => {
+          setPendingRequests((prev) =>
+            prev.filter((p) => p.userId !== fromUserId),
+          );
+        })
+        .catch(() => {
+          setPendingError('Error al aceptar solicitud');
+        })
+        .finally(() => {
+          setProcessingIds((prev) => {
+            const next = new Set(prev);
+            next.delete(fromUserId);
+            return next;
+          });
+        });
+    },
+    [session?.token],
+  );
+
+  const handleRejectRequest = React.useCallback(
+    (fromUserId: string) => {
+      const token = session?.token;
+      if (!token) return;
+      setProcessingIds((prev) => new Set(prev).add(fromUserId));
+      relationshipsService
+        .rejectFriendship(fromUserId, token)
+        .then(() => {
+          setPendingRequests((prev) =>
+            prev.filter((p) => p.userId !== fromUserId),
+          );
+        })
+        .catch(() => {
+          setPendingError('Error al rechazar solicitud');
+        })
+        .finally(() => {
+          setProcessingIds((prev) => {
+            const next = new Set(prev);
+            next.delete(fromUserId);
+            return next;
+          });
+        });
+    },
+    [session?.token],
+  );
+
+  const handleRequestFriend = React.useCallback(
+    (targetUserId: string) => {
+      const token = session?.token;
+      if (!token) return;
+      if (requestedIds.has(targetUserId)) return;
+      relationshipsService
+        .requestFriendship(targetUserId, token)
+        .then(() => {
+          setRequestedIds((prev) => new Set(prev).add(targetUserId));
+        })
+        .catch((err) => {
+          const msg =
+            err instanceof Error && err.message.includes('already')
+              ? null
+              : 'Error al enviar solicitud';
+          if (msg) setSearchError(msg);
+          else setRequestedIds((prev) => new Set(prev).add(targetUserId));
+        });
+    },
+    [session?.token, requestedIds],
+  );
+
+  React.useEffect(() => {
+    const token = session?.token;
+    if (!token || !showAddFriendsModal) return;
+    const q = searchFriendsValue.trim();
+    if (!q) {
+      setSearchResults([]);
+      setSearchError(null);
+      return;
+    }
+    const t = setTimeout(() => {
+      setSearchLoading(true);
+      setSearchError(null);
+      searchProfiles(q, token, 1, 20)
+        .then((res) => setSearchResults(res.items))
+        .catch((err) => {
+          setSearchResults([]);
+          setSearchError(extractErrorMessage(err, 'Error al buscar usuarios'));
+        })
+        .finally(() => setSearchLoading(false));
+    }, 350);
+    return () => clearTimeout(t);
+  }, [searchFriendsValue, session?.token, showAddFriendsModal]);
 
   return {
+    profile,
     isLoading,
     error,
+    user: session?.user ?? null,
+    showSettingsModal,
+    setShowSettingsModal,
+    closeSettingsModal,
+    clearDeleteError,
+    showAddFriendsModal,
+    setShowAddFriendsModal,
+    closeAddFriendsModal,
+    showRequestsModal,
+    setShowRequestsModal,
+    closeRequestsModal,
+    pendingRequests,
+    pendingLoading,
+    pendingError,
+    processingIds,
+    handleAcceptRequest,
+    handleRejectRequest,
+    searchFriendsValue,
+    setSearchFriendsValue,
+    searchResults,
+    searchLoading,
+    searchError,
+    requestedIds,
+    handleRequestFriend,
+    handleSignOut,
+    handleDeleteAccount,
+    isDeleting,
+    deleteError,
   };
 }
 
