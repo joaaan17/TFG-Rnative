@@ -35,10 +35,7 @@ export class MongoProfileReader implements ProfileReaderPort {
     const regex = new RegExp(`^${escaped}`, 'i');
     const docs = await ProfileModel.find({
       _id: { $in: userIds.map((id) => id as unknown) },
-      $or: [
-        { usernameLower: regex },
-        { nameLower: regex },
-      ],
+      $or: [{ usernameLower: regex }, { nameLower: regex }],
     })
       .select('_id username name avatarUrl')
       .sort({ usernameLower: 1 })

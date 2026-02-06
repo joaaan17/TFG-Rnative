@@ -17,6 +17,7 @@ import SettingsIcon from '@/shared/icons/settings.svg';
 
 import { profileStyles } from './Profile.styles';
 import { AddFriendsModal } from '../components/add-friends-modal';
+import { FriendProfileModal } from '../components/friend-profile-modal';
 import { FriendsListModal } from '../components/friends-list-modal';
 import { PendingRequestsModal } from '../components/pending-requests-modal';
 import { ProfileAvatar } from '../components/profileAvatar';
@@ -72,6 +73,12 @@ export function ProfileScreen() {
     friendsList,
     friendsLoading,
     friendsError,
+    showFriendProfileModal,
+    friendProfile,
+    friendProfileLoading,
+    friendProfileError,
+    handleSelectFriend,
+    closeFriendProfileModal,
     pendingRequests,
     pendingLoading,
     pendingError,
@@ -310,6 +317,15 @@ export function ProfileScreen() {
         items={friendsList}
         loading={friendsLoading}
         error={friendsError}
+        onSelectFriend={handleSelectFriend}
+      />
+
+      <FriendProfileModal
+        open={showFriendProfileModal}
+        onClose={closeFriendProfileModal}
+        profile={friendProfile}
+        loading={friendProfileLoading}
+        error={friendProfileError}
       />
 
       <PendingRequestsModal

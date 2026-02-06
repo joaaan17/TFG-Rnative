@@ -30,6 +30,15 @@ export function useProfileViewModel() {
   );
   const [friendsLoading, setFriendsLoading] = React.useState(false);
   const [friendsError, setFriendsError] = React.useState<string | null>(null);
+  const [showFriendProfileModal, setShowFriendProfileModal] =
+    React.useState(false);
+  const [friendProfile, setFriendProfile] = React.useState<ProfileUser | null>(
+    null,
+  );
+  const [friendProfileLoading, setFriendProfileLoading] = React.useState(false);
+  const [friendProfileError, setFriendProfileError] = React.useState<
+    string | null
+  >(null);
   const [searchFriendsValue, setSearchFriendsValue] = React.useState('');
   const [searchResults, setSearchResults] = React.useState<ProfileSearchItem[]>(
     [],
@@ -123,6 +132,28 @@ export function useProfileViewModel() {
     setShowFriendsModal(false);
     setFriendsList([]);
     setFriendsError(null);
+  }, []);
+
+  const handleSelectFriend = React.useCallback((userId: string) => {
+    setShowFriendProfileModal(true);
+    setFriendProfile(null);
+    setFriendProfileError(null);
+    setFriendProfileLoading(true);
+    getProfile(userId)
+      .then((data) => setFriendProfile(data))
+      .catch((err) => {
+        setFriendProfileError(
+          extractErrorMessage(err, 'Error al cargar perfil'),
+        );
+        setFriendProfile(null);
+      })
+      .finally(() => setFriendProfileLoading(false));
+  }, []);
+
+  const closeFriendProfileModal = React.useCallback(() => {
+    setShowFriendProfileModal(false);
+    setFriendProfile(null);
+    setFriendProfileError(null);
   }, []);
 
   React.useEffect(() => {
@@ -277,6 +308,12 @@ export function useProfileViewModel() {
     friendsList,
     friendsLoading,
     friendsError,
+    showFriendProfileModal,
+    friendProfile,
+    friendProfileLoading,
+    friendProfileError,
+    handleSelectFriend,
+    closeFriendProfileModal,
     pendingRequests,
     pendingLoading,
     pendingError,

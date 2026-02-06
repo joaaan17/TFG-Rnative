@@ -44,7 +44,18 @@ export type CardModalProps = {
    * Si true, cerrar al tocar el fondo (backdrop).
    */
   closeOnBackdropPress?: boolean;
+  /**
+   * Si true, el contenido con ScrollView puede hacer scroll correctamente (evita recorte).
+   */
+  scrollable?: boolean;
+  /**
+   * Altura del contenido (desde onContentSizeChange del ScrollView).
+   * Cuando scrollable y se proporciona, el modal se ajusta al contenido hasta maxHeight.
+   */
+  contentHeight?: number;
 };
+
+const DRAG_HANDLE_OFFSET = 50; // espacio para el handle y margen superior
 
 export function CardModal({
   open,
@@ -52,6 +63,8 @@ export function CardModal({
   children,
   maxHeightPct = 0.9,
   closeOnBackdropPress = true,
+  scrollable = false,
+  contentHeight,
 }: CardModalProps) {
   const palette = usePalette();
   const insets = useSafeAreaInsets();
@@ -67,6 +80,11 @@ export function CardModal({
   const backdropOpacity = React.useRef(new Animated.Value(0)).current;
 
   const maxHeight = Math.max(0, Math.min(1, maxHeightPct)) * screenHeight;
+  const paddingBottom = Math.max(insets.bottom, 12);
+  const fitContentHeight =
+    scrollable && contentHeight != null && contentHeight > 0
+      ? Math.min(contentHeight + DRAG_HANDLE_OFFSET + paddingBottom, maxHeight)
+      : null;
 
   // Calcular intensidad máxima del blur según si está bloqueado
   const maxBlurIntensity = closeOnBackdropPress ? 20 : 40;
@@ -253,12 +271,23 @@ export function CardModal({
           ]}
           pointerEvents="box-none"
         >
-          <View style={[styles.sheet, { maxHeight }]}>
+          <View
+            style={[
+              styles.sheet,
+              scrollable
+                ? {
+                    height: fitContentHeight ?? maxHeight,
+                    maxHeight,
+                  }
+                : { maxHeight },
+            ]}
+          >
             <Card
               className="rounded-t-xl rounded-b-none"
               style={[
                 styles.card,
                 {
+                  ...(scrollable && { flex: 1 }),
                   maxHeight,
                   backgroundColor: palette.cardBackground,
                   borderColor: palette.text,
@@ -269,10 +298,18 @@ export function CardModal({
                 <View style={styles.dragHandle} />
               </View>
               <View
-                style={{
-                  maxHeight: maxHeight - 120,
-                  paddingBottom: Math.max(insets.bottom, 12),
-                }}
+                style={
+                  scrollable
+                    ? {
+                        flex: 1,
+                        minHeight: 0,
+                        paddingBottom,
+                      }
+                    : {
+                        maxHeight: maxHeight - 120,
+                        paddingBottom,
+                      }
+                }
               >
                 {children}
               </View>

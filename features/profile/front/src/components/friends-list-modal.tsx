@@ -1,5 +1,10 @@
 import React from 'react';
-import { ActivityIndicator, ScrollView, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  View,
+} from 'react-native';
 import { CardModal } from '@/shared/components/card-modal';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Text } from '@/shared/components/ui/text';
@@ -12,11 +17,19 @@ export type FriendsListModalProps = {
   items: PendingRequestItem[];
   loading: boolean;
   error: string | null;
+  onSelectFriend?: (userId: string) => void;
 };
 
-function FriendCard({ item }: { item: PendingRequestItem }) {
+function FriendCard({
+  item,
+  onPress,
+}: {
+  item: PendingRequestItem;
+  onPress?: () => void;
+}) {
   return (
-    <Card style={{ marginBottom: 8, paddingVertical: 4 }}>
+    <Pressable onPress={onPress}>
+      <Card style={{ marginBottom: 8, paddingVertical: 4 }}>
       <CardContent
         style={{
           flexDirection: 'row',
@@ -25,7 +38,7 @@ function FriendCard({ item }: { item: PendingRequestItem }) {
           paddingVertical: 8,
         }}
       >
-        <ProfileAvatar size={44} iconOnly />
+        <ProfileAvatar size={44} iconOnly imageUri={item.avatarUrl} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text variant="default" style={{ fontWeight: '600' }}>
             {item.name}
@@ -35,7 +48,8 @@ function FriendCard({ item }: { item: PendingRequestItem }) {
           ) : null}
         </View>
       </CardContent>
-    </Card>
+      </Card>
+    </Pressable>
   );
 }
 
@@ -45,6 +59,7 @@ export function FriendsListModal({
   items,
   loading,
   error,
+  onSelectFriend,
 }: FriendsListModalProps) {
   return (
     <CardModal open={open} onClose={onClose} maxHeightPct={0.7}>
@@ -77,7 +92,11 @@ export function FriendsListModal({
             keyboardShouldPersistTaps="handled"
           >
             {items.map((item) => (
-              <FriendCard key={item.userId} item={item} />
+              <FriendCard
+                key={item.userId}
+                item={item}
+                onPress={() => onSelectFriend?.(item.userId)}
+              />
             ))}
           </ScrollView>
         )}

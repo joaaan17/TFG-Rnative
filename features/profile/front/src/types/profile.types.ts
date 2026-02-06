@@ -6,6 +6,7 @@ export interface ProfileUser {
   id: string;
   name: string;
   username?: string;
+  avatarUrl?: string;
   joinedAt?: string;
   bf?: number;
   nivel?: number;
