@@ -4,7 +4,8 @@ import cors from 'cors';
 import { authEnv } from '../features/auth/back/src/config/auth.env';
 import authRoutes from '../features/auth/back/src/api/api.routes';
 import profileRoutes from '../features/profile/back/src/api/api.routes';
-import relationshipsRoutes from '../features/relationships/back/src/api/relationships.routes';
+import relationshipsRoutes from '../features/relationships/back/src/api/api.routes';
+import iapreguntasRoutes from '../features/IApreguntas/back/src/api/api.routes';
 
 const app = express();
 app.use(cors());
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/relationships', relationshipsRoutes);
+app.use('/api/iapreguntas', iapreguntasRoutes);
 
 // --- 3. Inicialización (Base de Datos + Servidor) ---
 const startServer = async () => {

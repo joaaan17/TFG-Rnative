@@ -1,3 +1,3 @@
-import IApreguntasScreen from '@/features/IApreguntas/IApreguntas';
+import { IApreguntasScreen } from '@/features/IApreguntas/front/src';
 
 export default IApreguntasScreen;
