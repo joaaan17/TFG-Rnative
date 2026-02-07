@@ -3,8 +3,8 @@ import type { EducationalNews } from '../domain/iaNoticiasEducativas.types';
 import {
   getHeadlines,
   explainNews,
-  generateNewsQuiz,
 } from '../config/iaNoticiasEducativas.wiring';
+import { getQuiz } from '../config/quiz-store';
 
 const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutos
 const MAX_CACHE_SIZE = 50;
@@ -99,15 +99,21 @@ export async function generateNewsQuizController(
     return;
   }
 
-  try {
-    const quiz = await generateNewsQuiz.execute(newsId.trim());
+  const trimmedId = newsId.trim();
+
+  // Solo devolver quizzes pre-generados (scheduler). No llamar a ChatGPT.
+  const quiz = getQuiz(trimmedId);
+  if (quiz) {
     console.log(
-      '[iaNoticias] Controller: quiz OK, preguntas=',
+      '[iaNoticias] Controller: quiz desde store, preguntas=',
       quiz.questions?.length ?? 0,
     );
     res.json(quiz);
-  } catch (err) {
-    console.error('[iaNoticias] Controller: quiz ERROR:', err);
-    res.status(500).json({ error: 'Error al generar el quiz' });
+    return;
   }
+
+  console.log('[iaNoticias] Controller: quiz no disponible para newsId');
+  res.status(404).json({
+    error: 'Quiz no disponible. El quiz se genera automáticamente cada 10 minutos.',
+  });
 }

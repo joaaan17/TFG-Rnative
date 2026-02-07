@@ -95,7 +95,12 @@ export async function getQuiz(
   });
 
   if (!response.ok) {
-    throw new Error('Error al generar el quiz');
+    const data = await response.json().catch(() => ({}));
+    const msg =
+      typeof data?.error === 'string'
+        ? data.error
+        : 'Quiz no disponible. Se genera automáticamente cada 10 minutos.';
+    throw new Error(msg);
   }
 
   return (await response.json()) as NewsQuiz;

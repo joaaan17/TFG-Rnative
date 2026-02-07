@@ -7,6 +7,7 @@ import profileRoutes from '../features/profile/back/src/api/api.routes';
 import relationshipsRoutes from '../features/relationships/back/src/api/api.routes';
 import iapreguntasRoutes from '../features/IApreguntas/back/src/api/api.routes';
 import iaNoticiasRoutes from '../features/iaNoticiasEducativas/back/src/api/api.routes';
+import { startQuizScheduler } from '../features/iaNoticiasEducativas/back/src/config/quiz-scheduler';
 
 const app = express();
 app.use(cors());
@@ -35,6 +36,7 @@ const startServer = async () => {
       console.log(
         `📋 Quiz listo en POST http://localhost:${PORT}/api/ia-noticias/quiz`,
       );
+      startQuizScheduler();
     });
   } catch (error) {
     console.error('❌ Error al iniciar el servidor:', error);

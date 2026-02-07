@@ -46,6 +46,10 @@ export function useInicioViewModel(): UseInicioViewModelResult {
   const [quizAnswers, setQuizAnswers] = React.useState<Record<number, number>>(
     {},
   );
+  const quizStoreRef = React.useRef<Map<string, NewsQuiz>>(new Map());
+  const answersStoreRef = React.useRef<Map<string, Record<number, number>>>(
+    new Map(),
+  );
   const [loading, setLoading] = React.useState(false);
   const [loadingNews, setLoadingNews] = React.useState(false);
   const [loadingQuiz, setLoadingQuiz] = React.useState(false);
@@ -111,29 +115,39 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     setSelectedNews(null);
     setQuiz(null);
     setQuizAnswers({});
+    // No limpiamos quizStoreRef/answersStoreRef: persisten al salir de la noticia
   }, []);
 
   const openQuiz = React.useCallback(async () => {
     if (!token || !selectedNews) return;
     setIsQuizModalOpen(true);
-    if (quiz?.newsId === selectedNews.id) {
+    const newsId = selectedNews.id;
+
+    const cached = quizStoreRef.current.get(newsId);
+    if (cached) {
+      setQuiz(cached);
+      setQuizAnswers(answersStoreRef.current.get(newsId) ?? {});
       setLoadingQuiz(false);
       return;
     }
+
     setQuiz(null);
     setQuizAnswers({});
     setLoadingQuiz(true);
     setError(null);
     try {
-      const quizData = await loadQuiz(selectedNews.id, token);
+      const quizData = await loadQuiz(newsId, token);
+      quizStoreRef.current.set(newsId, quizData);
+      answersStoreRef.current.set(newsId, {});
       setQuiz(quizData);
+      setQuizAnswers({});
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Error al generar el quiz';
+      const msg = e instanceof Error ? e.message : 'Error al cargar el quiz';
       setError(msg);
     } finally {
       setLoadingQuiz(false);
     }
-  }, [token, selectedNews, quiz?.newsId]);
+  }, [token, selectedNews]);
 
   const closeQuizModal = React.useCallback(() => {
     setIsQuizModalOpen(false);
@@ -150,9 +164,13 @@ export function useInicioViewModel(): UseInicioViewModelResult {
 
   const onQuizAnswer = React.useCallback(
     (qIndex: number, optionIndex: number) => {
-      setQuizAnswers((prev) => ({ ...prev, [qIndex]: optionIndex }));
+      if (!selectedNews) return;
+      const newsId = selectedNews.id;
+      const next = { ...(answersStoreRef.current.get(newsId) ?? {}), [qIndex]: optionIndex };
+      answersStoreRef.current.set(newsId, next);
+      setQuizAnswers(next);
     },
-    [],
+    [selectedNews],
   );
 
   return {
