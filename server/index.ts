@@ -6,6 +6,7 @@ import authRoutes from '../features/auth/back/src/api/api.routes';
 import profileRoutes from '../features/profile/back/src/api/api.routes';
 import relationshipsRoutes from '../features/relationships/back/src/api/api.routes';
 import iapreguntasRoutes from '../features/IApreguntas/back/src/api/api.routes';
+import iaNoticiasRoutes from '../features/iaNoticiasEducativas/back/src/api/api.routes';
 
 const app = express();
 app.use(cors());
@@ -14,6 +15,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/relationships', relationshipsRoutes);
 app.use('/api/iapreguntas', iapreguntasRoutes);
+app.use('/api/ia-noticias', iaNoticiasRoutes);
 
 // --- 3. Inicialización (Base de Datos + Servidor) ---
 const startServer = async () => {

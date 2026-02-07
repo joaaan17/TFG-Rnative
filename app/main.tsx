@@ -1,6 +1,6 @@
 /**
  * Ruta Main - delega en la feature Inicio
  */
-import MainScreen from '@/features/Inicio/MainScreen';
+import { InicioScreen } from '@/features/Inicio';
 
-export default MainScreen;
+export default InicioScreen;

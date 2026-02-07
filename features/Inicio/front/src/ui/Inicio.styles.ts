@@ -1,4 +1,3 @@
-// features/Inicio/Main.styles.ts
 import { StyleSheet } from 'react-native';
 import AppColors from '@/design-system/colors';
 

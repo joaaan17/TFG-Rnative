@@ -11,12 +11,12 @@ import {
 import { Text } from '@/shared/components/ui/text';
 import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
 
-import type { NewsItem } from '../news.types';
+import type { NewsPreview } from '../types/inicio.types';
 import { newsCardStyles } from './NewsCard.styles';
 
 export type NewsCardProps = {
-  item: NewsItem;
-  onPress?: (item: NewsItem) => void;
+  item: NewsPreview;
+  onPress?: (item: NewsPreview) => void;
 };
 
 export function NewsCard({ item, onPress }: NewsCardProps) {

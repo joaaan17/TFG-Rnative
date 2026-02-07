@@ -6,7 +6,7 @@ import {
   Pressable,
   View,
 } from 'react-native';
-import { Send } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 
 import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
 import AppShellComponent from '@/shared/components/layout/AppShell';
@@ -116,7 +116,7 @@ export function IApreguntasScreen() {
               {loading ? (
                 <Text style={iaPreguntasStyles.sendButtonText}>...</Text>
               ) : (
-                <Send size={20} color="#FFFFFF" />
+                <ArrowRight size={20} color="#FFFFFF" />
               )}
             </Pressable>
           </View>
