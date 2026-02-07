@@ -3,6 +3,7 @@ import {
   Animated,
   Dimensions,
   Modal,
+  PanResponder,
   Platform,
   Pressable,
   StyleSheet,
@@ -56,6 +57,7 @@ export type CardModalProps = {
 };
 
 const DRAG_HANDLE_OFFSET = 50; // espacio para el handle y margen superior
+const DRAG_CLOSE_THRESHOLD = 80; // px arrastrados hacia abajo para cerrar
 
 export function CardModal({
   open,
@@ -76,8 +78,60 @@ export function CardModal({
   const [mounted, setMounted] = React.useState(open);
   const [blurOpacityValue, setBlurOpacityValue] = React.useState(0);
   const translateY = React.useRef(new Animated.Value(windowHeight)).current;
+  const dragY = React.useRef(new Animated.Value(0)).current;
   const blurOpacity = React.useRef(new Animated.Value(0)).current;
   const backdropOpacity = React.useRef(new Animated.Value(0)).current;
+
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, { dy }) => Math.abs(dy) > 5,
+      onPanResponderMove: (_, { dy }) => {
+        if (dy > 0) {
+          dragY.setValue(dy);
+        }
+      },
+      onPanResponderRelease: (_, { dy, vy }) => {
+        if (dy > DRAG_CLOSE_THRESHOLD || vy > 0.5) {
+          Animated.parallel([
+            Animated.timing(translateY, {
+              toValue: screenHeight,
+              duration: 180,
+              useNativeDriver: true,
+            }),
+            Animated.timing(dragY, {
+              toValue: 0,
+              duration: 0,
+              useNativeDriver: true,
+            }),
+            Animated.timing(blurOpacity, {
+              toValue: 0,
+              duration: 180,
+              useNativeDriver: true,
+            }),
+            Animated.timing(backdropOpacity, {
+              toValue: 0,
+              duration: 180,
+              useNativeDriver: true,
+            }),
+          ]).start(({ finished }) => {
+            if (finished) {
+              translateY.setValue(screenHeight);
+              setMounted(false);
+              onClose();
+            }
+          });
+        } else {
+          Animated.spring(dragY, {
+            toValue: 0,
+            useNativeDriver: true,
+            speed: 20,
+            bounciness: 8,
+          }).start();
+        }
+      },
+    }),
+  ).current;
 
   const maxHeight = Math.max(0, Math.min(1, maxHeightPct)) * screenHeight;
   const paddingBottom = Math.max(insets.bottom, 12);
@@ -113,6 +167,7 @@ export function CardModal({
     if (open) {
       // Iniciar desde valores invisibles
       translateY.setValue(screenHeight);
+      dragY.setValue(0);
       blurOpacity.setValue(0);
       backdropOpacity.setValue(0);
 
@@ -266,7 +321,11 @@ export function CardModal({
           style={[
             styles.sheetWrapper,
             {
-              transform: [{ translateY }],
+              transform: [
+                {
+                  translateY: Animated.add(translateY, dragY),
+                },
+              ],
             },
           ]}
           pointerEvents="box-none"
@@ -294,8 +353,12 @@ export function CardModal({
                 },
               ]}
             >
-              <View pointerEvents="none" style={styles.dragHandleContainer}>
-                <View style={styles.dragHandle} />
+              <View
+                style={styles.dragHandleContainer}
+                {...(closeOnBackdropPress ? panResponder.panHandlers : {})}
+                pointerEvents={closeOnBackdropPress ? 'auto' : 'none'}
+              >
+                <View style={styles.dragHandle} pointerEvents="none" />
               </View>
               <View
                 style={
@@ -360,11 +423,14 @@ const styles = StyleSheet.create({
   },
   dragHandleContainer: {
     position: 'absolute',
-    top: 10,
+    top: 0,
     left: 0,
     right: 0,
     width: '100%',
+    minHeight: 44,
+    paddingTop: 10,
     alignItems: 'center',
+    justifyContent: 'flex-start',
     zIndex: 10,
     elevation: 10,
   },

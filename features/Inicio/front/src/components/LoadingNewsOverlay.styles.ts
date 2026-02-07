@@ -3,8 +3,6 @@ import AppColors from '@/design-system/colors';
 
 export const loadingNewsOverlayStyles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    paddingVertical: 24,
     alignItems: 'flex-start',
   },
   bubble: {

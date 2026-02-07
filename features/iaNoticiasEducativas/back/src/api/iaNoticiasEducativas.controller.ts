@@ -1,11 +1,47 @@
 import type { Request, Response } from 'express';
-import { getHeadlines, explainNews } from '../config/iaNoticiasEducativas.wiring';
+import type { EducationalNews } from '../domain/iaNoticiasEducativas.types';
+import {
+  getHeadlines,
+  explainNews,
+} from '../config/iaNoticiasEducativas.wiring';
+
+const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutos
+const MAX_CACHE_SIZE = 50;
+
+type CacheEntry = { educationalNews: EducationalNews; expiresAt: number };
+/** Cache de respuestas ChatGPT por newsId. TTL 15 min, se invalida al reiniciar. */
+const explainCache = new Map<string, CacheEntry>();
+
+function getCached(id: string): EducationalNews | null {
+  const entry = explainCache.get(id);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    explainCache.delete(id);
+    return null;
+  }
+  return entry.educationalNews;
+}
+
+function setCached(id: string, educationalNews: EducationalNews): void {
+  if (explainCache.size >= MAX_CACHE_SIZE) {
+    const firstKey = explainCache.keys().next().value;
+    if (firstKey != null) explainCache.delete(firstKey);
+  }
+  explainCache.set(id, {
+    educationalNews,
+    expiresAt: Date.now() + CACHE_TTL_MS,
+  });
+}
 
 export async function getHeadlinesController(_req: Request, res: Response) {
   console.log('[iaNoticias] 1. Controller: getHeadlines recibida');
   try {
     const headlines = await getHeadlines.execute();
-    console.log('[iaNoticias] 2. Controller: getHeadlines OK, enviando', headlines?.length ?? 0, 'noticias');
+    console.log(
+      '[iaNoticias] 2. Controller: getHeadlines OK, enviando',
+      headlines?.length ?? 0,
+      'noticias',
+    );
     res.json(headlines);
   } catch (err) {
     console.error('[iaNoticias] Controller: getHeadlines ERROR:', err);
@@ -23,9 +59,25 @@ export async function explainNewsController(req: Request, res: Response) {
     return;
   }
 
+  const trimmedId = newsId.trim();
+
   try {
-    const educationalNews = await explainNews.execute(newsId.trim());
-    console.log('[iaNoticias] 2. Controller: explain OK, título:', educationalNews?.title?.slice(0, 40));
+    const cached = getCached(trimmedId);
+    if (cached) {
+      console.log(
+        '[iaNoticias] ✅ NOTICIA OBTENIDA DE CACHE (ChatGPT) — newsId:',
+        trimmedId.slice(0, 60),
+      );
+      res.json(cached);
+      return;
+    }
+
+    const educationalNews = await explainNews.execute(trimmedId);
+    setCached(trimmedId, educationalNews);
+    console.log(
+      '[iaNoticias] 2. Controller: explain OK (cached), título:',
+      educationalNews?.title?.slice(0, 40),
+    );
     res.json(educationalNews);
   } catch (err) {
     console.error('[iaNoticias] Controller: explain ERROR:', err);

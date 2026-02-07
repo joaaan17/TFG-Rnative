@@ -22,7 +22,6 @@ export function InicioScreen() {
     news,
     selectedNews,
     isNewsModalOpen,
-    scrollMaxHeight,
     loading,
     loadingNews,
     error,
@@ -64,11 +63,26 @@ export function InicioScreen() {
         />
       )}
 
-      <CardModal open={isNewsModalOpen} onClose={closeNewsModal}>
+      <CardModal
+        open={isNewsModalOpen}
+        onClose={closeNewsModal}
+        maxHeightPct={loadingNews ? 0.35 : 1}
+        scrollable={!loadingNews}
+      >
         {loadingNews ? (
-          <LoadingNewsOverlay visible />
+          <View
+            style={{
+              flex: 1,
+              minHeight: 100,
+              justifyContent: 'flex-end',
+              paddingHorizontal: 16,
+              paddingBottom: 24,
+            }}
+          >
+            <LoadingNewsOverlay visible />
+          </View>
         ) : selectedNews ? (
-          <>
+          <View style={{ flex: 1, minHeight: 0 }}>
             <View
               style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8 }}
             >
@@ -94,12 +108,12 @@ export function InicioScreen() {
               ) : null}
             </View>
             <ScrollView
-              style={{ maxHeight: scrollMaxHeight }}
+              style={{ flex: 1 }}
               contentContainerStyle={{
                 paddingHorizontal: 16,
                 paddingBottom: 24,
               }}
-              showsVerticalScrollIndicator={false}
+              showsVerticalScrollIndicator
             >
               <EducationalNewsContent
                 key={`${selectedNews.id}-content`}
@@ -107,7 +121,7 @@ export function InicioScreen() {
                 typewriterSpeed={8}
               />
             </ScrollView>
-          </>
+          </View>
         ) : null}
       </CardModal>
     </AppShellComponent>

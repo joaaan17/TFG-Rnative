@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import { requireAuth } from '../../../../auth/back/src/api/auth.middleware';
-import { getHeadlinesController, explainNewsController } from './iaNoticiasEducativas.controller';
+import {
+  getHeadlinesController,
+  explainNewsController,
+} from './iaNoticiasEducativas.controller';
 
 const router = Router();
 
