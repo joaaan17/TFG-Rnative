@@ -32,6 +32,9 @@ const startServer = async () => {
       console.log(
         `📡 Endpoint de Auth listo en http://localhost:${PORT}/api/auth/login`,
       );
+      console.log(
+        `📋 Quiz listo en POST http://localhost:${PORT}/api/ia-noticias/quiz`,
+      );
     });
   } catch (error) {
     console.error('❌ Error al iniciar el servidor:', error);

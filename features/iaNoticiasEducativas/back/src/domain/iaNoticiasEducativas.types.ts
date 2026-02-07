@@ -32,3 +32,16 @@ export interface EducationalNews {
   source: string;
   publishedAt: string;
 }
+
+/** Pregunta de quiz */
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  correctAnswerIndex: number;
+}
+
+/** Quiz de noticia educativa */
+export interface NewsQuiz {
+  newsId: string;
+  questions: QuizQuestion[];
+}

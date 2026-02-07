@@ -21,6 +21,17 @@ export type EducationalNews = {
   publishedAt: string;
 };
 
+export type QuizQuestion = {
+  question: string;
+  options: string[];
+  correctAnswerIndex: number;
+};
+
+export type NewsQuiz = {
+  newsId: string;
+  questions: QuizQuestion[];
+};
+
 /** Mensajes aleatorios que aparecen mientras se procesa la noticia con IA */
 export const NOTICIAS_LOADING_MESSAGES = [
   'El mercado premia la disciplina.',

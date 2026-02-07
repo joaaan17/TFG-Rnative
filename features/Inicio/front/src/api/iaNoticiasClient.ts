@@ -1,11 +1,19 @@
 import { Platform } from 'react-native';
-import type { NewsPreview, EducationalNews } from '../types/inicio.types';
+import { env } from '@/config/env';
+import type {
+  NewsPreview,
+  EducationalNews,
+  NewsQuiz,
+} from '../types/inicio.types';
 
 function getBaseUrl() {
-  if (Platform.OS === 'android') return 'http://10.0.2.2:3000/api/ia-noticias';
-  if (Platform.OS === 'ios' || Platform.OS === 'web')
-    return 'http://localhost:3000/api/ia-noticias';
-  return 'http://localhost:3000/api/ia-noticias';
+  const base =
+    env.apiUrl && env.apiUrl !== 'https://api.example.com'
+      ? env.apiUrl.replace(/\/$/, '')
+      : Platform.OS === 'android'
+        ? 'http://10.0.2.2:3000'
+        : 'http://localhost:3000';
+  return `${base}/api/ia-noticias`;
 }
 
 export async function getHeadlines(token: string): Promise<NewsPreview[]> {
@@ -70,4 +78,25 @@ export async function getEducationalNews(
   const data = (await response.json()) as EducationalNews;
   console.log('[iaNoticias FRONT] 3. Client: getEducationalNews OK');
   return data;
+}
+
+export async function getQuiz(
+  newsId: string,
+  token: string,
+): Promise<NewsQuiz> {
+  const url = `${getBaseUrl()}/quiz`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ newsId }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Error al generar el quiz');
+  }
+
+  return (await response.json()) as NewsQuiz;
 }

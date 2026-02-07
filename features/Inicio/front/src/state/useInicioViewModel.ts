@@ -5,8 +5,10 @@ import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
 import {
   loadHeadlines,
   loadEducationalNews,
+  loadQuiz,
   type NewsPreview,
   type EducationalNews,
+  type NewsQuiz,
 } from '../services/inicioService';
 
 export type UseInicioViewModelResult = {
@@ -14,12 +16,16 @@ export type UseInicioViewModelResult = {
   news: NewsPreview[];
   selectedNews: EducationalNews | null;
   isNewsModalOpen: boolean;
-  scrollMaxHeight: number;
+  isQuizModalOpen: boolean;
+  quiz: NewsQuiz | null;
   loading: boolean;
   loadingNews: boolean;
+  loadingQuiz: boolean;
   error: string | null;
   openNews: (item: NewsPreview) => Promise<void>;
   closeNewsModal: () => void;
+  openQuiz: () => Promise<void>;
+  closeQuizModal: () => void;
   refreshHeadlines: () => Promise<void>;
 };
 
@@ -33,8 +39,11 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     null,
   );
   const [isNewsModalOpen, setIsNewsModalOpen] = React.useState(false);
+  const [isQuizModalOpen, setIsQuizModalOpen] = React.useState(false);
+  const [quiz, setQuiz] = React.useState<NewsQuiz | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [loadingNews, setLoadingNews] = React.useState(false);
+  const [loadingQuiz, setLoadingQuiz] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
   const scrollMaxHeight = React.useMemo(
@@ -97,6 +106,28 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     setSelectedNews(null);
   }, []);
 
+  const openQuiz = React.useCallback(async () => {
+    if (!token || !selectedNews) return;
+    setIsQuizModalOpen(true);
+    setQuiz(null);
+    setLoadingQuiz(true);
+    setError(null);
+    try {
+      const quizData = await loadQuiz(selectedNews.id, token);
+      setQuiz(quizData);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al generar el quiz';
+      setError(msg);
+    } finally {
+      setLoadingQuiz(false);
+    }
+  }, [token, selectedNews]);
+
+  const closeQuizModal = React.useCallback(() => {
+    setIsQuizModalOpen(false);
+    setQuiz(null);
+  }, []);
+
   useFocusEffect(
     React.useCallback(() => {
       setTypewriterKey((k) => k + 1);
@@ -110,12 +141,16 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     news,
     selectedNews,
     isNewsModalOpen,
-    scrollMaxHeight,
+    isQuizModalOpen,
+    quiz,
     loading,
     loadingNews,
+    loadingQuiz,
     error,
     openNews,
     closeNewsModal,
+    openQuiz,
+    closeQuizModal,
     refreshHeadlines: fetchHeadlines,
   };
 }

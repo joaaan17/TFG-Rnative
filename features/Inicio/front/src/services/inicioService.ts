@@ -1,7 +1,11 @@
-import { getHeadlines, getEducationalNews } from '../api/iaNoticiasClient';
-import type { NewsPreview, EducationalNews } from '../types/inicio.types';
+import {
+  getHeadlines,
+  getEducationalNews,
+  getQuiz,
+} from '../api/iaNoticiasClient';
+import type { NewsPreview, EducationalNews, NewsQuiz } from '../types/inicio.types';
 
-export type { NewsPreview, EducationalNews };
+export type { NewsPreview, EducationalNews, NewsQuiz };
 
 export async function loadHeadlines(token: string): Promise<NewsPreview[]> {
   console.log('[iaNoticias FRONT] Service: loadHeadlines, token=', !!token);
@@ -22,4 +26,13 @@ export async function loadEducationalNews(
   if (!newsId?.trim()) throw new Error('newsId requerido');
   if (!token?.trim()) throw new Error('Token requerido');
   return getEducationalNews(newsId.trim(), token.trim());
+}
+
+export async function loadQuiz(
+  newsId: string,
+  token: string,
+): Promise<NewsQuiz> {
+  if (!newsId?.trim()) throw new Error('newsId requerido');
+  if (!token?.trim()) throw new Error('Token requerido');
+  return getQuiz(newsId.trim(), token.trim());
 }

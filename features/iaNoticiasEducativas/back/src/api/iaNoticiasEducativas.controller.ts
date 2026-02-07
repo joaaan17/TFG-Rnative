@@ -3,6 +3,7 @@ import type { EducationalNews } from '../domain/iaNoticiasEducativas.types';
 import {
   getHeadlines,
   explainNews,
+  generateNewsQuiz,
 } from '../config/iaNoticiasEducativas.wiring';
 
 const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutos
@@ -74,6 +75,7 @@ export async function explainNewsController(req: Request, res: Response) {
 
     const educationalNews = await explainNews.execute(trimmedId);
     setCached(trimmedId, educationalNews);
+
     console.log(
       '[iaNoticias] 2. Controller: explain OK (cached), título:',
       educationalNews?.title?.slice(0, 40),
@@ -82,5 +84,30 @@ export async function explainNewsController(req: Request, res: Response) {
   } catch (err) {
     console.error('[iaNoticias] Controller: explain ERROR:', err);
     res.status(500).json({ error: 'Error al procesar la noticia' });
+  }
+}
+
+export async function generateNewsQuizController(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const { newsId } = req.body;
+  console.log('[iaNoticias] Controller: quiz recibida, newsId:', newsId?.slice(0, 50));
+
+  if (!newsId || typeof newsId !== 'string') {
+    res.status(400).json({ error: 'newsId requerido' });
+    return;
+  }
+
+  try {
+    const quiz = await generateNewsQuiz.execute(newsId.trim());
+    console.log(
+      '[iaNoticias] Controller: quiz OK, preguntas=',
+      quiz.questions?.length ?? 0,
+    );
+    res.json(quiz);
+  } catch (err) {
+    console.error('[iaNoticias] Controller: quiz ERROR:', err);
+    res.status(500).json({ error: 'Error al generar el quiz' });
   }
 }

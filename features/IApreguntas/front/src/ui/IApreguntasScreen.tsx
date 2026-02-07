@@ -83,9 +83,7 @@ export function IApreguntasScreen() {
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={null}
             ListFooterComponent={
-              loading ? (
-                <LoadingMessagesOverlay visible inline />
-              ) : null
+              loading ? <LoadingMessagesOverlay visible inline /> : null
             }
           />
         </View>
@@ -110,7 +108,9 @@ export function IApreguntasScreen() {
               disabled={loading || !questionText.trim()}
               style={[
                 iaPreguntasStyles.sendButton,
-                questionText.trim().length > 0 && iaPreguntasStyles.sendButtonActive,
+                questionText.trim().length > 0
+                  ? iaPreguntasStyles.sendButtonActive
+                  : null,
               ]}
             >
               {loading ? (

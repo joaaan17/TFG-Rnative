@@ -1,8 +1,9 @@
 import React from 'react';
-import { FlatList, ScrollView, View } from 'react-native';
+import { FlatList, ScrollView, StyleSheet, View } from 'react-native';
 
 import AppShellComponent from '@/shared/components/layout/AppShell';
 import { CardModal } from '@/shared/components/card-modal';
+import { Button } from '@/shared/components/ui/button';
 import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
 import { Text } from '@/shared/components/ui/text';
 import { Image } from 'expo-image';
@@ -12,6 +13,7 @@ import { useInicioViewModel } from '../state/useInicioViewModel';
 import { NewsCard } from '../components/NewsCard';
 import { LoadingNewsOverlay } from '../components/LoadingNewsOverlay';
 import { EducationalNewsContent } from '../components/EducationalNewsContent';
+import { QuizModalContent } from '../components/QuizModalContent';
 
 /**
  * Pantalla tonta. Solo renderiza y conecta props/handlers del ViewModel.
@@ -22,11 +24,16 @@ export function InicioScreen() {
     news,
     selectedNews,
     isNewsModalOpen,
+    isQuizModalOpen,
+    quiz,
     loading,
     loadingNews,
+    loadingQuiz,
     error,
     openNews,
     closeNewsModal,
+    openQuiz,
+    closeQuizModal,
   } = useInicioViewModel();
 
   return (
@@ -82,50 +89,98 @@ export function InicioScreen() {
             <LoadingNewsOverlay visible />
           </View>
         ) : selectedNews ? (
-          <View style={{ flex: 1, minHeight: 0 }}>
-            <View
-              style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8 }}
-            >
-              <TypewriterTextComponent
-                key={selectedNews.id}
-                text={selectedNews.title}
-                useDefaultFontFamily={false}
-                speed={60}
-                variant="h3"
-                className="border-0 pb-0"
-              />
-              {selectedNews.imageUrl ? (
-                <Image
-                  source={{ uri: selectedNews.imageUrl }}
-                  style={{
-                    width: '100%',
-                    height: 180,
-                    borderRadius: 12,
-                    marginTop: 12,
-                  }}
-                  contentFit="cover"
-                />
-              ) : null}
-            </View>
+          <View style={styles.newsModalContent}>
             <ScrollView
-              style={{ flex: 1 }}
-              contentContainerStyle={{
-                paddingHorizontal: 16,
-                paddingBottom: 24,
-              }}
+              style={styles.newsScroll}
+              contentContainerStyle={styles.newsScrollContent}
               showsVerticalScrollIndicator
             >
+              <View style={styles.newsHeader}>
+                <TypewriterTextComponent
+                  key={selectedNews.id}
+                  text={selectedNews.title}
+                  useDefaultFontFamily={false}
+                  speed={60}
+                  variant="h3"
+                  className="border-0 pb-0"
+                />
+                {selectedNews.imageUrl ? (
+                  <Image
+                    source={{ uri: selectedNews.imageUrl }}
+                    style={styles.newsImage}
+                    contentFit="cover"
+                  />
+                ) : null}
+              </View>
               <EducationalNewsContent
                 key={`${selectedNews.id}-content`}
                 content={selectedNews.content}
                 typewriterSpeed={8}
               />
             </ScrollView>
+            <View style={styles.quizButtonContainer}>
+              <Button
+                onPress={openQuiz}
+                variant="default"
+                size="lg"
+                style={styles.quizButton}
+                accessibilityLabel="Realizar test de comprensión"
+              >
+                <Text>Realizar test</Text>
+              </Button>
+            </View>
           </View>
         ) : null}
+      </CardModal>
+
+      <CardModal
+        open={isQuizModalOpen}
+        onClose={closeQuizModal}
+        maxHeightPct={0.9}
+        scrollable
+      >
+        <QuizModalContent
+          quiz={quiz}
+          loading={loadingQuiz}
+          error={error}
+          onClose={closeQuizModal}
+        />
       </CardModal>
     </AppShellComponent>
   );
 }
+
+const styles = StyleSheet.create({
+  newsModalContent: {
+    flex: 1,
+    minHeight: 0,
+  },
+  newsScroll: {
+    flex: 1,
+  },
+  newsScrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+  },
+  newsHeader: {
+    paddingTop: 10,
+    paddingBottom: 8,
+  },
+  newsImage: {
+    width: '100%',
+    height: 180,
+    borderRadius: 12,
+    marginTop: 12,
+  },
+  quizButtonContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingBottom: 24,
+    width: '100%',
+  },
+  quizButton: {
+    width: '100%',
+  },
+});
 
 export default InicioScreen;
