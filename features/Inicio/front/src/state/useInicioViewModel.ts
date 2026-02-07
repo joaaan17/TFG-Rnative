@@ -18,6 +18,8 @@ export type UseInicioViewModelResult = {
   isNewsModalOpen: boolean;
   isQuizModalOpen: boolean;
   quiz: NewsQuiz | null;
+  quizAnswers: Record<number, number>;
+  onQuizAnswer: (qIndex: number, optionIndex: number) => void;
   loading: boolean;
   loadingNews: boolean;
   loadingQuiz: boolean;
@@ -41,6 +43,9 @@ export function useInicioViewModel(): UseInicioViewModelResult {
   const [isNewsModalOpen, setIsNewsModalOpen] = React.useState(false);
   const [isQuizModalOpen, setIsQuizModalOpen] = React.useState(false);
   const [quiz, setQuiz] = React.useState<NewsQuiz | null>(null);
+  const [quizAnswers, setQuizAnswers] = React.useState<Record<number, number>>(
+    {},
+  );
   const [loading, setLoading] = React.useState(false);
   const [loadingNews, setLoadingNews] = React.useState(false);
   const [loadingQuiz, setLoadingQuiz] = React.useState(false);
@@ -104,12 +109,19 @@ export function useInicioViewModel(): UseInicioViewModelResult {
   const closeNewsModal = React.useCallback(() => {
     setIsNewsModalOpen(false);
     setSelectedNews(null);
+    setQuiz(null);
+    setQuizAnswers({});
   }, []);
 
   const openQuiz = React.useCallback(async () => {
     if (!token || !selectedNews) return;
     setIsQuizModalOpen(true);
+    if (quiz?.newsId === selectedNews.id) {
+      setLoadingQuiz(false);
+      return;
+    }
     setQuiz(null);
+    setQuizAnswers({});
     setLoadingQuiz(true);
     setError(null);
     try {
@@ -121,11 +133,11 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     } finally {
       setLoadingQuiz(false);
     }
-  }, [token, selectedNews]);
+  }, [token, selectedNews, quiz?.newsId]);
 
   const closeQuizModal = React.useCallback(() => {
     setIsQuizModalOpen(false);
-    setQuiz(null);
+    // No limpiamos quiz: se mantiene hasta cerrar la noticia
   }, []);
 
   useFocusEffect(
@@ -136,6 +148,13 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     }, [fetchHeadlines]),
   );
 
+  const onQuizAnswer = React.useCallback(
+    (qIndex: number, optionIndex: number) => {
+      setQuizAnswers((prev) => ({ ...prev, [qIndex]: optionIndex }));
+    },
+    [],
+  );
+
   return {
     typewriterKey,
     news,
@@ -143,6 +162,8 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     isNewsModalOpen,
     isQuizModalOpen,
     quiz,
+    quizAnswers,
+    onQuizAnswer,
     loading,
     loadingNews,
     loadingQuiz,

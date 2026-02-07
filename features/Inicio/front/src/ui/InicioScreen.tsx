@@ -26,6 +26,8 @@ export function InicioScreen() {
     isNewsModalOpen,
     isQuizModalOpen,
     quiz,
+    quizAnswers,
+    onQuizAnswer,
     loading,
     loadingNews,
     loadingQuiz,
@@ -147,6 +149,8 @@ export function InicioScreen() {
       >
         <QuizModalContent
           quiz={quiz}
+          answers={quizAnswers}
+          onAnswer={onQuizAnswer}
           loading={loadingQuiz}
           error={error}
           onClose={closeQuizModal}

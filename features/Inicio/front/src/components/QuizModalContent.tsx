@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '@/shared/components/ui/text';
 import { Button } from '@/shared/components/ui/button';
@@ -9,6 +9,8 @@ import AppColors from '@/design-system/colors';
 
 export type QuizModalContentProps = {
   quiz: NewsQuiz | null;
+  answers: Record<number, number>;
+  onAnswer: (qIndex: number, optionIndex: number) => void;
   loading: boolean;
   error: string | null;
   onClose: () => void;
@@ -20,16 +22,23 @@ const PASS_THRESHOLD = 0.5; // 50% para aprobar
 
 export function QuizModalContent({
   quiz,
+  answers,
+  onAnswer,
   loading,
   error,
   onContentSizeChange,
 }: QuizModalContentProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [reviewingIndex, setReviewingIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    setCurrentIndex(0);
+    setReviewingIndex(null);
+  }, [quiz?.newsId]);
 
   const handleSelectOption = (qIndex: number, optionIndex: number) => {
     if (answers[qIndex] !== undefined) return;
-    setAnswers((prev) => ({ ...prev, [qIndex]: optionIndex }));
+    onAnswer(qIndex, optionIndex);
   };
 
   const handleNext = () => {
@@ -92,8 +101,47 @@ export function QuizModalContent({
     ([qIdx, opt]) => quiz.questions[Number(qIdx)]?.correctAnswerIndex === opt,
   ).length;
   const allAnswered = answeredCount === total;
-  const currentQuestion = quiz.questions[currentIndex];
-  const currentAnswered = answers[currentIndex] !== undefined;
+  const isReviewing = reviewingIndex !== null;
+  const displayIndex = isReviewing ? reviewingIndex : currentIndex;
+  const currentQuestion = quiz.questions[displayIndex];
+  const currentAnswered = answers[displayIndex] !== undefined;
+
+  // Modo repaso: mostrar pregunta seleccionada desde resultados
+  if (allAnswered && isReviewing) {
+    return (
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.content, styles.contentWithButtonSpace]}
+        showsVerticalScrollIndicator={false}
+        onContentSizeChange={(w, h) => onContentSizeChange?.(w, h)}
+      >
+        <Text variant="h3" style={styles.title}>
+          Repasar pregunta {displayIndex + 1}
+        </Text>
+        <Text variant="muted" style={styles.subtitle}>
+          {displayIndex + 1} de {total}
+        </Text>
+
+        <QuestionBlock
+          question={currentQuestion}
+          index={displayIndex}
+          selectedIndex={answers[displayIndex] ?? null}
+          onSelect={() => {}}
+        />
+
+        <View style={styles.nextContainer}>
+          <Button
+            onPress={() => setReviewingIndex(null)}
+            variant="default"
+            size="lg"
+            style={styles.nextButton}
+          >
+            <Text>Volver a resultados</Text>
+          </Button>
+        </View>
+      </ScrollView>
+    );
+  }
 
   // Pantalla de resumen final
   if (allAnswered) {
@@ -118,8 +166,9 @@ export function QuizModalContent({
             const bgColor = isCorrect ? '#22c55e' : '#ef4444';
             const isLast = qIdx === quiz.questions.length - 1;
             return (
-              <View
+              <Pressable
                 key={qIdx}
+                onPress={() => setReviewingIndex(qIdx)}
                 style={[
                   styles.resultsQuestionBadge,
                   {
@@ -135,7 +184,7 @@ export function QuizModalContent({
                 >
                   {qIdx + 1}
                 </Text>
-              </View>
+              </Pressable>
             );
           })}
         </View>
