@@ -32,6 +32,20 @@ export type NewsQuiz = {
   questions: QuizQuestion[];
 };
 
+/** Mensajes aleatorios mientras se carga el quiz */
+export const QUIZ_LOADING_MESSAGES = [
+  'Preparando test...',
+  'Generando preguntas...',
+  'Creando el cuestionario...',
+  'Un momento, casi listo...',
+  'ChatGPT está redactando las preguntas...',
+  'Preparando las opciones de respuesta...',
+  'Analizando la noticia...',
+  'Diseñando el test de comprensión...',
+  'Un segundo más...',
+  'Casi terminamos...',
+] as const;
+
 /** Mensajes aleatorios que aparecen mientras se procesa la noticia con IA */
 export const NOTICIAS_LOADING_MESSAGES = [
   'El mercado premia la disciplina.',

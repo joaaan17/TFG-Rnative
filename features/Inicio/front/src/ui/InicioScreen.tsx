@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, View } from 'react-native';
 
 import AppShellComponent from '@/shared/components/layout/AppShell';
@@ -35,6 +35,11 @@ export function InicioScreen() {
     openQuiz,
     closeQuizModal,
   } = useInicioViewModel();
+
+  const [quizContentHeight, setQuizContentHeight] = useState(0);
+  const handleQuizContentSize = useCallback((_w: number, h: number) => {
+    setQuizContentHeight(h);
+  }, []);
 
   return (
     <AppShellComponent>
@@ -136,14 +141,16 @@ export function InicioScreen() {
       <CardModal
         open={isQuizModalOpen}
         onClose={closeQuizModal}
-        maxHeightPct={0.9}
+        maxHeightPct={0.88}
         scrollable
+        contentHeight={quizContentHeight}
       >
         <QuizModalContent
           quiz={quiz}
           loading={loadingQuiz}
           error={error}
           onClose={closeQuizModal}
+          onContentSizeChange={handleQuizContentSize}
         />
       </CardModal>
     </AppShellComponent>
