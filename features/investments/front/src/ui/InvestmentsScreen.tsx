@@ -1,6 +1,6 @@
 import React from 'react';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { ScrollView, View } from 'react-native';
 
 import AppShellComponent from '@/shared/components/layout/AppShell';
 import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
@@ -8,39 +8,46 @@ import {
   SegmentedTextTabs,
   type SegmentedTextTabsValue,
 } from '@/shared/components/ui/segmented-text-tabs';
-import { PriceChart } from '@/shared/components/price-chart';
 import { Text } from '@/shared/components/ui/text';
 import { AssetLabel } from '@/shared/components/asset-label';
+import {
+  LightweightChartView,
+  useMarketChartViewModel,
+} from '@/features/market-chart';
 
-import { investmentsStyles } from './investmentsStyles';
+import { investmentsStyles } from './Investments.styles';
 
+/**
+ * Pantalla de Inversiones con TradingView Lightweight Charts.
+ * No hace fetch aquí: el ViewModel carga los datos; la Screen solo renderiza.
+ */
 export function InvestmentsScreen() {
+  const { data, loading, error, loadChart } = useMarketChartViewModel();
   const [typewriterKey, setTypewriterKey] = React.useState(0);
   const [tab, setTab] = React.useState<SegmentedTextTabsValue>(0);
 
   useFocusEffect(
     React.useCallback(() => {
       setTypewriterKey((k) => k + 1);
+      loadChart();
       return undefined;
-    }, []),
+    }, [loadChart]),
   );
 
   return (
     <AppShellComponent>
       <View style={investmentsStyles.container}>
-        {/* Header fijo (no scrollea) */}
         <View style={investmentsStyles.header}>
           <TypewriterTextComponent
             key={typewriterKey}
             text="INVERSIONES"
             speed={40}
             variant="h3"
-            useDefaultFontFamily={true}
+            useDefaultFontFamily
             className="border-0 pb-0"
           />
         </View>
 
-        {/* Contenido scrolleable */}
         <ScrollView
           style={investmentsStyles.scroll}
           contentContainerStyle={investmentsStyles.scrollContent}
@@ -58,8 +65,25 @@ export function InvestmentsScreen() {
             <Text variant="h3">1769 $</Text>
           </View>
 
-          <View style={investmentsStyles.chart}>
-            <PriceChart />
+          <View style={investmentsStyles.chartSection}>
+            {loading && (
+              <View style={investmentsStyles.loadingContainer}>
+                <ActivityIndicator size="large" />
+                <Text variant="muted" style={investmentsStyles.errorText}>
+                  Cargando gráfico...
+                </Text>
+              </View>
+            )}
+            {error && (
+              <Text variant="muted" style={investmentsStyles.errorText}>
+                {error}
+              </Text>
+            )}
+            {!loading && !error && data?.candles && data.candles.length > 0 && (
+              <View style={investmentsStyles.chartContainer}>
+                <LightweightChartView candles={data.candles} height={280} />
+              </View>
+            )}
           </View>
 
           <Text variant="muted" style={investmentsStyles.summaryTitle}>

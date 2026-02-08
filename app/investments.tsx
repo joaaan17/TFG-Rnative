@@ -1,3 +1,3 @@
-import InvestmentsScreen from '@/features/investments/investments';
+import { InvestmentsScreen } from '@/features/investments';
 
 export default InvestmentsScreen;

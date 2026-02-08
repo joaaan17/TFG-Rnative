@@ -7,6 +7,8 @@ import profileRoutes from '../features/profile/back/src/api/api.routes';
 import relationshipsRoutes from '../features/relationships/back/src/api/api.routes';
 import iapreguntasRoutes from '../features/IApreguntas/back/src/api/api.routes';
 import iaNoticiasRoutes from '../features/iaNoticiasEducativas/back/src/api/api.routes';
+import investmentsRoutes from '../features/investments/back/src/api/api.routes';
+import marketChartRoutes from '../features/market-chart/back/src/api/api.routes';
 import { startQuizScheduler } from '../features/iaNoticiasEducativas/back/src/config/quiz-scheduler';
 
 const app = express();
@@ -17,6 +19,8 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/relationships', relationshipsRoutes);
 app.use('/api/iapreguntas', iapreguntasRoutes);
 app.use('/api/ia-noticias', iaNoticiasRoutes);
+app.use('/api/investments', investmentsRoutes);
+app.use('/api/market-chart', marketChartRoutes);
 
 // --- 3. Inicialización (Base de Datos + Servidor) ---
 const startServer = async () => {
