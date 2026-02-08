@@ -4,16 +4,12 @@ import {
   searchProfilesUseCase,
 } from '../config/profile.wiring';
 
-export const searchProfilesController = async (
-  req: Request,
-  res: Response,
-) => {
+export const searchProfilesController = async (req: Request, res: Response) => {
   try {
     const q = typeof req.query.q === 'string' ? req.query.q : '';
     const pageRaw = req.query.page;
     const limitRaw = req.query.limit;
-    const page =
-      typeof pageRaw === 'string' ? parseInt(pageRaw, 10) || 1 : 1;
+    const page = typeof pageRaw === 'string' ? parseInt(pageRaw, 10) || 1 : 1;
     const limit = Math.min(
       50,
       typeof limitRaw === 'string' ? parseInt(limitRaw, 10) || 20 : 20,

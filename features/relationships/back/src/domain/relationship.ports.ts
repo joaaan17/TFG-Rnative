@@ -16,6 +16,7 @@ export interface RelationshipRepository {
   deleteByPair(userAId: string, userBId: string): Promise<void>;
   findAcceptedFriendIds(userId: string): Promise<string[]>;
   findPendingRequesterIds(userId: string): Promise<string[]>;
+  countAcceptedFriends(userId: string): Promise<number>;
 }
 
 export interface ProfileReaderPort {

@@ -73,6 +73,14 @@ export class MongoRelationshipRepository implements RelationshipRepository {
     });
   }
 
+  async countAcceptedFriends(userId: string): Promise<number> {
+    const count = await RelationshipModel.countDocuments({
+      status: 'accepted',
+      $or: [{ userAId: toObjectId(userId) }, { userBId: toObjectId(userId) }],
+    }).exec();
+    return count;
+  }
+
   async findPendingRequesterIds(userId: string): Promise<string[]> {
     const docs = await RelationshipModel.find({
       status: 'pending',

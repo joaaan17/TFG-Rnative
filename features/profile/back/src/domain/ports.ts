@@ -18,3 +18,7 @@ export interface ProfileRepository {
     excludeUserId?: string,
   ): Promise<ProfileSearchResult[]>;
 }
+
+export interface FriendCountProvider {
+  getFriendCount(userId: string): Promise<number>;
+}

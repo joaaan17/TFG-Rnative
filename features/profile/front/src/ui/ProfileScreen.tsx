@@ -89,6 +89,7 @@ export function ProfileScreen() {
     handleDeleteAccount,
     isDeleting,
     deleteError,
+    refetchProfile,
   } = useProfileViewModel();
   const [typewriterKey, setTypewriterKey] = React.useState(0);
 
@@ -113,8 +114,9 @@ export function ProfileScreen() {
   useFocusEffect(
     React.useCallback(() => {
       setTypewriterKey((k) => k + 1);
+      refetchProfile();
       return undefined;
-    }, []),
+    }, [refetchProfile]),
   );
 
   if (isLoading) {

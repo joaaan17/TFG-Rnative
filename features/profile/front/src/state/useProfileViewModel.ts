@@ -190,6 +190,14 @@ export function useProfileViewModel() {
       .finally(() => setFriendsLoading(false));
   }, [session?.token, showFriendsModal]);
 
+  const refetchProfile = React.useCallback(() => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+    getProfile(userId)
+      .then((data) => setProfile(data))
+      .catch(() => {});
+  }, [session?.user?.id]);
+
   const handleAcceptRequest = React.useCallback(
     (fromUserId: string) => {
       const token = session?.token;
@@ -201,6 +209,7 @@ export function useProfileViewModel() {
           setPendingRequests((prev) =>
             prev.filter((p) => p.userId !== fromUserId),
           );
+          refetchProfile();
         })
         .catch(() => {
           setPendingError('Error al aceptar solicitud');
@@ -213,7 +222,7 @@ export function useProfileViewModel() {
           });
         });
     },
-    [session?.token],
+    [session?.token, refetchProfile],
   );
 
   const handleRejectRequest = React.useCallback(
@@ -331,6 +340,7 @@ export function useProfileViewModel() {
     handleDeleteAccount,
     isDeleting,
     deleteError,
+    refetchProfile,
   };
 }
 
