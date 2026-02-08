@@ -21,3 +21,22 @@ export interface MarketChartData {
   candles: Candle[];
   indicators: IndicatorSeries[];
 }
+
+/** Línea horizontal en un precio (soporte, resistencia, compra, etc.) */
+export interface PriceLine {
+  price: number;
+  color?: string;
+  lineWidth?: number;
+  lineStyle?: number; // 0 sólida, 1 punteada, 2 discontinua
+  title?: string;
+  axisLabelVisible?: boolean;
+}
+
+/** Marcador en un punto temporal (noticia, compra, evento) */
+export interface ChartMarker {
+  time: number;
+  position?: 'aboveBar' | 'belowBar' | 'inBar';
+  color?: string;
+  shape?: 'circle' | 'square' | 'arrowUp' | 'arrowDown';
+  text?: string;
+}

@@ -19,7 +19,7 @@ interface NewsAPIResponse {
   articles: NewsAPIArticle[];
 }
 
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hora
 let cache: { raw: RawNews[]; ts: number } | null = null;
 
 function toRawNews(article: NewsAPIArticle, index: number): RawNews {

@@ -13,7 +13,10 @@ export class EducationalOpenAIProvider implements AIProviderPort {
   }
 
   async rewriteEducational(prompt: string): Promise<string> {
-    console.log('[iaNoticias] 12. EducationalOpenAI: llamando a gpt-4o-mini...');
+    console.log(
+      '[iaNoticias] 12. EducationalOpenAI: llamando a gpt-4o-mini...',
+      prompt.length,
+    );
     const completion = await this.client.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
@@ -26,7 +29,10 @@ export class EducationalOpenAIProvider implements AIProviderPort {
       ],
     });
     const text = completion.choices[0]?.message?.content ?? '';
-    console.log('[iaNoticias] 13. EducationalOpenAI: respuesta recibida, length=', text?.length ?? 0);
+    console.log(
+      '[iaNoticias] 13. EducationalOpenAI: respuesta recibida, length=',
+      text?.length ?? 0,
+    );
     return text;
   }
 }

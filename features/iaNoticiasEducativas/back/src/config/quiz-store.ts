@@ -2,7 +2,7 @@ import type { NewsQuiz } from '../domain/iaNoticiasEducativas.types';
 
 const MAX_QUIZZES = 50;
 
-/** Store de quizzes pre-generados. El scheduler los rellena cada 10 min. */
+/** Store de quizzes pre-generados. El scheduler los rellena cada hora. */
 const quizStore = new Map<string, NewsQuiz>();
 
 export function getQuiz(newsId: string): NewsQuiz | null {

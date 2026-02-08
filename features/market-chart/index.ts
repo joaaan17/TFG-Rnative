@@ -9,4 +9,6 @@ export {
   type Candle,
   type MarketChartData,
   type IndicatorSeries,
+  type PriceLine,
+  type ChartMarker,
 } from './front/src';

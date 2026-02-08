@@ -1,7 +1,7 @@
 import { getHeadlines, generateNewsQuiz } from './iaNoticiasEducativas.wiring';
 import { setQuiz } from './quiz-store';
 
-const INTERVAL_MS = 10 * 60 * 1000; // 10 minutos
+const INTERVAL_MS = 60 * 60 * 1000; // 1 hora
 const MAX_NEWS_PER_RUN = 5;
 
 async function runQuizGeneration(): Promise<void> {
@@ -45,7 +45,7 @@ export function startQuizScheduler(): void {
   runQuizGeneration(); // Primera ejecución al arrancar
 
   intervalId = setInterval(runQuizGeneration, INTERVAL_MS);
-  console.log('[iaNoticias] ⏰ Scheduler: iniciado (cada 10 min)');
+  console.log('[iaNoticias] ⏰ Scheduler: iniciado (cada 1 hora)');
 }
 
 export function stopQuizScheduler(): void {

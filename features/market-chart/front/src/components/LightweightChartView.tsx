@@ -1,8 +1,18 @@
 import React, { useEffect, useRef } from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { createChart, CandlestickSeries } from 'lightweight-charts';
-import type { Candle } from '../types/market-chart.types';
+import {
+  createChart,
+  CandlestickSeries,
+  createSeriesMarkers,
+  LineStyle,
+  type LineWidth,
+} from 'lightweight-charts';
+import type {
+  Candle,
+  PriceLine,
+  ChartMarker,
+} from '../types/market-chart.types';
 
 // En web usamos la librería directamente. En native usamos WebView.
 const isWeb = Platform.OS === 'web';
@@ -11,9 +21,17 @@ interface LightweightChartViewProps {
   candles: Candle[];
   height?: number;
   width?: number | string;
+  /** Líneas horizontales (precio compra, soporte, resistencia) */
+  priceLines?: PriceLine[];
+  /** Marcadores en puntos temporales (noticias, compras, eventos) */
+  markers?: ChartMarker[];
 }
 
-function buildChartHtml(candles: Candle[]): string {
+function buildChartHtml(
+  candles: Candle[],
+  priceLines: PriceLine[] = [],
+  markers: ChartMarker[] = [],
+): string {
   const dataJson = JSON.stringify(
     candles.map((c) => ({
       time: c.time,
@@ -59,6 +77,31 @@ function buildChartHtml(candles: Candle[]): string {
         wickDownColor: '#ef5350',
       });
       candlestickSeries.setData(data);
+      var priceLinesData = ${JSON.stringify(priceLines)};
+      var markersData = ${JSON.stringify(markers)};
+      if (Array.isArray(priceLinesData)) {
+        priceLinesData.forEach(function(pl) {
+          candlestickSeries.createPriceLine({
+            price: pl.price,
+            color: pl.color || '#ff0000',
+            lineWidth: pl.lineWidth ?? 2,
+            lineStyle: pl.lineStyle ?? 2,
+            axisLabelVisible: pl.axisLabelVisible !== false,
+            title: pl.title || '',
+          });
+        });
+      }
+      if (Array.isArray(markersData) && markersData.length > 0) {
+        candlestickSeries.setMarkers(markersData.map(function(m) {
+          return {
+            time: m.time,
+            position: m.position || 'aboveBar',
+            color: m.color || '#2962FF',
+            shape: m.shape || 'circle',
+            text: m.text || '',
+          };
+        }));
+      }
       chart.timeScale().fitContent();
     })();
   </script>
@@ -70,22 +113,41 @@ export function LightweightChartView({
   candles,
   height = 280,
   width = '100%',
+  priceLines = [],
+  markers = [],
 }: LightweightChartViewProps) {
   if (isWeb) {
     return (
-      <LightweightChartWeb candles={candles} height={height} width={width} />
+      <LightweightChartWeb
+        candles={candles}
+        height={height}
+        width={width}
+        priceLines={priceLines}
+        markers={markers}
+      />
     );
   }
   return (
-    <LightweightChartWebView candles={candles} height={height} width={width} />
+    <LightweightChartWebView
+      candles={candles}
+      height={height}
+      width={width}
+      priceLines={priceLines}
+      markers={markers}
+    />
   );
 }
 
 function LightweightChartWebView({
   candles,
   height,
+  priceLines,
+  markers,
 }: LightweightChartViewProps) {
-  const html = React.useMemo(() => buildChartHtml(candles), [candles]);
+  const html = React.useMemo(
+    () => buildChartHtml(candles, priceLines ?? [], markers ?? []),
+    [candles, priceLines, markers],
+  );
 
   return (
     <View style={[styles.container, styles.responsive, { height }]}>
@@ -102,6 +164,8 @@ function LightweightChartWebView({
 function LightweightChartWeb({
   candles,
   height,
+  priceLines = [],
+  markers = [],
 }: LightweightChartViewProps) {
   const containerRef = useRef<HTMLElement | null>(null);
   const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
@@ -142,6 +206,38 @@ function LightweightChartWeb({
         close: c.close,
       })),
     );
+
+    for (const pl of priceLines) {
+      candlestickSeries.createPriceLine({
+        price: pl.price,
+        color: pl.color ?? '#ff0000',
+        lineWidth: (pl.lineWidth ?? 2) as LineWidth,
+        lineStyle: (pl.lineStyle ?? LineStyle.Dashed) as LineStyle,
+        axisLabelVisible: pl.axisLabelVisible !== false,
+        title: pl.title ?? '',
+      });
+    }
+
+    if (markers.length > 0) {
+      createSeriesMarkers(
+        candlestickSeries,
+        markers.map((m) => ({
+          time: m.time as import('lightweight-charts').UTCTimestamp,
+          position: (m.position ?? 'aboveBar') as
+            | 'aboveBar'
+            | 'belowBar'
+            | 'inBar',
+          color: m.color ?? '#2962FF',
+          shape: (m.shape ?? 'circle') as
+            | 'circle'
+            | 'square'
+            | 'arrowUp'
+            | 'arrowDown',
+          text: m.text ?? '',
+        })),
+      );
+    }
+
     chart.timeScale().fitContent();
     chartRef.current = chart;
 
@@ -167,7 +263,14 @@ function LightweightChartWeb({
       chart.remove();
       chartRef.current = null;
     };
-  }, [candles, height, dimensions.width, dimensions.height]);
+  }, [
+    candles,
+    height,
+    priceLines,
+    markers,
+    dimensions.width,
+    dimensions.height,
+  ]);
 
   const handleLayout = React.useCallback(
     (e: { nativeEvent: { layout: { width: number; height: number } } }) => {

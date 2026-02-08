@@ -5,4 +5,6 @@ export type {
   Candle,
   MarketChartData,
   IndicatorSeries,
+  PriceLine,
+  ChartMarker,
 } from './types/market-chart.types';

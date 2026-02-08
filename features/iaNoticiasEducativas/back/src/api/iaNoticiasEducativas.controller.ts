@@ -1,38 +1,13 @@
 import type { Request, Response } from 'express';
-import type { EducationalNews } from '../domain/iaNoticiasEducativas.types';
 import {
   getHeadlines,
   explainNews,
 } from '../config/iaNoticiasEducativas.wiring';
 import { getQuiz } from '../config/quiz-store';
-
-const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutos
-const MAX_CACHE_SIZE = 50;
-
-type CacheEntry = { educationalNews: EducationalNews; expiresAt: number };
-/** Cache de respuestas ChatGPT por newsId. TTL 15 min, se invalida al reiniciar. */
-const explainCache = new Map<string, CacheEntry>();
-
-function getCached(id: string): EducationalNews | null {
-  const entry = explainCache.get(id);
-  if (!entry) return null;
-  if (Date.now() > entry.expiresAt) {
-    explainCache.delete(id);
-    return null;
-  }
-  return entry.educationalNews;
-}
-
-function setCached(id: string, educationalNews: EducationalNews): void {
-  if (explainCache.size >= MAX_CACHE_SIZE) {
-    const firstKey = explainCache.keys().next().value;
-    if (firstKey != null) explainCache.delete(firstKey);
-  }
-  explainCache.set(id, {
-    educationalNews,
-    expiresAt: Date.now() + CACHE_TTL_MS,
-  });
-}
+import {
+  getExplainCached,
+  setExplainCached,
+} from '../config/explain-cache';
 
 export async function getHeadlinesController(_req: Request, res: Response) {
   console.log('[iaNoticias] 1. Controller: getHeadlines recibida');
@@ -63,7 +38,7 @@ export async function explainNewsController(req: Request, res: Response) {
   const trimmedId = newsId.trim();
 
   try {
-    const cached = getCached(trimmedId);
+    const cached = getExplainCached(trimmedId);
     if (cached) {
       console.log(
         '[iaNoticias] ✅ NOTICIA OBTENIDA DE CACHE (ChatGPT) — newsId:',
@@ -74,7 +49,7 @@ export async function explainNewsController(req: Request, res: Response) {
     }
 
     const educationalNews = await explainNews.execute(trimmedId);
-    setCached(trimmedId, educationalNews);
+    setExplainCached(trimmedId, educationalNews);
 
     console.log(
       '[iaNoticias] 2. Controller: explain OK (cached), título:',
@@ -114,6 +89,6 @@ export async function generateNewsQuizController(
 
   console.log('[iaNoticias] Controller: quiz no disponible para newsId');
   res.status(404).json({
-    error: 'Quiz no disponible. El quiz se genera automáticamente cada 10 minutos.',
+    error: 'Quiz no disponible. El quiz se genera automáticamente cada hora.',
   });
 }
