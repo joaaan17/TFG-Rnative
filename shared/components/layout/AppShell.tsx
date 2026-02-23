@@ -38,10 +38,7 @@ export function AppShell({ children }: AppShellProps) {
         style={[
           appShellStyles.menubar,
           getAppShellMenubarStyle(insets.bottom),
-          {
-            backgroundColor: palette.mainBackground ?? palette.background,
-            borderTopColor: palette.text,
-          },
+          { backgroundColor: 'transparent' },
         ]}
         onLayout={(e) => {
           const h = e.nativeEvent.layout.height;
@@ -49,6 +46,7 @@ export function AppShell({ children }: AppShellProps) {
         }}
       >
         <AppMenubarComponent
+          activePath={pathname}
           onPressNews={() => {
             if (pathname !== '/main') router.push('/main');
           }}

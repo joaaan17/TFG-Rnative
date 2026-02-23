@@ -115,7 +115,7 @@ function Button({
     },
     outline: {
       backgroundColor: palette.background,
-      borderColor: palette.text,
+      borderColor: palette.surfaceBorder ?? palette.text,
       borderWidth: 1,
     },
     secondary: {

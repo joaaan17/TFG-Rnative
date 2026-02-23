@@ -34,7 +34,7 @@ function Input({
         {
           backgroundColor: palette.inputBackground,
           color: palette.text,
-          borderColor: palette.text,
+          borderColor: palette.surfaceBorder ?? palette.text,
         },
         Hierarchy.body,
         style,

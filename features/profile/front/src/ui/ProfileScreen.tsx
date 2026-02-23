@@ -15,7 +15,7 @@ import LigaIcon from '@/shared/icons/liga.svg';
 import RachaIcon from '@/shared/icons/racha.svg';
 import SettingsIcon from '@/shared/icons/settings.svg';
 
-import { profileStyles } from './Profile.styles';
+import { createProfileStyles } from './Profile.styles';
 import { AddFriendsModal } from '../components/add-friends-modal';
 import { FriendProfileModal } from '../components/friend-profile-modal';
 import { FriendsListModal } from '../components/friends-list-modal';
@@ -44,6 +44,7 @@ function formatPatrimonio(value: number): string {
 
 export function ProfileScreen() {
   const palette = usePalette();
+  const styles = React.useMemo(() => createProfileStyles(palette), [palette]);
   const router = useRouter();
   const {
     profile,
@@ -122,7 +123,7 @@ export function ProfileScreen() {
   if (isLoading) {
     return (
       <AppShellComponent>
-        <View style={[profileStyles.container, profileStyles.loadingContainer]}>
+        <View style={[styles.container, styles.loadingContainer]}>
           <ActivityIndicator size="large" color={palette.primary} />
         </View>
       </AppShellComponent>
@@ -132,185 +133,207 @@ export function ProfileScreen() {
   return (
     <AppShellComponent>
       <ScrollView
-        style={profileStyles.container}
-        contentContainerStyle={profileStyles.scrollContent}
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Card className="rounded-none" style={profileStyles.topCard}>
-          <CardHeader style={profileStyles.topCardHeader}>
-            <TypewriterTextComponent
-              key={typewriterKey}
-              text={displayName || 'Usuario'}
-              speed={40}
-              variant="h4"
-              className="border-0 pb-0"
-              style={profileStyles.topCardTitle}
-            />
-          </CardHeader>
+          <Card style={styles.topCard}>
+            <View style={styles.topCardDecorA} pointerEvents="none" />
+            <View style={styles.topCardDecorB} pointerEvents="none" />
 
-          <View
-            style={[profileStyles.topCardCenter, { pointerEvents: 'none' }]}
-          >
-            <ProfileAvatar />
-          </View>
+            <CardHeader style={styles.topCardHeader}>
+              <TypewriterTextComponent
+                key={typewriterKey}
+                text={displayName || 'Usuario'}
+                speed={40}
+                variant="h4"
+                className="border-0 pb-0"
+                style={styles.topCardTitle}
+              />
+            </CardHeader>
 
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Ajustes"
-            hitSlop={10}
-            style={profileStyles.settingsButton}
-            onPress={() => setShowSettingsModal(true)}
-          >
-            <SettingsIcon width={24} height={24} fill={palette.text} />
-          </Pressable>
-        </Card>
-
-        <View style={profileStyles.joinedTextWrapper}>
-          <Text variant="muted">{joinedText}</Text>
-          {error ? (
-            <Text variant="muted" style={profileStyles.errorText}>
-              {error}
-            </Text>
-          ) : null}
-        </View>
-
-        <View style={profileStyles.statsRow}>
-          <View style={profileStyles.statItem}>
-            <Text variant="h3" style={profileStyles.statValue}>
-              {profile?.bf ?? 0}
-            </Text>
-            <Text variant="muted" style={profileStyles.statLabel}>
-              B/F
-            </Text>
-          </View>
-
-          <View style={profileStyles.statItem}>
-            <Text variant="h3" style={profileStyles.statValue}>
-              {profile?.following ?? 0}
-            </Text>
-            <Text variant="muted" style={profileStyles.statLabel}>
-              Siguiendo
-            </Text>
-          </View>
-
-          <View style={profileStyles.statItem}>
-            <Text variant="h3" style={profileStyles.statValue}>
-              {profile?.followers ?? 0}
-            </Text>
-            <Text variant="muted" style={profileStyles.statLabel}>
-              Seguidores
-            </Text>
-          </View>
-        </View>
-
-        <View style={profileStyles.addFriendsWrapper}>
-          <Button
-            size="sm"
-            style={profileStyles.addFriendsButton}
-            onPress={() => setShowAddFriendsModal(true)}
-          >
-            <AgregarIcon width={22} height={22} />
-            <Text>Agregar Amigos</Text>
-          </Button>
-          <Button
-            size="sm"
-            style={profileStyles.addFriendsButton}
-            onPress={() => setShowRequestsModal(true)}
-          >
-            <Text>Ver Solicitudes</Text>
-          </Button>
-        </View>
-
-        <View style={profileStyles.addFriendsRowSecond}>
-          <Button
-            size="sm"
-            style={profileStyles.addFriendsButtonFullWidth}
-            onPress={() => setShowFriendsModal(true)}
-          >
-            <Text>Ver Amigos</Text>
-          </Button>
-        </View>
-
-        <View style={profileStyles.summaryWrapper}>
-          <Text variant="muted" style={profileStyles.summaryTitle}>
-            RESUMEN
-          </Text>
-
-          <View style={profileStyles.summaryGrid}>
-            <View style={profileStyles.summaryRow}>
-              <View style={profileStyles.summaryItem}>
-                <View style={profileStyles.summaryValueRow}>
-                  <RachaIcon
-                    style={profileStyles.summaryIcon}
-                    width={18}
-                    height={18}
-                  />
-                  <Text variant="h4" style={profileStyles.summaryValue}>
-                    {profile?.bf ?? 0} días
-                  </Text>
-                </View>
-              </View>
-              <View style={profileStyles.summaryItem}>
-                <Text variant="h4" style={profileStyles.summaryValue}>
-                  {profile?.nivel ?? 1}
-                </Text>
-              </View>
+            <View style={styles.topCardCenter} pointerEvents="none">
+              <ProfileAvatar
+                size={108}
+                innerSize={82}
+                iconSize={38}
+                outerRingWidth={2}
+              />
             </View>
 
-            <View style={profileStyles.summaryRow}>
-              <View style={profileStyles.summaryItem}>
-                <View style={profileStyles.summaryValueRow}>
-                  <LigaIcon
-                    style={profileStyles.summaryIcon}
-                    width={20}
-                    height={20}
-                  />
-                  <Text variant="h4" style={profileStyles.summaryValue}>
-                    {profile?.division ?? 'Bronce'}
-                  </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Ajustes"
+              hitSlop={10}
+              style={styles.settingsButton}
+              onPress={() => setShowSettingsModal(true)}
+            >
+              <SettingsIcon width={22} height={22} fill={palette.text} />
+            </Pressable>
+          </Card>
+
+          <View style={styles.joinedTextWrapper}>
+            <Text variant="muted">{joinedText}</Text>
+            {error ? (
+              <Text variant="muted" style={styles.errorText}>
+                {error}
+              </Text>
+            ) : null}
+          </View>
+
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text variant="h3" style={styles.statValue}>
+                {profile?.bf ?? 0}
+              </Text>
+              <Text variant="muted" style={styles.statLabel}>
+                B/F
+              </Text>
+            </View>
+
+            <View style={styles.statItem}>
+              <Text variant="h3" style={styles.statValue}>
+                {profile?.following ?? 0}
+              </Text>
+              <Text variant="muted" style={styles.statLabel}>
+                Siguiendo
+              </Text>
+            </View>
+
+            <View style={styles.statItem}>
+              <Text variant="h3" style={styles.statValue}>
+                {profile?.followers ?? 0}
+              </Text>
+              <Text variant="muted" style={styles.statLabel}>
+                Seguidores
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.addFriendsWrapper}>
+            <Button
+              size="sm"
+              style={styles.addFriendsButton}
+              onPress={() => setShowAddFriendsModal(true)}
+            >
+              <AgregarIcon width={20} height={20} />
+              <Text>Agregar Amigos</Text>
+            </Button>
+            <Button
+              size="sm"
+              style={styles.addFriendsButton}
+              onPress={() => setShowRequestsModal(true)}
+            >
+              <Text>Ver Solicitudes</Text>
+            </Button>
+          </View>
+
+          <View style={styles.addFriendsRowSecond}>
+            <Button
+              size="sm"
+              variant="outline"
+              style={[
+                styles.addFriendsButtonFullWidth,
+                {
+                  backgroundColor: 'rgba(29,78,216,0.12)',
+                  borderColor: 'rgba(29,78,216,0.28)',
+                },
+              ]}
+              onPress={() => setShowFriendsModal(true)}
+            >
+              <Text>Ver Amigos</Text>
+            </Button>
+          </View>
+
+          <View style={styles.summaryWrapper}>
+            <View style={styles.sectionTitleRow}>
+              <View style={styles.sectionTitleAccent} />
+              <Text variant="muted" style={styles.summaryTitle}>
+                RESUMEN
+              </Text>
+            </View>
+
+            <View style={styles.sectionCard}>
+              <View style={styles.summaryGrid}>
+                <View style={styles.summaryRow}>
+                  <View style={styles.summaryItem}>
+                    <View style={styles.summaryValueRow}>
+                      <View style={styles.summaryIconPill}>
+                        <RachaIcon width={16} height={16} />
+                      </View>
+                      <Text variant="h4" style={styles.summaryValue}>
+                        {profile?.bf ?? 0} días
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.summaryItem}>
+                    <Text variant="h4" style={styles.summaryValue}>
+                      {profile?.nivel ?? 1}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-              <View style={profileStyles.summaryItem}>
-                <View style={profileStyles.summaryValueRow}>
-                  <ExpIcon
-                    style={profileStyles.summaryIcon}
-                    width={18}
-                    height={18}
-                  />
-                  <Text variant="h4" style={profileStyles.summaryValue}>
-                    {formatPatrimonio(profile?.patrimonio ?? 0)}
-                  </Text>
+
+                <View style={styles.summaryRow}>
+                  <View style={styles.summaryItem}>
+                    <View style={styles.summaryValueRow}>
+                      <View style={styles.summaryIconPill}>
+                        <LigaIcon width={18} height={18} />
+                      </View>
+                      <Text variant="h4" style={styles.summaryValue}>
+                        {profile?.division ?? 'Bronce'}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.summaryItem}>
+                    <View style={styles.summaryValueRow}>
+                      <View style={styles.summaryIconPill}>
+                        <ExpIcon width={16} height={16} />
+                      </View>
+                      <Text variant="h4" style={styles.summaryValue}>
+                        {formatPatrimonio(profile?.patrimonio ?? 0)}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
               </View>
             </View>
           </View>
-        </View>
 
-        <View style={profileStyles.summaryWrapper}>
-          <Text variant="muted" style={profileStyles.summaryTitle}>
-            LOGROS MENSUALES
-          </Text>
+          <View style={styles.summaryWrapper}>
+            <View style={styles.sectionTitleRow}>
+              <View style={styles.sectionTitleAccent} />
+              <Text variant="muted" style={styles.summaryTitle}>
+                LOGROS MENSUALES
+              </Text>
+            </View>
 
-          <View style={profileStyles.logrosRow}>
-            <ProfileAvatar size={72} outerRingWidth={2} showInner={false} />
-            <ProfileAvatar size={72} outerRingWidth={2} showInner={false} />
-            <ProfileAvatar size={72} outerRingWidth={2} showInner={false} />
-            <ProfileAvatar size={72} outerRingWidth={2} showInner={false} />
+            <View style={styles.sectionCard}>
+              <View style={styles.logrosRow}>
+                <ProfileAvatar size={74} outerRingWidth={2} showInner={false} />
+                <ProfileAvatar size={74} outerRingWidth={2} showInner={false} />
+                <ProfileAvatar size={74} outerRingWidth={2} showInner={false} />
+                <ProfileAvatar size={74} outerRingWidth={2} showInner={false} />
+              </View>
+            </View>
           </View>
-        </View>
 
-        <View style={profileStyles.summaryWrapper}>
-          <Text variant="muted" style={profileStyles.summaryTitle}>
-            LOGROS TOTALES
-          </Text>
+          <View style={styles.summaryWrapper}>
+            <View style={styles.sectionTitleRow}>
+              <View style={styles.sectionTitleAccent} />
+              <Text variant="muted" style={styles.summaryTitle}>
+                LOGROS TOTALES
+              </Text>
+            </View>
 
-          <View style={profileStyles.logrosRow}>
-            <ProfileAvatar size={72} outerRingWidth={2} showInner={false} />
-            <ProfileAvatar size={72} outerRingWidth={2} showInner={false} />
-            <ProfileAvatar size={72} outerRingWidth={2} showInner={false} />
-            <ProfileAvatar size={72} outerRingWidth={2} showInner={false} />
+            <View style={styles.sectionCard}>
+              <View style={styles.logrosRow}>
+                <ProfileAvatar size={74} outerRingWidth={2} showInner={false} />
+                <ProfileAvatar size={74} outerRingWidth={2} showInner={false} />
+                <ProfileAvatar size={74} outerRingWidth={2} showInner={false} />
+                <ProfileAvatar size={74} outerRingWidth={2} showInner={false} />
+              </View>
+            </View>
           </View>
-        </View>
       </ScrollView>
 
       <FriendsListModal

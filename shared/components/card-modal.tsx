@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import AppColors from '@/design-system/colors';
 import { Card } from '@/shared/components/ui/card';
 import { usePalette } from '@/shared/hooks/use-palette';
 
@@ -349,7 +348,7 @@ export function CardModal({
                   ...(scrollable && { flex: 1 }),
                   maxHeight,
                   backgroundColor: palette.cardBackground,
-                  borderColor: palette.text,
+                  borderColor: palette.surfaceBorder ?? palette.text,
                 },
               ]}
             >
@@ -438,7 +437,7 @@ const styles = StyleSheet.create({
     width: 88, // más largo (estilo iOS)
     height: 5,
     borderRadius: 999,
-    backgroundColor: AppColors.light.primary, // negro
+    backgroundColor: 'rgba(0,0,0,0.22)',
     opacity: 0.9,
   },
 });

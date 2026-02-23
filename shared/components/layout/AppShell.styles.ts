@@ -13,8 +13,7 @@ export const appShellStyles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingTop: 6,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 0,
     zIndex: 1000,
     elevation: 24,
   },
@@ -22,6 +21,7 @@ export const appShellStyles = StyleSheet.create({
 
 export function getAppShellMenubarStyle(bottomInset: number) {
   return {
-    paddingBottom: Math.max(bottomInset, 6),
+    paddingBottom: Math.max(bottomInset, 10),
+    paddingHorizontal: 0,
   } as const;
 }

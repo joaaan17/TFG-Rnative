@@ -3,49 +3,49 @@
  * Define los colores para modo claro y oscuro
  */
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const tintColorLight = '#1D4ED8';
+const tintColorDark = '#60A5FA';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
+    text: '#0B1220',
+    background: '#F7F9FC',
     tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
+    icon: '#5B6B82',
+    tabIconDefault: '#5B6B82',
     tabIconSelected: tintColorLight,
     // Colores adicionales para la app
-    primary: '#000000', // Negro para botones primarios
-    primaryText: '#FFFFFF', // Blanco para texto en botones primarios
-    destructive: '#EF4444',
+    primary: '#1D4ED8', // Azul principal
+    primaryText: '#FFFFFF',
+    destructive: '#E5484D',
     destructiveText: '#FFFFFF',
-    inputBackground: '#F5F5F5', // Gris claro para inputs
-    surfaceMuted: '#E0E0E0', // Gris (un tono más claro) para superficies (ej: headers/cards)
-    surfaceBorder: '#BDBDBD', // Gris más oscuro para separadores/bordes sutiles
-    link: '#687076', // Color para links
-    cardBackground: '#FFFFFF', // Fondo de cards
-    headerBackground: '#1A5D3E', // Verde oscuro para header
-    mainBackground: '#ffffff',
+    inputBackground: '#FFFFFF',
+    surfaceMuted: '#EEF2F7',
+    surfaceBorder: '#D6DEE8',
+    link: '#1D4ED8',
+    cardBackground: '#FFFFFF',
+    headerBackground: '#0B1220',
+    mainBackground: '#F7F9FC',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    text: '#E6EDF6',
+    background: '#070B14',
     tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    icon: '#9AA9BF',
+    tabIconDefault: '#9AA9BF',
+    tabIconSelected: '#E6EDF6',
     // Colores adicionales para modo oscuro
-    primary: '#FFFFFF',
-    primaryText: '#000000',
-    destructive: '#F87171',
-    destructiveText: '#000000',
-    inputBackground: '#2A2A2A',
-    surfaceMuted: '#2A2A2A',
-    surfaceBorder: '#3A3A3A',
-    link: '#9BA1A6',
-    cardBackground: '#1E1E1E',
-    headerBackground: '#1A5D3E',
-    mainBackground: '#000000',
+    primary: '#60A5FA',
+    primaryText: '#081226',
+    destructive: '#FB7185',
+    destructiveText: '#0B1220',
+    inputBackground: '#0B1220',
+    surfaceMuted: '#0F1930',
+    surfaceBorder: '#1B2A45',
+    link: '#60A5FA',
+    cardBackground: '#0B1220',
+    headerBackground: '#070B14',
+    mainBackground: '#070B14',
   },
 };
 
