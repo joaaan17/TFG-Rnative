@@ -7,6 +7,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Text } from '@/shared/components/ui/text';
 import { CardModal } from '@/shared/components/card-modal';
 import { FriendCard } from '@/shared/components/friend-card';
+import { Hierarchy } from '@/design-system/typography';
 
 import { batallasStyles } from './Batallas.styles';
 import { useBatallasViewModel } from '../state/useBatallasViewModel';
@@ -34,7 +35,7 @@ export function BatallasScreen() {
             <Button
               size="xl"
               style={batallasStyles.footerButton}
-              textStyle={{ fontFamily: 'ArchivoBlack', fontSize: 18 }}
+              textStyle={[Hierarchy.action, { fontSize: 18 }]}
               onPress={() => setStartBattleOpen(true)}
             >
               <Text>INICIAR BATALLA</Text>
@@ -47,7 +48,7 @@ export function BatallasScreen() {
           onClose={() => setStartBattleOpen(false)}
         >
           <View style={batallasStyles.modalHeader}>
-            <Text variant="h3" style={{ fontFamily: 'ArchivoBlack' }}>
+            <Text variant="h3" style={Hierarchy.titleModalLarge}>
               INICIAR BATALLA
             </Text>
           </View>

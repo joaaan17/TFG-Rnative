@@ -1,8 +1,9 @@
 import React from 'react';
 
 import { Text } from '@/shared/components/ui/text';
+import { FontFamilies } from '@/design-system/typography';
 
-const DEFAULT_TYPEWRITER_FONT_FAMILY = 'ArchivoBlack';
+const DEFAULT_TYPEWRITER_FONT_FAMILY = FontFamilies.primary.bold;
 
 export type TypewriterTextProps = {
   text: string;
@@ -10,7 +11,7 @@ export type TypewriterTextProps = {
   /**
    * Controla la tipografía del texto animado.
    * - Si `useDefaultFontFamily` es true (default), se usa `fontFamily` si lo pasas,
-   *   o `ArchivoBlack` como fallback.
+   *   o la tipografía principal de títulos como fallback.
    * - Si `useDefaultFontFamily` es false, NO se fuerza ninguna fontFamily (usa la tipografía normal de la app).
    */
   fontFamily?: string;

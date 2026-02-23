@@ -4,6 +4,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { Platform, Text as RNText, type Role } from 'react-native';
 import { usePalette } from '@/shared/hooks/use-palette';
+import { FontFamilies, Hierarchy } from '@/design-system/typography';
 
 const textVariants = cva(
   cn(
@@ -86,6 +87,22 @@ function Text({
   const textClass = React.useContext(TextClassContext);
   const Component = asChild ? Slot.Text : RNText;
   const resolvedVariant = variant ?? 'default';
+  const typographyStyle =
+    resolvedVariant === 'h1'
+      ? Hierarchy.titleLarge
+      : resolvedVariant === 'h2'
+        ? Hierarchy.titleModalLarge
+        : resolvedVariant === 'h3'
+          ? Hierarchy.titleModal
+          : resolvedVariant === 'h4'
+            ? Hierarchy.valueSecondary
+            : resolvedVariant === 'small'
+              ? Hierarchy.bodySmallSemibold
+              : resolvedVariant === 'muted'
+                ? Hierarchy.bodySmall
+                : resolvedVariant === 'code'
+                  ? { fontFamily: FontFamilies.mono }
+                  : Hierarchy.body;
   const color =
     resolvedVariant === 'link'
       ? palette.link
@@ -96,7 +113,7 @@ function Text({
   return (
     <Component
       className={cn(textVariants({ variant }), textClass, className)}
-      style={[{ color }, props.style]}
+      style={[typographyStyle, { color }, props.style]}
       role={variant ? ROLE[variant] : undefined}
       aria-level={variant ? ARIA_LEVEL[variant] : undefined}
       {...props}

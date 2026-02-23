@@ -13,6 +13,11 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
+      fontFamily: {
+        primary: ['var(--font-family-primary)'],
+        body: ['var(--font-family-body)'],
+        secondary: ['var(--font-family-secondary)'],
+      },
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',

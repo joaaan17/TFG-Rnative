@@ -9,6 +9,7 @@ import {
 import { usePalette } from '@/shared/hooks/use-palette';
 import { cn } from '@/lib/utils';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { Hierarchy } from '@/design-system/typography';
 
 const buttonVariants = cva(
   cn(
@@ -139,6 +140,7 @@ function Button({
 
   const resolvedVariant = variant ?? 'default';
   const textColor = textColors[resolvedVariant];
+  const resolvedTextStyle = [Hierarchy.action, textStyle] as const;
 
   const content =
     typeof children === 'function'
@@ -147,7 +149,7 @@ function Button({
           if (!React.isValidElement(child)) return child;
           const el = child as React.ReactElement<any>;
           return React.cloneElement(el, {
-            style: [el.props?.style, textStyle, { color: textColor }],
+            style: [el.props?.style, resolvedTextStyle, { color: textColor }],
           });
         });
 

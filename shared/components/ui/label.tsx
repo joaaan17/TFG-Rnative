@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import * as LabelPrimitive from '@rn-primitives/label';
 import { Platform } from 'react-native';
+import { Hierarchy } from '@/design-system/typography';
 
 function Label({
   className,
@@ -32,6 +33,7 @@ function Label({
           Platform.select({ web: 'leading-none' }),
           className,
         )}
+        style={[Hierarchy.label, props.style]}
         {...props}
       />
     </LabelPrimitive.Root>

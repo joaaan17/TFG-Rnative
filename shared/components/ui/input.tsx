@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { Platform, TextInput, type TextInputProps } from 'react-native';
 import { usePalette } from '@/shared/hooks/use-palette';
+import { Hierarchy } from '@/design-system/typography';
 
 function Input({
   className,
@@ -35,6 +36,7 @@ function Input({
           color: palette.text,
           borderColor: palette.text,
         },
+        Hierarchy.body,
         style,
       ]}
       placeholderTextColor={placeholderColor}

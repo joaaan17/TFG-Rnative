@@ -13,6 +13,19 @@ import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
+import {
+  DMSans_400Regular,
+  DMSans_500Medium,
+} from '@expo-google-fonts/dm-sans';
+import {
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+} from '@expo-google-fonts/manrope';
+import {
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+} from '@expo-google-fonts/plus-jakarta-sans';
+
 import { useColorScheme } from '@/shared/hooks/use-color-scheme';
 import { AuthProvider } from '@/features/auth/front/src/state/AuthContext';
 
@@ -23,7 +36,12 @@ SplashScreen.preventAutoHideAsync().catch(() => {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [fontsLoaded] = useFonts({
-    ArchivoBlack: require('../shared/fonts/ArchivoBlack-Regular.ttf'),
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
   });
 
   React.useEffect(() => {

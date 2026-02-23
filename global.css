@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=DM+Sans:wght@400;500&family=Manrope:wght@500;600&display=swap');
+
 /* Ocultar barra de scroll en navegador para un aspecto más limpio tipo app */
 *::-webkit-scrollbar {
   display: none;
@@ -13,6 +15,10 @@
 
 @layer base {
   :root {
+    --font-family-primary: 'Plus Jakarta Sans', ui-sans-serif, system-ui;
+    --font-family-body: 'DM Sans', ui-sans-serif, system-ui;
+    --font-family-secondary: 'Manrope', ui-sans-serif, system-ui;
+
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
