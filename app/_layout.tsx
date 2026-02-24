@@ -78,6 +78,10 @@ export default function RootLayout() {
               name="investments"
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="stock"
+              options={{ headerShown: false }}
+            />
             <Stack.Screen name="batallas" options={{ headerShown: false }} />
             <Stack.Screen
               name="modal"

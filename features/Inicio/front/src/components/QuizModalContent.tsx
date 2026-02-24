@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Hierarchy } from '@/design-system/typography';
 import { Text } from '@/shared/components/ui/text';
 import { Button } from '@/shared/components/ui/button';
 import { usePalette } from '@/shared/hooks/use-palette';
@@ -28,6 +29,7 @@ export function QuizModalContent({
   error,
   onContentSizeChange,
 }: QuizModalContentProps) {
+  const palette = usePalette();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [reviewingIndex, setReviewingIndex] = useState<number | null>(null);
 
@@ -74,7 +76,9 @@ export function QuizModalContent({
           )
         }
       >
-        <Text variant="muted">{error}</Text>
+        <Text style={[Hierarchy.body, { color: palette.icon ?? palette.text }]}>
+          {error}
+        </Text>
       </View>
     );
   }
@@ -90,7 +94,9 @@ export function QuizModalContent({
           )
         }
       >
-        <Text variant="muted">No se pudo generar el quiz.</Text>
+        <Text style={[Hierarchy.body, { color: palette.icon ?? palette.text }]}>
+          No se pudo generar el quiz.
+        </Text>
       </View>
     );
   }
@@ -115,10 +121,22 @@ export function QuizModalContent({
         showsVerticalScrollIndicator={false}
         onContentSizeChange={(w, h) => onContentSizeChange?.(w, h)}
       >
-        <Text variant="h3" style={styles.title}>
+        <Text
+          style={[
+            Hierarchy.titleModal,
+            styles.title,
+            { color: palette.text },
+          ]}
+        >
           Repasar pregunta {displayIndex + 1}
         </Text>
-        <Text variant="muted" style={styles.subtitle}>
+        <Text
+          style={[
+            Hierarchy.caption,
+            styles.subtitle,
+            { color: palette.icon ?? palette.text },
+          ]}
+        >
           {displayIndex + 1} de {total}
         </Text>
 
@@ -136,7 +154,7 @@ export function QuizModalContent({
             size="lg"
             style={styles.nextButton}
           >
-            <Text>Volver a resultados</Text>
+            <Text style={Hierarchy.action}>Volver a resultados</Text>
           </Button>
         </View>
       </ScrollView>
@@ -154,7 +172,13 @@ export function QuizModalContent({
         showsVerticalScrollIndicator={false}
         onContentSizeChange={(w, h) => onContentSizeChange?.(w, h)}
       >
-        <Text variant="h3" style={styles.resultsTitle}>
+        <Text
+          style={[
+            Hierarchy.titleModal,
+            styles.resultsTitle,
+            { color: palette.text },
+          ]}
+        >
           Resultados del test
         </Text>
         <View style={styles.resultsQuestionsRow}>
@@ -179,8 +203,11 @@ export function QuizModalContent({
                 ]}
               >
                 <Text
-                  variant="default"
-                  style={[styles.resultsQuestionBadgeText, { color: bgColor }]}
+                  style={[
+                    Hierarchy.bodySmallSemibold,
+                    styles.resultsQuestionBadgeText,
+                    { color: bgColor },
+                  ]}
                 >
                   {qIdx + 1}
                 </Text>
@@ -189,7 +216,9 @@ export function QuizModalContent({
           })}
         </View>
         <View style={styles.resultsScoreWrapper}>
-          <Text variant="default" style={styles.resultsScore}>
+          <Text
+            style={[Hierarchy.value, styles.resultsScore, { color: palette.text }]}
+          >
             {correctCount}/{total} ({Math.round((correctCount / total) * 100)}%)
           </Text>
         </View>
@@ -200,18 +229,21 @@ export function QuizModalContent({
           ]}
         >
           <Text
-            variant="h3"
             style={[
+              Hierarchy.titleModal,
               styles.resultsVerdictText,
-              {
-                color: passed ? '#22c55e' : '#ef4444',
-                fontWeight: '500',
-              },
+              { color: passed ? '#22c55e' : '#ef4444' },
             ]}
           >
             {passed ? '¡Has aprobado!' : 'No has aprobado'}
           </Text>
-          <Text variant="muted" style={styles.resultsVerdictSub}>
+          <Text
+            style={[
+              Hierarchy.body,
+              styles.resultsVerdictSub,
+              { color: palette.icon ?? palette.text },
+            ]}
+          >
             {passed
               ? 'Has demostrado comprender los conceptos clave.'
               : 'Repasa el contenido de la noticia e inténtalo de nuevo.'}
@@ -229,10 +261,18 @@ export function QuizModalContent({
       showsVerticalScrollIndicator={false}
       onContentSizeChange={(w, h) => onContentSizeChange?.(w, h)}
     >
-      <Text variant="h3" style={styles.title}>
+      <Text
+        style={[Hierarchy.titleModal, styles.title, { color: palette.text }]}
+      >
         Test de comprensión
       </Text>
-      <Text variant="muted" style={styles.subtitle}>
+      <Text
+        style={[
+          Hierarchy.caption,
+          styles.subtitle,
+          { color: palette.icon ?? palette.text },
+        ]}
+      >
         Pregunta {currentIndex + 1} de {total}
       </Text>
 
@@ -251,7 +291,7 @@ export function QuizModalContent({
           size="lg"
           style={styles.nextButton}
         >
-          <Text>
+          <Text style={Hierarchy.action}>
             {currentIndex < total - 1 ? 'Siguiente pregunta' : 'Ver resultados'}
           </Text>
         </Button>
@@ -278,7 +318,13 @@ function QuestionBlock({
 
   return (
     <View style={styles.questionBlock}>
-      <Text variant="default" style={styles.questionText}>
+      <Text
+        style={[
+          Hierarchy.bodySmallSemibold,
+          styles.questionText,
+          { color: palette.text },
+        ]}
+      >
         {index + 1}. {question.question}
       </Text>
       {question.options.map((opt, optIndex) => {
@@ -305,8 +351,11 @@ function QuestionBlock({
             ]}
           >
             <Text
-              variant="default"
-              style={[styles.optionText, bgColor && { color: bgColor }]}
+              style={[
+                Hierarchy.body,
+                styles.optionText,
+                { color: bgColor ?? palette.text },
+              ]}
             >
               {opt}
             </Text>
@@ -344,8 +393,6 @@ const styles = StyleSheet.create({
   },
   questionText: {
     marginBottom: 12,
-    fontWeight: '600',
-    fontSize: 16,
   },
   option: {
     padding: 14,
@@ -389,20 +436,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  resultsQuestionBadgeText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
+  resultsQuestionBadgeText: {},
   resultsScoreWrapper: {
     minHeight: 56,
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 8,
   },
-  resultsScore: {
-    fontSize: 20,
-    fontWeight: '700',
-  },
+  resultsScore: {},
   resultsVerdict: {
     padding: 20,
     borderRadius: 18,

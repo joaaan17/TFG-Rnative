@@ -1,13 +1,11 @@
 import React, { useMemo } from 'react';
 import { View } from 'react-native';
 import { Hierarchy } from '@/design-system/typography';
-import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
 import { Text } from '@/shared/components/ui/text';
 import { usePalette } from '@/shared/hooks/use-palette';
 
 export type EducationalNewsContentProps = {
   content: string;
-  typewriterSpeed?: number;
 };
 
 type Block = { type: 'h2' | 'h3' | 'paragraph'; text: string };
@@ -73,20 +71,19 @@ function parseInlineLabels(text: string): InlineSegment[] {
  */
 export function EducationalNewsContent({
   content,
-  typewriterSpeed = 8,
 }: EducationalNewsContentProps) {
   const palette = usePalette();
   const blocks = useMemo(() => parseMarkdownBlocks(content), [content]);
 
   const styles = useMemo(
     () => ({
-      container: { gap: 22 },
+      container: { gap: 14 },
       h2Row: {
         flexDirection: 'row' as const,
         alignItems: 'center' as const,
         gap: 12,
-        marginTop: 16,
-        marginBottom: 8,
+        marginTop: 12,
+        marginBottom: 4,
       },
       h2Accent: {
         width: 4,
@@ -104,8 +101,8 @@ export function EducationalNewsContent({
         flexDirection: 'row' as const,
         alignItems: 'center' as const,
         gap: 10,
-        marginTop: 24,
-        marginBottom: 10,
+        marginTop: 10,
+        marginBottom: 6,
       },
       h3Accent: {
         width: 3,
@@ -129,8 +126,9 @@ export function EducationalNewsContent({
         paddingLeft: 2,
       },
       labelText: {
-        ...Hierarchy.label,
+        ...Hierarchy.body,
         color: palette.primary,
+        lineHeight: 26,
       },
     }),
     [palette],
@@ -175,15 +173,9 @@ export function EducationalNewsContent({
           );
         }
         return (
-          <TypewriterTextComponent
-            key={idx}
-            text={block.text}
-            speed={typewriterSpeed}
-            useDefaultFontFamily={false}
-            variant="muted"
-            className="border-0 pb-0"
-            style={styles.paragraph}
-          />
+          <Text key={idx} style={styles.paragraph}>
+            {block.text}
+          </Text>
         );
       })}
     </View>

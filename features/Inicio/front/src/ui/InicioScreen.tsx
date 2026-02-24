@@ -241,7 +241,6 @@ function NewsModalContent({
             <EducationalNewsContent
               key={`${selectedNews.id}-content`}
               content={content}
-              typewriterSpeed={8}
             />
           </View>
         </View>

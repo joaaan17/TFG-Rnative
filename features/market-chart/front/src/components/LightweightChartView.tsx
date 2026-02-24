@@ -17,6 +17,18 @@ import type {
 // En web usamos la librería directamente. En native usamos WebView.
 const isWeb = Platform.OS === 'web';
 
+export type ChartTheme = {
+  layoutBackgroundColor?: string;
+  textColor?: string;
+  gridColor?: string;
+  /** Color velas alcistas (default: verde coherente con app) */
+  upColor?: string;
+  /** Color velas bajistas (default: destructive de la app) */
+  downColor?: string;
+  /** Tamaño fuente ejes (p. ej. 11-12 para jerarquía sutil) */
+  fontSize?: number;
+};
+
 interface LightweightChartViewProps {
   candles: Candle[];
   height?: number;
@@ -25,13 +37,28 @@ interface LightweightChartViewProps {
   priceLines?: PriceLine[];
   /** Marcadores en puntos temporales (noticias, compras, eventos) */
   markers?: ChartMarker[];
+  /** Tema opcional para integrar con la paleta de la app */
+  theme?: ChartTheme;
 }
+
+const DEFAULT_CHART_THEME: Required<Omit<ChartTheme, 'fontSize'>> & {
+  fontSize?: number;
+} = {
+  layoutBackgroundColor: '#ffffff',
+  textColor: '#333333',
+  gridColor: '#eeeeee',
+  upColor: '#16A34A', // verde éxito (coherente con asset-card)
+  downColor: '#E5484D', // destructive design system
+  fontSize: 11,
+};
 
 function buildChartHtml(
   candles: Candle[],
   priceLines: PriceLine[] = [],
   markers: ChartMarker[] = [],
+  theme: ChartTheme = {},
 ): string {
+  const t = { ...DEFAULT_CHART_THEME, ...theme };
   const dataJson = JSON.stringify(
     candles.map((c) => ({
       time: c.time,
@@ -51,7 +78,7 @@ function buildChartHtml(
   <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; background: #fff; }
+    html, body { width: 100%; height: 100%; background: ${t.layoutBackgroundColor}; }
     #chart { width: 100%; height: 100%; min-height: 280px; }
   </style>
 </head>
@@ -62,19 +89,40 @@ function buildChartHtml(
       var data = ${dataJson};
       if (!data || data.length === 0) return;
       var container = document.getElementById('chart');
+      var fontSize = ${t.fontSize ?? 11};
       var chart = LightweightCharts.createChart(container, {
-        layout: { background: { color: '#ffffff' }, textColor: '#333' },
-        grid: { vertLines: { color: '#eee' }, horzLines: { color: '#eee' } },
+        layout: {
+          background: { color: '${t.layoutBackgroundColor}' },
+          textColor: '${t.textColor}',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "DM Sans", sans-serif',
+          fontSize: fontSize,
+        },
+        grid: {
+          vertLines: { color: '${t.gridColor}' },
+          horzLines: { color: '${t.gridColor}' },
+        },
+        rightPriceScale: {
+          borderColor: 'transparent',
+          scaleMargins: { top: 0.1, bottom: 0.15 },
+        },
+        timeScale: {
+          timeVisible: true,
+          secondsVisible: false,
+          borderColor: 'transparent',
+        },
         width: container.clientWidth,
         height: container.clientHeight || 280,
-        timeScale: { timeVisible: true, secondsVisible: false },
+        crosshair: {
+          vertLine: { color: '${t.textColor}', labelBackgroundColor: '${t.textColor}' },
+          horzLine: { color: '${t.gridColor}' },
+        },
       });
       var candlestickSeries = chart.addCandlestickSeries({
-        upColor: '#26a69a',
-        downColor: '#ef5350',
+        upColor: '${t.upColor}',
+        downColor: '${t.downColor}',
         borderVisible: false,
-        wickUpColor: '#26a69a',
-        wickDownColor: '#ef5350',
+        wickUpColor: '${t.upColor}',
+        wickDownColor: '${t.downColor}',
       });
       candlestickSeries.setData(data);
       var priceLinesData = ${JSON.stringify(priceLines)};
@@ -115,6 +163,7 @@ export function LightweightChartView({
   width = '100%',
   priceLines = [],
   markers = [],
+  theme,
 }: LightweightChartViewProps) {
   if (isWeb) {
     return (
@@ -124,6 +173,7 @@ export function LightweightChartView({
         width={width}
         priceLines={priceLines}
         markers={markers}
+        theme={theme}
       />
     );
   }
@@ -134,6 +184,7 @@ export function LightweightChartView({
       width={width}
       priceLines={priceLines}
       markers={markers}
+      theme={theme}
     />
   );
 }
@@ -143,10 +194,11 @@ function LightweightChartWebView({
   height,
   priceLines,
   markers,
+  theme,
 }: LightweightChartViewProps) {
   const html = React.useMemo(
-    () => buildChartHtml(candles, priceLines ?? [], markers ?? []),
-    [candles, priceLines, markers],
+    () => buildChartHtml(candles, priceLines ?? [], markers ?? [], theme ?? {}),
+    [candles, priceLines, markers, theme],
   );
 
   return (
@@ -166,6 +218,7 @@ function LightweightChartWeb({
   height,
   priceLines = [],
   markers = [],
+  theme,
 }: LightweightChartViewProps) {
   const containerRef = useRef<HTMLElement | null>(null);
   const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
@@ -173,6 +226,10 @@ function LightweightChartWeb({
     width: 0,
     height,
   });
+  const chartTheme = React.useMemo(
+    () => ({ ...DEFAULT_CHART_THEME, ...theme }),
+    [theme],
+  );
 
   useEffect(() => {
     const el = containerRef.current as HTMLElement | null;
@@ -182,19 +239,43 @@ function LightweightChartWeb({
     const h = dimensions.height || height;
 
     const chart = createChart(el, {
-      layout: { background: { color: '#ffffff' }, textColor: '#333' },
-      grid: { vertLines: { color: '#eee' }, horzLines: { color: '#eee' } },
+      layout: {
+        background: { color: chartTheme.layoutBackgroundColor },
+        textColor: chartTheme.textColor,
+        fontSize: (chartTheme as ChartTheme & { fontSize?: number }).fontSize ?? 11,
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "DM Sans", sans-serif',
+      },
+      grid: {
+        vertLines: { color: chartTheme.gridColor },
+        horzLines: { color: chartTheme.gridColor },
+      },
+      rightPriceScale: {
+        borderColor: 'transparent',
+        scaleMargins: { top: 0.1, bottom: 0.15 },
+      },
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: false,
+        borderColor: 'transparent',
+      },
       width: w,
       height: h,
-      timeScale: { timeVisible: true, secondsVisible: false },
+      crosshair: {
+        vertLine: {
+          color: chartTheme.textColor,
+          labelBackgroundColor: chartTheme.textColor,
+        },
+        horzLine: { color: chartTheme.gridColor },
+      },
     });
 
     const candlestickSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#26a69a',
-      downColor: '#ef5350',
+      upColor: chartTheme.upColor,
+      downColor: chartTheme.downColor,
       borderVisible: false,
-      wickUpColor: '#26a69a',
-      wickDownColor: '#ef5350',
+      wickUpColor: chartTheme.upColor,
+      wickDownColor: chartTheme.downColor,
     });
 
     candlestickSeries.setData(
@@ -268,6 +349,7 @@ function LightweightChartWeb({
     height,
     priceLines,
     markers,
+    chartTheme,
     dimensions.width,
     dimensions.height,
   ]);
@@ -309,8 +391,8 @@ function LightweightChartWeb({
 const styles = StyleSheet.create({
   container: {
     overflow: 'hidden',
-    borderRadius: 12,
-    backgroundColor: '#fff',
+    borderRadius: 0,
+    backgroundColor: 'transparent',
   },
   responsive: {
     width: '100%',
