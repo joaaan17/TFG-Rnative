@@ -21,7 +21,7 @@ export const appShellStyles = StyleSheet.create({
 
 export function getAppShellMenubarStyle(bottomInset: number) {
   return {
-    paddingBottom: Math.max(bottomInset, 10),
+    paddingBottom: Math.max(bottomInset, 6),
     paddingHorizontal: 0,
   } as const;
 }

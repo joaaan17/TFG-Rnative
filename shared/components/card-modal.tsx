@@ -53,6 +53,10 @@ export type CardModalProps = {
    * Cuando scrollable y se proporciona, el modal se ajusta al contenido hasta maxHeight.
    */
   contentHeight?: number;
+  /**
+   * Si true, el Card no tiene padding superior (para que el contenido pueda llegar hasta arriba, p. ej. imagen bajo la barra de arrastre).
+   */
+  contentNoPaddingTop?: boolean;
 };
 
 const DRAG_HANDLE_OFFSET = 50; // espacio para el handle y margen superior
@@ -66,6 +70,7 @@ export function CardModal({
   closeOnBackdropPress = true,
   scrollable = false,
   contentHeight,
+  contentNoPaddingTop = false,
 }: CardModalProps) {
   const palette = usePalette();
   const insets = useSafeAreaInsets();
@@ -142,6 +147,10 @@ export function CardModal({
   // Calcular intensidad máxima del blur según si está bloqueado
   const maxBlurIntensity = closeOnBackdropPress ? 20 : 40;
   const maxBackdropOpacity = closeOnBackdropPress ? 0.3 : 0.5;
+  const blurTint =
+    palette.background === '#070B14' || palette.background === '#081226'
+      ? 'dark'
+      : 'light';
 
   // Listener para actualizar el valor de opacidad del blur (necesario para web)
   React.useEffect(() => {
@@ -240,14 +249,17 @@ export function CardModal({
           >
             <BlurViewComponent
               intensity={maxBlurIntensity}
-              tint="dark"
+              tint={blurTint}
               style={StyleSheet.absoluteFill}
             >
               <Animated.View
                 style={[
                   StyleSheet.absoluteFill,
                   {
-                    backgroundColor: 'rgba(0,0,0,0)',
+                    backgroundColor:
+                      blurTint === 'dark'
+                        ? 'rgba(0,0,0,0)'
+                        : 'rgba(255,255,255,0)',
                     opacity: backdropOpacity.interpolate({
                       inputRange: [0, 1],
                       outputRange: [0, maxBackdropOpacity],
@@ -266,9 +278,14 @@ export function CardModal({
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: closeOnBackdropPress
-                ? 'rgba(0,0,0,0.6)'
-                : 'rgba(0,0,0,0.8)',
+              backgroundColor:
+                blurTint === 'dark'
+                  ? closeOnBackdropPress
+                    ? 'rgba(0,0,0,0.60)'
+                    : 'rgba(0,0,0,0.78)'
+                  : closeOnBackdropPress
+                    ? 'rgba(10,14,24,0.26)'
+                    : 'rgba(10,14,24,0.36)',
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
               opacity: blurOpacityValue,
@@ -281,9 +298,14 @@ export function CardModal({
             style={[
               StyleSheet.absoluteFill,
               {
-                backgroundColor: closeOnBackdropPress
-                  ? 'rgba(0,0,0,0.6)'
-                  : 'rgba(0,0,0,0.8)',
+                backgroundColor:
+                  blurTint === 'dark'
+                    ? closeOnBackdropPress
+                      ? 'rgba(0,0,0,0.60)'
+                      : 'rgba(0,0,0,0.78)'
+                    : closeOnBackdropPress
+                      ? 'rgba(10,14,24,0.26)'
+                      : 'rgba(10,14,24,0.36)',
                 opacity: blurOpacity,
               },
             ]}
@@ -341,7 +363,7 @@ export function CardModal({
             ]}
           >
             <Card
-              className="rounded-t-xl rounded-b-none"
+              className="rounded-t-3xl rounded-b-none"
               style={[
                 styles.card,
                 {
@@ -349,6 +371,7 @@ export function CardModal({
                   maxHeight,
                   backgroundColor: palette.cardBackground,
                   borderColor: palette.surfaceBorder ?? palette.text,
+                  ...(contentNoPaddingTop && { paddingTop: 0 }),
                 },
               ]}
             >
@@ -414,8 +437,8 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
     overflow: 'hidden',
@@ -434,11 +457,11 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   dragHandle: {
-    width: 88, // más largo (estilo iOS)
-    height: 5,
+    width: 64,
+    height: 4,
     borderRadius: 999,
-    backgroundColor: 'rgba(0,0,0,0.22)',
-    opacity: 0.9,
+    backgroundColor: 'rgba(128,128,128,0.35)',
+    opacity: 0.95,
   },
 });
 

@@ -1,5 +1,11 @@
 import React from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import {
+  LayoutChangeEvent,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 import Animated, {
   Easing,
   interpolate,
@@ -29,6 +35,10 @@ try {
   BlurViewComponent = null;
 }
 
+const INDICATOR_DURATION_MS = 280;
+const INDICATOR_EASING = Easing.out(Easing.cubic);
+const ROW_PADDING_H = 8;
+
 export type AppMenubarProps = {
   activePath?: string;
   onPressProfile?: () => void;
@@ -47,11 +57,23 @@ export function AppMenubar({
   onPressQuestion,
 }: AppMenubarProps) {
   const palette = usePalette();
+  const [rowWidth, setRowWidth] = React.useState(0);
+  const [indicatorReady, setIndicatorReady] = React.useState(false);
+  const isInitialPosition = React.useRef(true);
+  const centerXSv = useSharedValue(0);
+  const ITEM_COUNT = 5;
+  const HALO_SIZE = 20;
 
   function withAlpha(hex: string, alpha01: number) {
     const a = Math.max(0, Math.min(1, alpha01));
     const h = hex.replace('#', '').trim();
-    const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+    const full =
+      h.length === 3
+        ? h
+            .split('')
+            .map((c) => c + c)
+            .join('')
+        : h;
     if (full.length !== 6) return `rgba(0,0,0,${a})`;
     const r = parseInt(full.slice(0, 2), 16);
     const g = parseInt(full.slice(2, 4), 16);
@@ -61,13 +83,49 @@ export function AppMenubar({
 
   const items = React.useMemo(
     () => [
-      { key: 'news', label: 'Noticias', path: '/main', onPress: onPressNews, Icon: Newspaper },
-      { key: 'help', label: 'Ayuda', path: '/ia-preguntas', onPress: onPressQuestion, Icon: HelpCircle },
-      { key: 'invest', label: 'Inversiones', path: '/investments', onPress: onPressInvestments, Icon: ChartNoAxesCombined },
-      { key: 'friends', label: 'Batallas', path: '/batallas', onPress: onPressFriends, Icon: Swords },
-      { key: 'profile', label: 'Perfil', path: '/profile', onPress: onPressProfile, Icon: User },
+      {
+        key: 'news',
+        label: 'Noticias',
+        path: '/main',
+        onPress: onPressNews,
+        Icon: Newspaper,
+      },
+      {
+        key: 'help',
+        label: 'Ayuda',
+        path: '/ia-preguntas',
+        onPress: onPressQuestion,
+        Icon: HelpCircle,
+      },
+      {
+        key: 'invest',
+        label: 'Inversiones',
+        path: '/investments',
+        onPress: onPressInvestments,
+        Icon: ChartNoAxesCombined,
+      },
+      {
+        key: 'friends',
+        label: 'Batallas',
+        path: '/batallas',
+        onPress: onPressFriends,
+        Icon: Swords,
+      },
+      {
+        key: 'profile',
+        label: 'Perfil',
+        path: '/profile',
+        onPress: onPressProfile,
+        Icon: User,
+      },
     ],
-    [onPressFriends, onPressInvestments, onPressNews, onPressProfile, onPressQuestion],
+    [
+      onPressFriends,
+      onPressInvestments,
+      onPressNews,
+      onPressProfile,
+      onPressQuestion,
+    ],
   );
 
   const activeIndex = Math.max(
@@ -78,11 +136,94 @@ export function AppMenubar({
   const indexSv = useSharedValue(activeIndex);
 
   React.useEffect(() => {
-    indexSv.value = withTiming(activeIndex, {
-      duration: 260,
-      easing: Easing.out(Easing.cubic),
-    });
-  }, [activeIndex, indexSv]);
+    if (rowWidth <= 0) return;
+    const contentWidth = rowWidth - 2 * ROW_PADDING_H;
+    const slotWidth = contentWidth / ITEM_COUNT;
+    const targetCenterX = ROW_PADDING_H + (activeIndex + 0.5) * slotWidth;
+    if (isInitialPosition.current) {
+      centerXSv.value = targetCenterX;
+      indexSv.value = activeIndex;
+      isInitialPosition.current = false;
+      setIndicatorReady(true);
+    } else {
+      centerXSv.value = withTiming(targetCenterX, {
+        duration: INDICATOR_DURATION_MS,
+        easing: INDICATOR_EASING,
+      });
+      indexSv.value = withTiming(activeIndex, {
+        duration: INDICATOR_DURATION_MS,
+        easing: INDICATOR_EASING,
+      });
+    }
+  }, [activeIndex, rowWidth, centerXSv, indexSv]);
+
+  const onRowLayout = React.useCallback((e: LayoutChangeEvent) => {
+    const w = e.nativeEvent.layout.width;
+    if (w > 0) setRowWidth((prev) => (prev === w ? prev : w));
+  }, []);
+
+  const dotWrapAnimatedStyle = useAnimatedStyle(() => ({
+    position: 'absolute' as const,
+    left: centerXSv.value - HALO_SIZE / 2,
+    width: HALO_SIZE,
+    height: HALO_SIZE,
+    borderRadius: HALO_SIZE / 2,
+    top: -10,
+  }));
+
+  const barBg =
+    Platform.OS === 'web'
+      ? withAlpha(palette.background, 0.92)
+      : withAlpha(palette.background, 0.88);
+  const haloBorderColor = palette.surfaceBorder ?? palette.icon ?? palette.text;
+
+  const iconWrapStyle0 = useAnimatedStyle(() => {
+    const current = indexSv.value;
+    const t = Math.max(0, 1 - Math.abs(current - 0));
+    return {
+      transform: [{ scale: interpolate(t, [0, 1], [1, 1.06]) }],
+      opacity: interpolate(t, [0, 1], [0.78, 1]),
+    };
+  }, []);
+  const iconWrapStyle1 = useAnimatedStyle(() => {
+    const current = indexSv.value;
+    const t = Math.max(0, 1 - Math.abs(current - 1));
+    return {
+      transform: [{ scale: interpolate(t, [0, 1], [1, 1.06]) }],
+      opacity: interpolate(t, [0, 1], [0.78, 1]),
+    };
+  }, []);
+  const iconWrapStyle2 = useAnimatedStyle(() => {
+    const current = indexSv.value;
+    const t = Math.max(0, 1 - Math.abs(current - 2));
+    return {
+      transform: [{ scale: interpolate(t, [0, 1], [1, 1.06]) }],
+      opacity: interpolate(t, [0, 1], [0.78, 1]),
+    };
+  }, []);
+  const iconWrapStyle3 = useAnimatedStyle(() => {
+    const current = indexSv.value;
+    const t = Math.max(0, 1 - Math.abs(current - 3));
+    return {
+      transform: [{ scale: interpolate(t, [0, 1], [1, 1.06]) }],
+      opacity: interpolate(t, [0, 1], [0.78, 1]),
+    };
+  }, []);
+  const iconWrapStyle4 = useAnimatedStyle(() => {
+    const current = indexSv.value;
+    const t = Math.max(0, 1 - Math.abs(current - 4));
+    return {
+      transform: [{ scale: interpolate(t, [0, 1], [1, 1.06]) }],
+      opacity: interpolate(t, [0, 1], [0.78, 1]),
+    };
+  }, []);
+  const iconWrapStyles = [
+    iconWrapStyle0,
+    iconWrapStyle1,
+    iconWrapStyle2,
+    iconWrapStyle3,
+    iconWrapStyle4,
+  ];
 
   function renderItem({
     Icon,
@@ -95,28 +236,20 @@ export function AppMenubar({
     label: string;
     index: number;
   }) {
-    const iconWrapStyle = useAnimatedStyle(() => {
-      const isActive = indexSv.value;
-      const dist = Math.abs(isActive - index);
-      const t = Math.max(0, 1 - dist);
-      const scale = interpolate(t, [0, 1], [1, 1.08]);
-      return { transform: [{ scale }] };
-    }, [index]);
+    const isActive = index === activeIndex;
+    const iconColor = isActive
+      ? (palette.primary ?? '#2563eb')
+      : (palette.icon ?? palette.text);
 
     return (
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label}
-        style={({ pressed }) => [styles.item, pressed && { opacity: 0.6 }]}
-        onPress={() => {
-          onPress?.();
-        }}
+        style={({ pressed }) => [styles.item, pressed && { opacity: 0.7 }]}
+        onPress={() => onPress?.()}
       >
-        <Animated.View style={iconWrapStyle}>
-          <Icon
-            size={24}
-            color={index === activeIndex ? palette.primary : (palette.icon ?? palette.text)}
-          />
+        <Animated.View style={iconWrapStyles[index]}>
+          <Icon size={22} color={iconColor} />
         </Animated.View>
       </Pressable>
     );
@@ -126,36 +259,48 @@ export function AppMenubar({
 
   return (
     <View style={styles.outer} pointerEvents="box-none">
-      <View
-        style={[
-          styles.root,
-          {
-            borderTopColor: palette.surfaceBorder ?? palette.text,
-          },
-        ]}
-      >
+      <View style={styles.root}>
         {isBlurAvailable && BlurViewComponent ? (
           <BlurViewComponent
             intensity={22}
-            tint={Platform.select({ ios: 'default', android: 'default', default: 'default' })}
+            tint={Platform.select({
+              ios: 'default',
+              android: 'default',
+              default: 'default',
+            })}
             style={StyleSheet.absoluteFill}
           />
         ) : null}
         {/* Scrim integrado (sin “cápsula”): solo material + borde superior */}
         <View
           pointerEvents="none"
-          style={[
-            StyleSheet.absoluteFill,
-            {
-              backgroundColor:
-                Platform.OS === 'web'
-                  ? withAlpha(palette.background, 0.86)
-                  : withAlpha(palette.background, 0.78),
-            },
-          ]}
+          style={[StyleSheet.absoluteFill, { backgroundColor: barBg }]}
         />
 
-        <View style={styles.row}>
+        <View style={styles.row} onLayout={onRowLayout}>
+          {rowWidth > 0 && indicatorReady ? (
+            <Animated.View
+              style={[styles.dotWrap, dotWrapAnimatedStyle]}
+              pointerEvents="none"
+            >
+              <View
+                style={[
+                  styles.dotHalo,
+                  {
+                    backgroundColor: withAlpha(haloBorderColor, 0.5),
+                    borderWidth: 1,
+                    borderColor: withAlpha(haloBorderColor, 0.5),
+                  },
+                ]}
+              />
+              <View
+                style={[
+                  styles.dot,
+                  { backgroundColor: palette.primary ?? '#2563eb' },
+                ]}
+              />
+            </Animated.View>
+          ) : null}
           {items.map((it, i) =>
             renderItem({
               Icon: it.Icon,
@@ -179,15 +324,14 @@ const styles = StyleSheet.create({
   },
   root: {
     width: '100%',
-    borderTopWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
     ...Platform.select({
-      android: { elevation: 18 },
+      android: { elevation: 12 },
       default: {
         shadowColor: '#0B1220',
-        shadowOpacity: 0.08,
-        shadowRadius: 20,
-        shadowOffset: { width: 0, height: -6 },
+        shadowOpacity: 0.05,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: -4 },
       },
     }),
   },
@@ -195,14 +339,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 6,
-    paddingTop: 10,
-    paddingBottom: 12,
+    paddingHorizontal: 8,
+    paddingTop: 7,
+    paddingBottom: 9,
+    position: 'relative',
+  },
+  dotWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dotHalo: {
+    position: 'absolute',
+    width: 22,
+    height: 22,
+    borderRadius: 10,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   item: {
     flex: 1,
-    minHeight: 44,
+    minHeight: 36,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 3,
   },
 });

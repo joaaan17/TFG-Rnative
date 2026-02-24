@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, View } from 'react-native';
 import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
+import { usePalette } from '@/shared/hooks/use-palette';
 import {
   NOTICIAS_LOADING_MESSAGES,
   QUIZ_LOADING_MESSAGES,
@@ -24,6 +25,7 @@ export function LoadingNewsOverlay({
   visible,
   messages = NOTICIAS_LOADING_MESSAGES,
 }: LoadingNewsOverlayProps) {
+  const palette = usePalette();
   const getRandomMessage = () => {
     const list = messages;
     const idx = Math.floor(Math.random() * list.length);
@@ -66,14 +68,21 @@ export function LoadingNewsOverlay({
   return (
     <View style={loadingNewsOverlayStyles.container} pointerEvents="none">
       <Animated.View
-        style={[loadingNewsOverlayStyles.bubble, { opacity: fadeAnim }]}
+        style={[
+          loadingNewsOverlayStyles.bubble,
+          {
+            opacity: fadeAnim,
+            backgroundColor: palette.cardBackground,
+            borderColor: palette.surfaceBorder ?? palette.text,
+          },
+        ]}
       >
         <TypewriterTextComponent
           text={message}
           speed={25}
           useDefaultFontFamily={false}
           className="border-0 pb-0"
-          style={loadingNewsOverlayStyles.text}
+          style={[loadingNewsOverlayStyles.text, { color: palette.text }]}
         />
       </Animated.View>
     </View>

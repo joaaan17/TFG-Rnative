@@ -1,26 +1,274 @@
-import React, { useCallback, useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  FlatList,
+  Pressable,
+  ScrollView,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react-native';
 
+import { Hierarchy } from '@/design-system/typography';
 import AppShellComponent from '@/shared/components/layout/AppShell';
 import { CardModal } from '@/shared/components/card-modal';
 import { Button } from '@/shared/components/ui/button';
 import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
 import { Text } from '@/shared/components/ui/text';
 import { Image } from 'expo-image';
+import { usePalette } from '@/shared/hooks/use-palette';
 
-import { mainStyles } from './Inicio.styles';
+import { createInicioStyles, createNewsModalStyles } from './Inicio.styles';
 import { useInicioViewModel } from '../state/useInicioViewModel';
 import { NewsCard } from '../components/NewsCard';
 import { LoadingNewsOverlay } from '../components/LoadingNewsOverlay';
 import { EducationalNewsContent } from '../components/EducationalNewsContent';
 import { QuizModalContent } from '../components/QuizModalContent';
+import type { EducationalNews } from '../types/inicio.types';
+
+function formatDate(publishedAt: string): string {
+  const d = new Date(publishedAt);
+  return d.toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function getWordCount(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function getReadingMinutes(wordCount: number): number {
+  return Math.max(1, Math.ceil(wordCount / 200));
+}
+
+function getNivel(wordCount: number): string {
+  if (wordCount < 300) return 'Corto';
+  if (wordCount < 800) return 'Intermedio';
+  return 'Largo';
+}
+
+function extractLead(content: string): string {
+  if (!content || typeof content !== 'string') return '';
+  const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  if (!normalized) return '';
+  const withoutHeaders = normalized.replace(/^#+\s+.+$/gm, '').trim();
+  const blocks = withoutHeaders
+    .split(/\n\n+/)
+    .map((b) => b.trim())
+    .filter(Boolean);
+  const firstBlock = blocks[0];
+  if (firstBlock) return firstBlock;
+  const fallback = normalized
+    .split('\n')
+    .filter((line) => !/^#+\s+/.test(line.trim()))
+    .join(' ')
+    .trim();
+  return fallback.slice(0, 300) || normalized.slice(0, 300);
+}
+
+type NewsModalContentProps = {
+  selectedNews: EducationalNews;
+  palette: ReturnType<typeof usePalette>;
+  onBack: () => void;
+  onQuiz: () => void;
+};
+
+function NewsModalContent({
+  selectedNews,
+  palette,
+  onBack,
+  onQuiz,
+}: NewsModalContentProps) {
+  const modalStyles = useMemo(() => createNewsModalStyles(palette), [palette]);
+  const content = selectedNews.content ?? '';
+  const wordCount = useMemo(() => getWordCount(content), [content]);
+  const readingMin = useMemo(() => getReadingMinutes(wordCount), [wordCount]);
+  const nivel = useMemo(() => getNivel(wordCount), [wordCount]);
+  const lead = useMemo(() => extractLead(content), [content]);
+  const sourceLabel = (selectedNews.source || '').trim() || 'Noticias';
+  const dateLabel = formatDate(selectedNews.publishedAt);
+  const iconColor = palette.primaryText ?? '#FFF';
+  const mutedColor = palette.icon ?? palette.text;
+
+  return (
+    <View style={modalStyles.newsModalContent}>
+      <ScrollView
+        style={modalStyles.newsScroll}
+        contentContainerStyle={modalStyles.newsScrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Hero con imagen y botones */}
+        <View style={modalStyles.newsHeroWrap}>
+          {selectedNews.imageUrl ? (
+            <Image
+              source={{ uri: selectedNews.imageUrl }}
+              style={modalStyles.newsHeroImage}
+              contentFit="cover"
+            />
+          ) : null}
+          <View style={modalStyles.newsHeroScrim} />
+          <View style={modalStyles.newsHeroActions}>
+            <Pressable
+              onPress={onBack}
+              style={({ pressed }) => [
+                modalStyles.newsHeroButton,
+                { opacity: pressed ? 0.8 : 1 },
+              ]}
+              accessibilityLabel="Cerrar"
+            >
+              <ChevronLeft size={24} color={iconColor} strokeWidth={2} />
+            </Pressable>
+            <Pressable
+              onPress={onQuiz}
+              style={({ pressed }) => [
+                modalStyles.newsHeroButton,
+                { opacity: pressed ? 0.8 : 1 },
+              ]}
+              accessibilityLabel="Realizar test"
+            >
+              <Sparkles size={22} color={iconColor} strokeWidth={2} />
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Meta: fuente • fecha */}
+        <View style={modalStyles.newsMetaRow}>
+          <Text
+            style={[
+              Hierarchy.caption,
+              modalStyles.newsMetaText,
+              { color: mutedColor },
+            ]}
+          >
+            {sourceLabel} • {dateLabel}
+          </Text>
+        </View>
+
+        {/* Título del artículo (jerarquía principal del modal) */}
+        <View style={modalStyles.newsTitleWrap}>
+          <TypewriterTextComponent
+            key={selectedNews.id}
+            text={selectedNews.title}
+            useDefaultFontFamily={false}
+            speed={60}
+            variant="h3"
+            className="border-0 pb-0"
+            style={[Hierarchy.titleModalLarge, { color: palette.text }]}
+          />
+        </View>
+
+        {/* Stats en cards minimalistas azul claro */}
+        <View style={modalStyles.newsStatsRow}>
+          <View style={modalStyles.newsStatCard}>
+            <Text
+              style={[
+                Hierarchy.captionSmall,
+                modalStyles.newsStatCardText,
+                { color: palette.primary },
+              ]}
+            >
+              {readingMin} min lectura
+            </Text>
+          </View>
+          <View style={modalStyles.newsStatCard}>
+            <Text
+              style={[
+                Hierarchy.captionSmall,
+                modalStyles.newsStatCardText,
+                { color: palette.primary },
+              ]}
+            >
+              {wordCount} palabras
+            </Text>
+          </View>
+          <View style={modalStyles.newsStatCard}>
+            <Text
+              style={[
+                Hierarchy.captionSmall,
+                modalStyles.newsStatCardText,
+                { color: palette.primary },
+              ]}
+            >
+              {nivel}
+            </Text>
+          </View>
+        </View>
+
+        {/* Área de lectura: card redondeada al estilo perfil, con divisores */}
+        <View style={modalStyles.newsReadingCard}>
+          {/* Sección ABOUT */}
+          <View style={modalStyles.newsSection}>
+            <View style={modalStyles.newsSectionLabelRow}>
+              <View style={modalStyles.newsSectionAccent} />
+              <Text
+                style={[
+                  Hierarchy.titleSection,
+                  modalStyles.newsSectionLabel,
+                  { color: mutedColor },
+                ]}
+              >
+                ABOUT
+              </Text>
+            </View>
+            <View style={modalStyles.newsSectionDivider} />
+            <Text
+              style={[
+                Hierarchy.body,
+                modalStyles.newsLead,
+                { color: palette.text },
+              ]}
+            >
+              {lead}
+            </Text>
+          </View>
+
+          {/* Sección CONTENIDO */}
+          <View style={modalStyles.newsSection}>
+            <View style={modalStyles.newsSectionLabelRow}>
+              <View style={modalStyles.newsSectionAccent} />
+              <Text
+                style={[
+                  Hierarchy.titleSection,
+                  modalStyles.newsSectionLabel,
+                  { color: mutedColor },
+                ]}
+              >
+                CONTENIDO
+              </Text>
+            </View>
+            <View style={modalStyles.newsSectionDivider} />
+            <EducationalNewsContent
+              key={`${selectedNews.id}-content`}
+              content={content}
+              typewriterSpeed={8}
+            />
+          </View>
+        </View>
+      </ScrollView>
+      <View style={modalStyles.quizButtonContainer}>
+        <Button
+          onPress={onQuiz}
+          variant="default"
+          size="lg"
+          style={modalStyles.quizButton}
+          accessibilityLabel="Realizar test de comprensión"
+        >
+          <Text style={Hierarchy.action}>Realizar test</Text>
+          <ChevronRight size={20} color={palette.primaryText} strokeWidth={2} />
+        </Button>
+      </View>
+    </View>
+  );
+}
 
 /**
  * Pantalla tonta. Solo renderiza y conecta props/handlers del ViewModel.
  */
 export function InicioScreen() {
+  const palette = usePalette();
+  const ui = useMemo(() => createInicioStyles(palette), [palette]);
   const {
-    typewriterKey,
     news,
     selectedNews,
     isNewsModalOpen,
@@ -43,38 +291,93 @@ export function InicioScreen() {
     setQuizContentHeight(h);
   }, []);
 
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const cardGap = 16;
+  const cardWidth = screenWidth - 40;
+  const cardHeight = Math.min(screenHeight * 0.72, 560);
+
+  const greeting = useMemo(() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Buenos días';
+    if (h < 20) return 'Buenas tardes';
+    return 'Buenas noches';
+  }, []);
+  const todayLabel = useMemo(
+    () =>
+      new Date().toLocaleDateString('es-ES', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      }),
+    [],
+  );
+
   return (
     <AppShellComponent>
-      <View style={mainStyles.header}>
-        <TypewriterTextComponent
-          key={typewriterKey}
-          text="NOTICIAS"
-          speed={40}
-          variant="h3"
-          className="border-0 pb-0"
-        />
-      </View>
-
       {error ? (
-        <View style={mainStyles.content}>
+        <View style={[ui.container, ui.content, { justifyContent: 'center' }]}>
           <Text variant="muted">{error}</Text>
         </View>
       ) : loading ? (
-        <View style={mainStyles.content}>
+        <View style={[ui.container, ui.content, { justifyContent: 'center' }]}>
           <Text variant="muted">Cargando noticias...</Text>
         </View>
       ) : (
-        <FlatList
-          style={{ flex: 1 }}
-          contentContainerStyle={mainStyles.content}
-          data={news}
-          keyExtractor={(item) => item.id}
-          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <NewsCard item={item} onPress={openNews} />
-          )}
-        />
+        <View style={ui.container}>
+          <View style={ui.masthead}>
+            <Text
+              style={[
+                Hierarchy.caption,
+                ui.mastheadGreeting,
+                { color: palette.icon ?? palette.text },
+              ]}
+            >
+              {greeting}
+            </Text>
+            <Text
+              style={[
+                Hierarchy.titleModalLarge,
+                ui.mastheadTitle,
+                { color: palette.text },
+              ]}
+            >
+              Noticias
+            </Text>
+            <Text
+              style={[
+                Hierarchy.caption,
+                ui.mastheadDate,
+                { color: palette.icon ?? palette.text },
+              ]}
+            >
+              {todayLabel}
+            </Text>
+          </View>
+          <FlatList
+            data={news}
+            keyExtractor={(item) => item.id}
+            horizontal
+            style={{ flex: 1, minHeight: cardHeight }}
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={cardWidth + cardGap}
+            snapToAlignment="start"
+            decelerationRate="fast"
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              paddingBottom: 24,
+            }}
+            ItemSeparatorComponent={() => <View style={{ width: cardGap }} />}
+            renderItem={({ item, index }) => (
+              <NewsCard
+                item={item}
+                index={index}
+                onPress={openNews}
+                cardWidth={cardWidth}
+                cardHeight={cardHeight}
+              />
+            )}
+          />
+        </View>
       )}
 
       <CardModal
@@ -82,6 +385,7 @@ export function InicioScreen() {
         onClose={closeNewsModal}
         maxHeightPct={loadingNews ? 0.35 : 1}
         scrollable={!loadingNews}
+        contentNoPaddingTop
       >
         {loadingNews ? (
           <View
@@ -96,47 +400,12 @@ export function InicioScreen() {
             <LoadingNewsOverlay visible />
           </View>
         ) : selectedNews ? (
-          <View style={styles.newsModalContent}>
-            <ScrollView
-              style={styles.newsScroll}
-              contentContainerStyle={styles.newsScrollContent}
-              showsVerticalScrollIndicator
-            >
-              <View style={styles.newsHeader}>
-                <TypewriterTextComponent
-                  key={selectedNews.id}
-                  text={selectedNews.title}
-                  useDefaultFontFamily={false}
-                  speed={60}
-                  variant="h3"
-                  className="border-0 pb-0"
-                />
-                {selectedNews.imageUrl ? (
-                  <Image
-                    source={{ uri: selectedNews.imageUrl }}
-                    style={styles.newsImage}
-                    contentFit="cover"
-                  />
-                ) : null}
-              </View>
-              <EducationalNewsContent
-                key={`${selectedNews.id}-content`}
-                content={selectedNews.content}
-                typewriterSpeed={8}
-              />
-            </ScrollView>
-            <View style={styles.quizButtonContainer}>
-              <Button
-                onPress={openQuiz}
-                variant="default"
-                size="lg"
-                style={styles.quizButton}
-                accessibilityLabel="Realizar test de comprensión"
-              >
-                <Text>Realizar test</Text>
-              </Button>
-            </View>
-          </View>
+          <NewsModalContent
+            selectedNews={selectedNews}
+            palette={palette}
+            onBack={closeNewsModal}
+            onQuiz={openQuiz}
+          />
         ) : null}
       </CardModal>
 
@@ -160,38 +429,5 @@ export function InicioScreen() {
     </AppShellComponent>
   );
 }
-
-const styles = StyleSheet.create({
-  newsModalContent: {
-    flex: 1,
-    minHeight: 0,
-  },
-  newsScroll: {
-    flex: 1,
-  },
-  newsScrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
-  newsHeader: {
-    paddingTop: 10,
-    paddingBottom: 8,
-  },
-  newsImage: {
-    width: '100%',
-    height: 180,
-    borderRadius: 12,
-    marginTop: 12,
-  },
-  quizButtonContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    paddingBottom: 24,
-    width: '100%',
-  },
-  quizButton: {
-    width: '100%',
-  },
-});
 
 export default InicioScreen;

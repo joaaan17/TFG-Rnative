@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '@/shared/components/ui/text';
 import { Button } from '@/shared/components/ui/button';
+import { usePalette } from '@/shared/hooks/use-palette';
 import type { NewsQuiz, QuizQuestion } from '../types/inicio.types';
 import { QUIZ_LOADING_MESSAGES } from '../types/inicio.types';
 import { LoadingNewsOverlay } from './LoadingNewsOverlay';
-import AppColors from '@/design-system/colors';
 
 export type QuizModalContentProps = {
   quiz: NewsQuiz | null;
@@ -273,6 +273,7 @@ function QuestionBlock({
   selectedIndex,
   onSelect,
 }: QuestionBlockProps) {
+  const palette = usePalette();
   const isAnswered = selectedIndex !== null;
 
   return (
@@ -287,7 +288,7 @@ function QuestionBlock({
         } else if (optIndex === question.correctAnswerIndex) {
           bgColor = '#22c55e';
         } else if (optIndex === selectedIndex) {
-          bgColor = AppColors.light.destructive ?? '#ef4444';
+          bgColor = palette.destructive ?? '#ef4444';
         }
 
         return (
@@ -348,7 +349,7 @@ const styles = StyleSheet.create({
   },
   option: {
     padding: 14,
-    borderRadius: 8,
+    borderRadius: 16,
     marginBottom: 8,
     borderWidth: 1,
     borderColor: 'rgba(128,128,128,0.4)',
@@ -378,7 +379,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.12)',
-    borderRadius: 10,
+    borderRadius: 16,
     overflow: 'hidden',
   },
   resultsQuestionBadge: {
@@ -404,7 +405,7 @@ const styles = StyleSheet.create({
   },
   resultsVerdict: {
     padding: 20,
-    borderRadius: 12,
+    borderRadius: 18,
     alignItems: 'center',
   },
   resultsVerdictText: {
