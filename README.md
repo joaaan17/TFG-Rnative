@@ -61,7 +61,7 @@ app/                          # RUTAS (Expo Router): archivos delgados, sin lóg
   ia-preguntas.tsx            # /ia-preguntas -> delega a features/IApreguntas
   profile.tsx                 # /profile -> delega a features/profile
   investments.tsx             # /investments -> delega a features/investments
-  batallas.tsx                # /batallas -> delega a features/batallas
+  dashboard.tsx                # /dashboard -> delega a features/dashboard
   modal.tsx                   # ruta modal (si aplica)
 
 features/                     # FEATURES (MVVM ligero)
@@ -97,9 +97,8 @@ features/                     # FEATURES (MVVM ligero)
   investments/
     investments.tsx
     investmentsStyles.ts
-  batallas/
-    batallas.tsx
-    batallasStyles.ts
+  dashboard/
+   dashboard.tsx
 
 shared/                       # “Librería” interna reutilizable
   components/

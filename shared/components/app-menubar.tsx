@@ -17,8 +17,8 @@ import Animated, {
 import {
   ChartNoAxesCombined,
   HelpCircle,
+  LayoutDashboard,
   Newspaper,
-  Swords,
   User,
 } from 'lucide-react-native';
 import { usePalette } from '@/shared/hooks/use-palette';
@@ -42,7 +42,7 @@ const ROW_PADDING_H = 8;
 export type AppMenubarProps = {
   activePath?: string;
   onPressProfile?: () => void;
-  onPressFriends?: () => void;
+  onPressDashboard?: () => void;
   onPressInvestments?: () => void;
   onPressNews?: () => void;
   onPressQuestion?: () => void;
@@ -51,7 +51,7 @@ export type AppMenubarProps = {
 export function AppMenubar({
   activePath,
   onPressProfile,
-  onPressFriends,
+  onPressDashboard,
   onPressInvestments,
   onPressNews,
   onPressQuestion,
@@ -105,11 +105,11 @@ export function AppMenubar({
         Icon: ChartNoAxesCombined,
       },
       {
-        key: 'friends',
-        label: 'Batallas',
-        path: '/batallas',
-        onPress: onPressFriends,
-        Icon: Swords,
+        key: 'dashboard',
+        label: 'Dashboard',
+        path: '/dashboard',
+        onPress: onPressDashboard,
+        Icon: LayoutDashboard,
       },
       {
         key: 'profile',
@@ -120,7 +120,7 @@ export function AppMenubar({
       },
     ],
     [
-      onPressFriends,
+      onPressDashboard,
       onPressInvestments,
       onPressNews,
       onPressProfile,

@@ -1,15 +1,15 @@
 import React from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 
-export type UseBatallasViewModelResult = {
+export type UseDashboardViewModelResult = {
   typewriterKey: number;
-  isStartBattleOpen: boolean;
-  setStartBattleOpen: (open: boolean) => void;
+  activeChart: 'sector' | 'geo';
+  setActiveChart: (chart: 'sector' | 'geo') => void;
 };
 
-export function useBatallasViewModel(): UseBatallasViewModelResult {
+export function useDashboardViewModel(): UseDashboardViewModelResult {
   const [typewriterKey, setTypewriterKey] = React.useState(0);
-  const [isStartBattleOpen, setIsStartBattleOpen] = React.useState(false);
+  const [activeChart, setActiveChart] = React.useState<'sector' | 'geo'>('sector');
 
   useFocusEffect(
     React.useCallback(() => {
@@ -20,7 +20,7 @@ export function useBatallasViewModel(): UseBatallasViewModelResult {
 
   return {
     typewriterKey,
-    isStartBattleOpen,
-    setStartBattleOpen: setIsStartBattleOpen,
+    activeChart,
+    setActiveChart,
   };
 }

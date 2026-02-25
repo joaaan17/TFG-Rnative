@@ -105,7 +105,7 @@ TFG-Rnative/
 │   │       └── api/
 │   │
 │   ├── investments/back/          # Feature Inversiones
-│   └── batallas/back/             # Feature Batallas
+│   └── dashboard/back/            # Feature Dashboard
 ```
 
 - **Pros**: Respeta el modelo Auth; cada feature es un módulo; un solo servidor; fácil añadir features.

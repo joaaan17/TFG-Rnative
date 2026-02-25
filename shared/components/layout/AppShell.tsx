@@ -53,8 +53,8 @@ export function AppShell({ children }: AppShellProps) {
           onPressInvestments={() => {
             if (pathname !== '/investments') router.push('/investments');
           }}
-          onPressFriends={() => {
-            if (pathname !== '/batallas') router.push('/batallas');
+          onPressDashboard={() => {
+            if (pathname !== '/dashboard') router.push('/dashboard');
           }}
           onPressQuestion={() => {
             if (pathname !== '/ia-preguntas') router.push('/ia-preguntas');
