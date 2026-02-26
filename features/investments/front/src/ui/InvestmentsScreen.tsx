@@ -25,6 +25,10 @@ import {
 import { usePalette } from '@/shared/hooks/use-palette';
 import { Hierarchy } from '@/design-system/typography';
 
+import {
+  MarketCandlesModal,
+  type MarketCandlesModalAsset,
+} from '../components/MarketCandlesModal';
 import { StockSearchModal } from '../components/StockSearchModal';
 import { createInvestmentsStyles } from './Investments.styles';
 
@@ -45,6 +49,8 @@ export function InvestmentsScreen() {
   const [typewriterKey, setTypewriterKey] = React.useState(0);
   const [tab, setTab] = React.useState<SegmentedTextTabsValue>(0);
   const [stockSearchModalOpen, setStockSearchModalOpen] = React.useState(false);
+  const [candlesModalOpen, setCandlesModalOpen] = React.useState(false);
+  const [selectedAsset, setSelectedAsset] = React.useState<MarketCandlesModalAsset | null>(null);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -62,9 +68,10 @@ export function InvestmentsScreen() {
     setStockSearchModalOpen(true);
   };
 
-  const handleStockSearchSelect = (symbol: string) => {
+  const handleSelectAsset = (asset: MarketCandlesModalAsset) => {
     setStockSearchModalOpen(false);
-    router.push({ pathname: '/stock', params: { symbol } });
+    setSelectedAsset(asset);
+    setCandlesModalOpen(true);
   };
 
   const handleOrdersPress = () => {
@@ -303,7 +310,23 @@ export function InvestmentsScreen() {
         <StockSearchModal
           open={stockSearchModalOpen}
           onClose={() => setStockSearchModalOpen(false)}
-          onSelectSymbol={handleStockSearchSelect}
+          onSelectAsset={handleSelectAsset}
+        />
+        <MarketCandlesModal
+          visible={candlesModalOpen}
+          asset={selectedAsset}
+          onClose={() => {
+            setCandlesModalOpen(false);
+            setSelectedAsset(null);
+          }}
+          onOperar={() => {
+            if (selectedAsset?.symbol) {
+              setCandlesModalOpen(false);
+              setSelectedAsset(null);
+              router.push({ pathname: '/stock', params: { symbol: selectedAsset.symbol } });
+            }
+          }}
+          onOrdenes={handleOrdersPress}
         />
       </View>
   );

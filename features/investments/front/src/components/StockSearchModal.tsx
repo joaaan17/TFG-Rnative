@@ -17,12 +17,16 @@ const SEARCH_LIMIT = 15;
 export type StockSearchModalProps = {
   open: boolean;
   onClose: () => void;
-  onSelectSymbol: (symbol: string) => void;
+  /** Al pulsar un resultado: abrir modal de gráfico (nombre + símbolo). */
+  onSelectAsset?: (asset: { symbol: string; name: string }) => void;
+  /** Opcional: al elegir ir a detalle de la acción (ej. desde el modal de velas). */
+  onSelectSymbol?: (symbol: string) => void;
 };
 
 export function StockSearchModal({
   open,
   onClose,
+  onSelectAsset,
   onSelectSymbol,
 }: StockSearchModalProps) {
   const palette = usePalette();
@@ -77,11 +81,16 @@ export function StockSearchModal({
   }, [open]);
 
   const handleSelect = useCallback(
-    (symbol: string) => {
-      onSelectSymbol(symbol);
-      onClose();
+    (item: MarketSearchResultItem) => {
+      if (onSelectAsset) {
+        onSelectAsset({ symbol: item.symbol, name: item.name });
+        onClose();
+      } else if (onSelectSymbol) {
+        onSelectSymbol(item.symbol);
+        onClose();
+      }
     },
-    [onSelectSymbol, onClose],
+    [onSelectAsset, onSelectSymbol, onClose],
   );
 
   const renderItem = useCallback(
@@ -94,7 +103,7 @@ export function StockSearchModal({
           borderBottomColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.06)',
           opacity: pressed ? 0.7 : 1,
         })}
-        onPress={() => handleSelect(item.symbol)}
+        onPress={() => handleSelect(item)}
         accessibilityRole="button"
         accessibilityLabel={`${item.name} ${item.symbol}`}
       >
