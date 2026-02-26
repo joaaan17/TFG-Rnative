@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import type { CandleInterval, CandleRange } from '../domain/market.types';
 import {
   getCandlesUseCase,
+  getQuotesUseCase,
   searchMarketUseCase,
 } from '../config/market.wiring';
 
@@ -156,5 +157,41 @@ export const getCandlesController = async (
 
     console.error('[market] Candles error:', err);
     res.status(500).json({ message: 'An error occurred while fetching candles.' });
+  }
+};
+
+export const getQuotesController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const raw =
+      typeof req.query.symbols === 'string' ? req.query.symbols.trim() : '';
+    const symbols = raw
+      ? raw.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean)
+      : [];
+    if (symbols.length === 0) {
+      res.status(200).json({ quotes: [] });
+      return;
+    }
+    const quotes = await getQuotesUseCase.execute(symbols);
+    res.status(200).json({ quotes });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Quotes failed';
+    const isBadGateway =
+      message.includes('timeout') ||
+      message.includes('Yahoo') ||
+      message.includes('network') ||
+      message.includes('ECONNREFUSED') ||
+      message.includes('ETIMEDOUT');
+    if (isBadGateway) {
+      console.error('[market] Quotes upstream error:', err);
+      res
+        .status(502)
+        .json({ message: 'Quotes service temporarily unavailable.' });
+      return;
+    }
+    console.error('[market] Quotes error:', err);
+    res.status(500).json({ message: 'An error occurred while fetching quotes.' });
   }
 };

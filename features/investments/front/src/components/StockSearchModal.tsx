@@ -8,11 +8,39 @@ import {
 import { CardModal } from '@/shared/components/card-modal';
 import { SearchBar } from '@/shared/components/ui/search-bar';
 import { Text } from '@/shared/components/ui/text';
+import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
 import { searchMarket, type MarketSearchResultItem } from '../api/marketSearchClient';
+import { getQuotes, type QuoteItem } from '../api/marketQuotesClient';
 
 const DEBOUNCE_MS = 400;
 const SEARCH_LIMIT = 15;
+
+/** 7 magníficas + oro (GLD) + Bitcoin. Símbolos para la lista por defecto. */
+const DEFAULT_SYMBOLS = [
+  'AAPL',   // Apple
+  'TSLA',   // Tesla
+  'NVDA',   // Nvidia
+  'MSFT',   // Microsoft
+  'GOOGL',  // Alphabet
+  'AMZN',   // Amazon
+  'META',   // Meta (7ª magnífica)
+  'GLD',    // ETF oro (precio en USD)
+  'BTC-USD', // Bitcoin
+];
+
+/** Nombre de empresa por símbolo para la lista por defecto (arriba el nombre, abajo el símbolo). */
+const DEFAULT_DISPLAY_NAMES: Record<string, string> = {
+  'AAPL': 'Apple Inc.',
+  'TSLA': 'Tesla, Inc.',
+  'NVDA': 'NVIDIA Corporation',
+  'MSFT': 'Microsoft Corporation',
+  'GOOGL': 'Alphabet Inc.',
+  'AMZN': 'Amazon.com, Inc.',
+  'META': 'Meta Platforms, Inc.',
+  'GLD': 'Oro (ETF)',
+  'BTC-USD': 'Bitcoin',
+};
 
 export type StockSearchModalProps = {
   open: boolean;
@@ -32,6 +60,8 @@ export function StockSearchModal({
   const palette = usePalette();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<MarketSearchResultItem[]>([]);
+  const [defaultQuotes, setDefaultQuotes] = useState<QuoteItem[]>([]);
+  const [defaultQuotesLoading, setDefaultQuotesLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -58,42 +88,66 @@ export function StockSearchModal({
     }
   }, []);
 
+  const fetchDefaultQuotes = useCallback(async () => {
+    setDefaultQuotesLoading(true);
+    try {
+      const res = await getQuotes(DEFAULT_SYMBOLS);
+      setDefaultQuotes(res.quotes);
+    } catch {
+      setDefaultQuotes(
+        DEFAULT_SYMBOLS.map((symbol) => ({
+          symbol,
+          name: symbol,
+        })),
+      );
+    } finally {
+      setDefaultQuotesLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!open) return;
 
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      debounceRef.current = null;
-      runSearch(query);
-    }, DEBOUNCE_MS);
+    if (query.trim().length < 1) {
+      fetchDefaultQuotes();
+    } else {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        debounceRef.current = null;
+        runSearch(query);
+      }, DEBOUNCE_MS);
+    }
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [open, query, runSearch]);
+  }, [open, query, runSearch, fetchDefaultQuotes]);
 
   useEffect(() => {
     if (!open) {
       setQuery('');
       setResults([]);
+      setDefaultQuotes([]);
       setError(null);
     }
   }, [open]);
 
   const handleSelect = useCallback(
-    (item: MarketSearchResultItem) => {
+    (item: MarketSearchResultItem | QuoteItem) => {
+      const symbol = item.symbol;
+      const name = 'name' in item ? item.name : symbol;
       if (onSelectAsset) {
-        onSelectAsset({ symbol: item.symbol, name: item.name });
+        onSelectAsset({ symbol, name });
         onClose();
       } else if (onSelectSymbol) {
-        onSelectSymbol(item.symbol);
+        onSelectSymbol(symbol);
         onClose();
       }
     },
     [onSelectAsset, onSelectSymbol, onClose],
   );
 
-  const renderItem = useCallback(
+  const renderSearchItem = useCallback(
     ({ item }: { item: MarketSearchResultItem }) => (
       <Pressable
         style={({ pressed }) => ({
@@ -123,6 +177,69 @@ export function StockSearchModal({
     [handleSelect, palette.surfaceBorder, palette.text],
   );
 
+  const formatPrice = (item: QuoteItem): string => {
+    if (item.price == null) return '';
+    if (item.symbol === 'GLD') {
+      const usdPerOz = item.price * 10;
+      return `~${usdPerOz.toFixed(0)} $/oz`;
+    }
+    const value = item.price >= 1e6
+      ? (item.price / 1e6).toFixed(2) + 'M'
+      : item.price >= 1e3
+        ? item.price.toFixed(2)
+        : item.price < 1
+          ? item.price.toFixed(4)
+          : item.price.toFixed(2);
+    const cur = item.currency === 'USD' ? '$' : item.currency ?? '';
+    return `${cur}${value}`;
+  };
+
+  const getDisplayName = useCallback((item: QuoteItem): string => {
+    const mapped = DEFAULT_DISPLAY_NAMES[item.symbol];
+    if (mapped) return mapped;
+    return item.name && item.name !== item.symbol ? item.name : item.symbol;
+  }, []);
+
+  const renderDefaultItem = useCallback(
+    ({ item }: { item: QuoteItem }) => (
+      <Pressable
+        style={({ pressed }) => ({
+          paddingVertical: 14,
+          paddingHorizontal: 16,
+          borderBottomWidth: 1,
+          borderBottomColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.06)',
+          opacity: pressed ? 0.7 : 1,
+        })}
+        onPress={() => handleSelect(item)}
+        accessibilityRole="button"
+        accessibilityLabel={`${getDisplayName(item)} ${item.symbol}`}
+      >
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View>
+            <Text style={{ fontWeight: '600', color: palette.text }}>
+              {getDisplayName(item)}
+            </Text>
+            <Text
+              variant="muted"
+              style={{ marginTop: 2, fontSize: 13 }}
+            >
+              {item.symbol}
+            </Text>
+          </View>
+          {item.price != null && (
+            <Text style={{ fontSize: 15, fontWeight: '600', color: palette.text }}>
+              {formatPrice(item)}
+            </Text>
+          )}
+        </View>
+      </Pressable>
+    ),
+    [handleSelect, getDisplayName, palette.surfaceBorder, palette.text],
+  );
+
+  const showDefaultList = query.trim().length < 1 && !loading;
+  const showSearchResults = query.trim().length >= 1 && results.length > 0 && !loading;
+
   return (
     <CardModal
       open={open}
@@ -132,10 +249,15 @@ export function StockSearchModal({
       scrollable
     >
       <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 24, minHeight: 200 }}>
+        <Text
+          style={[Hierarchy.titleModal, { color: palette.text, marginBottom: 12 }]}
+        >
+          Buscador por nombre o símbolo
+        </Text>
         <SearchBar
           value={query}
           onChangeText={setQuery}
-          placeholder="Buscar por nombre o símbolo (ej. Apple, AAPL)"
+          placeholder="ej. Apple, AAPL, TSLA"
           autoFocus={open}
           variant="translucent"
         />
@@ -144,6 +266,24 @@ export function StockSearchModal({
           <View style={{ paddingVertical: 24, alignItems: 'center' }}>
             <ActivityIndicator size="small" color={palette.primary} />
           </View>
+        )}
+
+        {showDefaultList && defaultQuotesLoading && (
+          <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+            <ActivityIndicator size="small" color={palette.primary} />
+          </View>
+        )}
+
+        {showDefaultList && !defaultQuotesLoading && defaultQuotes.length > 0 && (
+          <FlatList
+            data={defaultQuotes}
+            keyExtractor={(item) => item.symbol}
+            renderItem={renderDefaultItem}
+            scrollEnabled={true}
+            style={{ flex: 1, marginTop: 8 }}
+            contentContainerStyle={{ paddingBottom: 24 }}
+            showsVerticalScrollIndicator={true}
+          />
         )}
 
         {error && !loading && (
@@ -162,11 +302,11 @@ export function StockSearchModal({
           </View>
         )}
 
-        {!loading && results.length > 0 && (
+        {showSearchResults && (
           <FlatList
             data={results}
             keyExtractor={(item) => item.symbol}
-            renderItem={renderItem}
+            renderItem={renderSearchItem}
             scrollEnabled={true}
             style={{ flex: 1, marginTop: 8 }}
             contentContainerStyle={{ paddingBottom: 24 }}

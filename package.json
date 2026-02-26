@@ -5,6 +5,7 @@
   "scripts": {
     "start": "expo start",
     "server": "npx tsx server/index.ts",
+    "s": "npx tsx server/index.ts",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",

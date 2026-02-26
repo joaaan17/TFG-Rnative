@@ -30,6 +30,8 @@ export type MarketCandlesModalProps = {
   visible: boolean;
   asset: MarketCandlesModalAsset | null;
   onClose: () => void;
+  /** Flecha atrás: volver al buscador (cierra este modal y abre el de búsqueda). */
+  onBack?: () => void;
   /** Al pulsar "Operar" (ej. ir a pantalla de compra/venta del activo). */
   onOperar?: () => void;
   /** Al pulsar "Órdenes" (ej. ir a listado de órdenes). */
@@ -56,6 +58,7 @@ export function MarketCandlesModal({
   visible,
   asset,
   onClose,
+  onBack,
   onOperar,
   onOrdenes,
 }: MarketCandlesModalProps) {
@@ -131,30 +134,48 @@ export function MarketCandlesModal({
             paddingVertical: 12,
           }}
         >
-          <View style={{ flex: 1 }}>
+          <View style={{ minWidth: 42, alignItems: 'flex-start' }}>
+            {(showActions || onBack != null) ? (
+              <Pressable
+                onPress={showActions ? () => setOperarStep('chart') : onBack!}
+                style={({ pressed }) => ({
+                  padding: 8,
+                  opacity: pressed ? 0.7 : 1,
+                })}
+                accessibilityRole="button"
+                accessibilityLabel={showActions ? 'Volver al gráfico' : 'Volver al buscador'}
+              >
+                <ChevronLeft size={26} color={palette.text} strokeWidth={2} />
+              </Pressable>
+            ) : null}
+          </View>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 }}>
             <Text
-              style={[Hierarchy.titleModal, { color: palette.text }]}
+              style={[Hierarchy.titleModal, { color: palette.text, textAlign: 'center' }]}
+              numberOfLines={1}
             >
               {asset?.name ?? ''}
             </Text>
             <Text
               variant="muted"
-              style={[Hierarchy.bodySmall, { marginTop: 4, color: palette.icon ?? palette.text }]}
+              style={[Hierarchy.bodySmall, { marginTop: 4, color: palette.icon ?? palette.text, textAlign: 'center' }]}
             >
               {asset?.symbol ?? ''}
             </Text>
           </View>
-          <Pressable
-            onPress={onClose}
-            style={({ pressed }) => ({
-              padding: 8,
-              opacity: pressed ? 0.7 : 1,
-            })}
-            accessibilityRole="button"
-            accessibilityLabel="Cerrar"
-          >
-            <X size={24} color={palette.text} />
-          </Pressable>
+          <View style={{ minWidth: 42, alignItems: 'flex-end' }}>
+            <Pressable
+              onPress={onClose}
+              style={({ pressed }) => ({
+                padding: 8,
+                opacity: pressed ? 0.7 : 1,
+              })}
+              accessibilityRole="button"
+              accessibilityLabel="Cerrar"
+            >
+              <X size={24} color={palette.text} />
+            </Pressable>
+          </View>
         </View>
 
         {showChart && operarStep === 'chart' && (
@@ -202,24 +223,6 @@ export function MarketCandlesModal({
             entering={FadeIn.duration(220)}
             style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 20, justifyContent: 'center' }}
           >
-            <Pressable
-              onPress={() => setOperarStep('chart')}
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                alignSelf: 'flex-start',
-                paddingVertical: 8,
-                paddingRight: 12,
-                opacity: pressed ? 0.7 : 1,
-              })}
-              accessibilityRole="button"
-              accessibilityLabel="Volver al gráfico"
-            >
-              <ChevronLeft size={24} color={palette.primary} />
-              <Text style={[Hierarchy.action, { color: palette.primary, marginLeft: 4 }]}>
-                Volver
-              </Text>
-            </Pressable>
             <Animated.View
               entering={FadeInUp.delay(100).duration(260)}
               style={{ marginTop: 24 }}

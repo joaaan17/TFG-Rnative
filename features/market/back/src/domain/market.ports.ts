@@ -3,6 +3,7 @@ import type {
   CandleInterval,
   CandleRange,
   MarketSearchResult,
+  QuoteItem,
 } from './market.types';
 
 /**
@@ -23,4 +24,11 @@ export interface MarketCandlesPort {
     range: CandleRange,
     interval: CandleInterval,
   ): Promise<Candle[]>;
+}
+
+/**
+ * Port para cotizaciones (precio actual de varios símbolos).
+ */
+export interface MarketQuotesPort {
+  getQuotes(symbols: string[]): Promise<QuoteItem[]>;
 }

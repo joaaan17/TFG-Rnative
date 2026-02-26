@@ -319,6 +319,11 @@ export function InvestmentsScreen() {
             setCandlesModalOpen(false);
             setSelectedAsset(null);
           }}
+          onBack={() => {
+            setCandlesModalOpen(false);
+            setSelectedAsset(null);
+            setStockSearchModalOpen(true);
+          }}
           onOperar={() => {
             if (selectedAsset?.symbol) {
               setCandlesModalOpen(false);

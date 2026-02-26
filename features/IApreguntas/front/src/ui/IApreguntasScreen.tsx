@@ -10,6 +10,7 @@ import { ArrowRight } from 'lucide-react-native';
 
 import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
 import { Text } from '@/shared/components/ui/text';
+import { usePalette } from '@/shared/hooks/use-palette';
 
 import { iaPreguntasStyles } from './IApreguntas.styles';
 import { useIApreguntasViewModel } from '../state/useIApreguntasViewModel';
@@ -22,6 +23,7 @@ import { LoadingMessagesOverlay } from '../components/LoadingMessagesOverlay';
  * Solo renderiza y conecta props/handlers del ViewModel.
  */
 export function IApreguntasScreen() {
+  const palette = usePalette();
   const flatListRef = useRef<FlatList>(null);
   const {
     typewriterKey,
@@ -40,9 +42,10 @@ export function IApreguntasScreen() {
     }
   }, [messages.length, loading]);
 
+  const containerBg = palette.mainBackground ?? palette.background;
   return (
     <KeyboardAvoidingView
-        style={iaPreguntasStyles.container}
+        style={[iaPreguntasStyles.container, { backgroundColor: containerBg }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >

@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { Router } from 'express';
 import {
   getCandlesController,
+  getQuotesController,
   searchMarketController,
 } from './market.controller';
 
@@ -17,5 +18,6 @@ router.get('/', (_req: Request, res: Response) => {
 
 router.get('/search', searchMarketController);
 router.get('/candles', getCandlesController);
+router.get('/quotes', getQuotesController);
 
 export default router;

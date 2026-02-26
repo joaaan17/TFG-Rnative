@@ -53,3 +53,11 @@ export interface Candle {
   c: number;
   v?: number;
 }
+
+/** Cotización resumida para listados (nombre + precio). */
+export interface QuoteItem {
+  symbol: string;
+  name: string;
+  price?: number;
+  currency?: string;
+}
