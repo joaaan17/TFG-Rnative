@@ -9,7 +9,6 @@ import {
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react-native';
 
 import { Hierarchy } from '@/design-system/typography';
-import AppShellComponent from '@/shared/components/layout/AppShell';
 import { CardModal } from '@/shared/components/card-modal';
 import { Button } from '@/shared/components/ui/button';
 import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
@@ -98,7 +97,7 @@ function NewsModalContent({
         contentContainerStyle={modalStyles.newsScrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero con imagen y botones */}
+        {/* Hero: solo imagen y scrim (botones fuera del scroll para que reciban toques) */}
         <View style={modalStyles.newsHeroWrap}>
           {selectedNews.imageUrl ? (
             <Image
@@ -108,28 +107,6 @@ function NewsModalContent({
             />
           ) : null}
           <View style={modalStyles.newsHeroScrim} />
-          <View style={modalStyles.newsHeroActions}>
-            <Pressable
-              onPress={onBack}
-              style={({ pressed }) => [
-                modalStyles.newsHeroButton,
-                { opacity: pressed ? 0.8 : 1 },
-              ]}
-              accessibilityLabel="Cerrar"
-            >
-              <ChevronLeft size={24} color={iconColor} strokeWidth={2} />
-            </Pressable>
-            <Pressable
-              onPress={onQuiz}
-              style={({ pressed }) => [
-                modalStyles.newsHeroButton,
-                { opacity: pressed ? 0.8 : 1 },
-              ]}
-              accessibilityLabel="Realizar test"
-            >
-              <Sparkles size={22} color={iconColor} strokeWidth={2} />
-            </Pressable>
-          </View>
         </View>
 
         {/* Meta: fuente • fecha */}
@@ -245,6 +222,33 @@ function NewsModalContent({
           </View>
         </View>
       </ScrollView>
+      {/* Botones en capa fija fuera del ScrollView para que los toques no los intercepte el scroll */}
+      <View style={modalStyles.newsHeroActionsOverlay} pointerEvents="box-none">
+        <Pressable
+          onPress={() => onBack()}
+          hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+          style={({ pressed }) => [
+            modalStyles.newsHeroButton,
+            { opacity: pressed ? 0.8 : 1 },
+          ]}
+          accessibilityLabel="Cerrar"
+          accessibilityRole="button"
+        >
+          <ChevronLeft size={24} color={iconColor} strokeWidth={2} />
+        </Pressable>
+        <Pressable
+          onPress={() => onQuiz()}
+          hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+          style={({ pressed }) => [
+            modalStyles.newsHeroButton,
+            { opacity: pressed ? 0.8 : 1 },
+          ]}
+          accessibilityLabel="Realizar test"
+          accessibilityRole="button"
+        >
+          <Sparkles size={22} color={iconColor} strokeWidth={2} />
+        </Pressable>
+      </View>
       <View style={modalStyles.quizButtonContainer}>
         <Button
           onPress={onQuiz}
@@ -290,6 +294,11 @@ export function InicioScreen() {
     setQuizContentHeight(h);
   }, []);
 
+  const handleOpenQuizFromNews = useCallback(() => {
+    openQuiz();
+    setTimeout(() => closeNewsModal(), 100);
+  }, [openQuiz, closeNewsModal]);
+
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const cardGap = 16;
   const cardWidth = screenWidth - 40;
@@ -312,7 +321,7 @@ export function InicioScreen() {
   );
 
   return (
-    <AppShellComponent>
+    <>
       {error ? (
         <View style={[ui.container, ui.content, { justifyContent: 'center' }]}>
           <Text variant="muted">{error}</Text>
@@ -403,7 +412,7 @@ export function InicioScreen() {
             selectedNews={selectedNews}
             palette={palette}
             onBack={closeNewsModal}
-            onQuiz={openQuiz}
+            onQuiz={handleOpenQuizFromNews}
           />
         ) : null}
       </CardModal>
@@ -425,7 +434,7 @@ export function InicioScreen() {
           onContentSizeChange={handleQuizContentSize}
         />
       </CardModal>
-    </AppShellComponent>
+    </>
   );
 }
 

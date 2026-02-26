@@ -9,7 +9,6 @@ import {
 import { ArrowRight } from 'lucide-react-native';
 
 import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
-import AppShellComponent from '@/shared/components/layout/AppShell';
 import { Text } from '@/shared/components/ui/text';
 
 import { iaPreguntasStyles } from './IApreguntas.styles';
@@ -42,8 +41,7 @@ export function IApreguntasScreen() {
   }, [messages.length, loading]);
 
   return (
-    <AppShellComponent>
-      <KeyboardAvoidingView
+    <KeyboardAvoidingView
         style={iaPreguntasStyles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
@@ -122,7 +120,6 @@ export function IApreguntasScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
-    </AppShellComponent>
   );
 }
 

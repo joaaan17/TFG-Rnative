@@ -166,7 +166,7 @@ export function PortfolioDonutChart({
               <Text
                 style={[
                   Hierarchy.captionSmall,
-                  { color: palette.icon ?? palette.text },
+                  { color: '#0B1220' },
                 ]}
               >
                 {s.label} {s.value}%

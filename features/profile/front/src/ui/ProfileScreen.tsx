@@ -3,7 +3,6 @@ import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 
-import AppShellComponent from '@/shared/components/layout/AppShell';
 import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
 import { Card, CardHeader } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -122,16 +121,14 @@ export function ProfileScreen() {
 
   if (isLoading) {
     return (
-      <AppShellComponent>
-        <View style={[styles.container, styles.loadingContainer]}>
-          <ActivityIndicator size="large" color={palette.primary} />
-        </View>
-      </AppShellComponent>
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={palette.primary} />
+      </View>
     );
   }
 
   return (
-    <AppShellComponent>
+    <>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
@@ -387,7 +384,7 @@ export function ProfileScreen() {
         isDeleting={isDeleting}
         deleteError={deleteError}
       />
-    </AppShellComponent>
+    </>
   );
 }
 

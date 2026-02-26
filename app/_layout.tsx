@@ -65,24 +65,15 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <AuthProvider>
-          <Stack>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="register" options={{ headerShown: false }} />
-            <Stack.Screen name="main" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="ia-preguntas"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen name="profile" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="investments"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="stock"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen name="dashboard" options={{ headerShown: false }} />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="register" />
+            <Stack.Screen name="main" />
+            <Stack.Screen name="ia-preguntas" />
+            <Stack.Screen name="profile" />
+            <Stack.Screen name="investments" />
+            <Stack.Screen name="stock" />
+            <Stack.Screen name="dashboard" />
             <Stack.Screen
               name="modal"
               options={{ presentation: 'modal', title: 'Modal' }}

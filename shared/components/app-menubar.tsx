@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import Animated, {
+  cancelAnimation,
   Easing,
   interpolate,
   useAnimatedStyle,
@@ -146,6 +147,8 @@ export function AppMenubar({
       isInitialPosition.current = false;
       setIndicatorReady(true);
     } else {
+      cancelAnimation(centerXSv);
+      cancelAnimation(indexSv);
       centerXSv.value = withTiming(targetCenterX, {
         duration: INDICATOR_DURATION_MS,
         easing: INDICATOR_EASING,
@@ -162,14 +165,19 @@ export function AppMenubar({
     if (w > 0) setRowWidth((prev) => (prev === w ? prev : w));
   }, []);
 
-  const dotWrapAnimatedStyle = useAnimatedStyle(() => ({
-    position: 'absolute' as const,
-    left: centerXSv.value - HALO_SIZE / 2,
-    width: HALO_SIZE,
-    height: HALO_SIZE,
-    borderRadius: HALO_SIZE / 2,
-    top: -10,
-  }));
+  const dotWrapAnimatedStyle = useAnimatedStyle(() => {
+    'worklet';
+    const x = centerXSv.value - HALO_SIZE / 2;
+    return {
+      position: 'absolute' as const,
+      left: 0,
+      width: HALO_SIZE,
+      height: HALO_SIZE,
+      borderRadius: HALO_SIZE / 2,
+      top: -10,
+      transform: [{ translateX: x }],
+    };
+  });
 
   const barBg =
     Platform.OS === 'web'

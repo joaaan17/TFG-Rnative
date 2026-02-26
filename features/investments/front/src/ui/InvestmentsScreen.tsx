@@ -10,7 +10,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { ClipboardList, Search } from 'lucide-react-native';
 
-import AppShellComponent from '@/shared/components/layout/AppShell';
 import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
 import {
   SegmentedTextTabs,
@@ -81,8 +80,7 @@ export function InvestmentsScreen() {
   }, [data?.candles, palette.destructive]);
 
   return (
-    <AppShellComponent>
-      <View
+    <View
         style={styles.container}
         accessibilityElementsHidden={false}
         importantForAccessibility="yes"
@@ -295,7 +293,6 @@ export function InvestmentsScreen() {
           </Pressable>
         </View>
       </View>
-    </AppShellComponent>
   );
 }
 

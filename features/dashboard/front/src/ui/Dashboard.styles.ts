@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import type { Palette } from '@/shared/hooks/use-palette';
+import { FontFamilies } from '@/design-system/typography';
 
 export function createDashboardStyles(palette: Palette, screenWidth: number) {
   const cardWidth = (screenWidth - 48 - 12) / 2; // 2 cols, padding 24*2, gap 12
@@ -10,11 +11,41 @@ export function createDashboardStyles(palette: Palette, screenWidth: number) {
       backgroundColor: palette.mainBackground ?? palette.background,
     },
     header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
       paddingHorizontal: 20,
       paddingTop: 12,
       paddingBottom: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: palette.surfaceBorder ?? palette.surfaceMuted,
+    },
+    welcomeBlock: {
+      flex: 1,
+    },
+    welcomeLine1: {
+      fontFamily: FontFamilies.body.regular,
+      fontSize: 15,
+      lineHeight: 20,
+      letterSpacing: 0.1,
+    },
+    welcomeLine2: {
+      fontFamily: FontFamilies.primary.bold,
+      fontSize: 28,
+      lineHeight: 34,
+      letterSpacing: -0.3,
+      marginTop: 4,
+    },
+    headerIcons: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    headerIconButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: palette.surfaceMuted,
     },
     scroll: {
       flex: 1,
@@ -25,30 +56,66 @@ export function createDashboardStyles(palette: Palette, screenWidth: number) {
       paddingBottom: 100,
     },
     profitabilityWrap: {
-      marginBottom: 24,
+      marginBottom: 20,
+    },
+    profitabilityCard: {
+      borderRadius: 16,
+      overflow: 'hidden',
+      alignSelf: 'stretch',
+      borderWidth: 1,
+      borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
+      shadowColor: '#0B1220',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    profitabilityCardInner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 16,
+      paddingHorizontal: 20,
+      gap: 16,
+    },
+    profitabilityIconWrap: {
+      width: 48,
+      height: 48,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: `${palette.primary}18`,
+    },
+    profitabilityTextBlock: {
+      flex: 1,
     },
     profitabilityLabel: {
       marginBottom: 4,
-      opacity: 0.85,
+      opacity: 0.9,
     },
     profitabilityValue: {
-      fontSize: 28,
+      fontSize: 26,
       letterSpacing: -0.5,
-    },
-    periodSelector: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      alignSelf: 'flex-start',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 20,
-      backgroundColor: palette.surfaceMuted,
-      gap: 6,
-      marginTop: 8,
     },
     chartSection: {
       marginBottom: 28,
       alignItems: 'center',
+    },
+    chartCard: {
+      borderRadius: 20,
+      overflow: 'hidden',
+      alignSelf: 'stretch',
+      borderWidth: 1,
+      borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
+      shadowColor: '#0B1220',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    chartCardInner: {
+      alignItems: 'center',
+      paddingVertical: 20,
+      paddingHorizontal: 16,
     },
     chartTabs: {
       flexDirection: 'row',
@@ -119,15 +186,18 @@ export function createDashboardStyles(palette: Palette, screenWidth: number) {
     },
     metricCard: {
       width: cardWidth,
-      padding: 16,
       borderRadius: 16,
       borderWidth: 1,
       borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
-      backgroundColor: palette.cardBackground,
+      overflow: 'hidden',
       minHeight: 100,
     },
+    metricCardGradient: {
+      flex: 1,
+      borderRadius: 16,
+      padding: 16,
+    },
     metricCardHighlight: {
-      backgroundColor: `${palette.primary}12`,
       borderColor: `${palette.primary}35`,
     },
     metricIconWrap: {

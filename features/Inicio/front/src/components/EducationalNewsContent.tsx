@@ -98,24 +98,16 @@ export function EducationalNewsContent({
         flex: 1,
       },
       h3Row: {
-        flexDirection: 'row' as const,
-        alignItems: 'center' as const,
-        gap: 10,
-        marginTop: 10,
+        marginTop: 14,
         marginBottom: 6,
-      },
-      h3Accent: {
-        width: 3,
-        height: 16,
-        borderRadius: 2,
-        backgroundColor: palette.primary,
+        paddingLeft: 8,
       },
       h3Text: {
-        ...Hierarchy.bodySmallSemibold,
-        color: palette.text,
-        letterSpacing: 0.3,
-        flex: 1,
-        opacity: 0.95,
+        ...Hierarchy.bodySmall,
+        fontSize: 14,
+        color: palette.icon ?? palette.text,
+        lineHeight: 20,
+        letterSpacing: 0.2,
       },
       paragraph: {
         ...Hierarchy.body,
@@ -150,7 +142,6 @@ export function EducationalNewsContent({
         if (block.type === 'h3') {
           return (
             <View key={idx} style={styles.h3Row}>
-              <View style={styles.h3Accent} />
               <Text style={styles.h3Text}>{block.text}</Text>
             </View>
           );
