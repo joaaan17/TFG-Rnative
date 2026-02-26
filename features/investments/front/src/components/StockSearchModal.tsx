@@ -132,10 +132,25 @@ export function StockSearchModal({
     }
   }, [open]);
 
+  const getDisplayName = useCallback((item: QuoteItem): string => {
+    const mapped = DEFAULT_DISPLAY_NAMES[item.symbol];
+    if (mapped) return mapped;
+    return item.name && item.name !== item.symbol ? item.name : item.symbol;
+  }, []);
+
+  /** Nombre para el modal: empresa en lista por defecto, o name del resultado de búsqueda */
+  const getAssetNameForModal = useCallback(
+    (item: MarketSearchResultItem | QuoteItem): string => {
+      if ('price' in item) return getDisplayName(item as QuoteItem);
+      return (item as MarketSearchResultItem).name;
+    },
+    [getDisplayName],
+  );
+
   const handleSelect = useCallback(
     (item: MarketSearchResultItem | QuoteItem) => {
       const symbol = item.symbol;
-      const name = 'name' in item ? item.name : symbol;
+      const name = getAssetNameForModal(item);
       if (onSelectAsset) {
         onSelectAsset({ symbol, name });
         onClose();
@@ -144,7 +159,7 @@ export function StockSearchModal({
         onClose();
       }
     },
-    [onSelectAsset, onSelectSymbol, onClose],
+    [getAssetNameForModal, onSelectAsset, onSelectSymbol, onClose],
   );
 
   const renderSearchItem = useCallback(
@@ -193,12 +208,6 @@ export function StockSearchModal({
     const cur = item.currency === 'USD' ? '$' : item.currency ?? '';
     return `${cur}${value}`;
   };
-
-  const getDisplayName = useCallback((item: QuoteItem): string => {
-    const mapped = DEFAULT_DISPLAY_NAMES[item.symbol];
-    if (mapped) return mapped;
-    return item.name && item.name !== item.symbol ? item.name : item.symbol;
-  }, []);
 
   const renderDefaultItem = useCallback(
     ({ item }: { item: QuoteItem }) => (
@@ -259,7 +268,7 @@ export function StockSearchModal({
           onChangeText={setQuery}
           placeholder="ej. Apple, AAPL, TSLA"
           autoFocus={open}
-          variant="translucent"
+          variant="input"
         />
 
         {loading && (

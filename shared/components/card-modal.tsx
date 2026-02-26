@@ -57,6 +57,11 @@ export type CardModalProps = {
    * Si true, el Card no tiene padding superior (para que el contenido pueda llegar hasta arriba, p. ej. imagen bajo la barra de arrastre).
    */
   contentNoPaddingTop?: boolean;
+  /**
+   * Color de fondo del sheet y de la franja inferior (p. ej. safe area).
+   * Si no se pasa, se usa palette.cardBackground.
+   */
+  contentBackgroundColor?: string;
 };
 
 const DRAG_HANDLE_OFFSET = 50; // espacio para el handle y margen superior
@@ -71,8 +76,10 @@ export function CardModal({
   scrollable = false,
   contentHeight,
   contentNoPaddingTop = false,
+  contentBackgroundColor,
 }: CardModalProps) {
   const palette = usePalette();
+  const sheetBg = contentBackgroundColor ?? palette.cardBackground;
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   // En Android, la pantalla puede tener barra de navegación; usamos screen para cubrir todo
@@ -369,7 +376,7 @@ export function CardModal({
                 {
                   ...(scrollable && { flex: 1 }),
                   maxHeight,
-                  backgroundColor: palette.cardBackground,
+                  backgroundColor: sheetBg,
                   borderColor: palette.surfaceBorder ?? palette.text,
                   ...(contentNoPaddingTop && { paddingTop: 0 }),
                 },
@@ -405,7 +412,7 @@ export function CardModal({
             <View
               style={{
                 height: Math.max(insets.bottom, 32),
-                backgroundColor: palette.cardBackground,
+                backgroundColor: sheetBg,
               }}
             />
           )}

@@ -245,17 +245,18 @@ export function createNewsModalStyles(palette: Palette) {
     newsLead: {
       lineHeight: 26,
     },
+    /* Contenedor del CTA al final del modal: sin caja blanca, solo espaciado y separador sutil */
     quizButtonContainer: {
-      paddingHorizontal: 20,
-      paddingTop: 16,
-      paddingBottom: 0,
       width: '100%',
-      borderTopWidth: 1,
-      borderTopColor: palette.surfaceBorder ?? 'transparent',
-      backgroundColor: palette.cardBackground ?? palette.background,
+      paddingHorizontal: 20,
+      paddingTop: 32,
+      paddingBottom: 40,
+      marginTop: 8,
+      alignItems: 'center',
     },
     quizButton: {
       width: '100%',
+      borderRadius: 14,
     },
   });
 }

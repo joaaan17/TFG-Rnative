@@ -221,8 +221,22 @@ function NewsModalContent({
             />
           </View>
         </View>
+
+        {/* CTA al final del modal: sin caja blanca ni raya, espaciado elegante */}
+        <View style={modalStyles.quizButtonContainer}>
+          <Button
+            onPress={onQuiz}
+            variant="default"
+            size="lg"
+            style={modalStyles.quizButton}
+            accessibilityLabel="Realizar test de comprensión"
+          >
+            <Text style={Hierarchy.action}>Realizar test</Text>
+            <ChevronRight size={20} color={palette.primaryText} strokeWidth={2} />
+          </Button>
+        </View>
       </ScrollView>
-      {/* Botones en capa fija fuera del ScrollView para que los toques no los intercepte el scroll */}
+      {/* Solo los botones del hero (atrás, test en header) en overlay para que reciban toques */}
       <View style={modalStyles.newsHeroActionsOverlay} pointerEvents="box-none">
         <Pressable
           onPress={() => onBack()}
@@ -248,18 +262,6 @@ function NewsModalContent({
         >
           <Sparkles size={22} color={iconColor} strokeWidth={2} />
         </Pressable>
-      </View>
-      <View style={modalStyles.quizButtonContainer}>
-        <Button
-          onPress={onQuiz}
-          variant="default"
-          size="lg"
-          style={modalStyles.quizButton}
-          accessibilityLabel="Realizar test de comprensión"
-        >
-          <Text style={Hierarchy.action}>Realizar test</Text>
-          <ChevronRight size={20} color={palette.primaryText} strokeWidth={2} />
-        </Button>
       </View>
     </View>
   );
@@ -364,17 +366,15 @@ export function InicioScreen() {
           <FlatList
             data={news}
             keyExtractor={(item) => item.id}
-            horizontal
-            style={{ flex: 1, minHeight: cardHeight }}
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={cardWidth + cardGap}
-            snapToAlignment="start"
-            decelerationRate="fast"
+            style={{ flex: 1 }}
+            showsVerticalScrollIndicator={true}
+            scrollEnabled={true}
             contentContainerStyle={{
               paddingHorizontal: 20,
               paddingBottom: 24,
+              paddingTop: 8,
             }}
-            ItemSeparatorComponent={() => <View style={{ width: cardGap }} />}
+            ItemSeparatorComponent={() => <View style={{ height: cardGap }} />}
             renderItem={({ item, index }) => (
               <NewsCard
                 item={item}
@@ -394,6 +394,7 @@ export function InicioScreen() {
         maxHeightPct={loadingNews ? 0.35 : 1}
         scrollable={!loadingNews}
         contentNoPaddingTop
+        contentBackgroundColor={palette.background}
       >
         {loadingNews ? (
           <View
