@@ -83,7 +83,9 @@ export function SearchBar({
             backgroundColor: 'transparent',
             color: palette.text,
             minHeight: 24,
-          },
+            outlineStyle: 'none',
+            outlineWidth: 0,
+          } as ViewStyle,
         ]}
         {...inputProps}
       />

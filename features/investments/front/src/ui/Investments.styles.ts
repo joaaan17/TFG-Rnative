@@ -14,8 +14,6 @@ export function createInvestmentsStyles(
       paddingHorizontal: 20,
       paddingTop: 12,
       paddingBottom: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: palette.surfaceBorder ?? palette.surfaceMuted,
     },
     bottomActions: {
       position: 'absolute',
@@ -45,7 +43,7 @@ export function createInvestmentsStyles(
     tabsWrap: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 14,
+      marginBottom: 6,
       minHeight: 48,
       paddingVertical: 4,
       paddingHorizontal: 4,

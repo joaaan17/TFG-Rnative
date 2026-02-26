@@ -25,6 +25,7 @@ import {
 import { usePalette } from '@/shared/hooks/use-palette';
 import { Hierarchy } from '@/design-system/typography';
 
+import { StockSearchModal } from '../components/StockSearchModal';
 import { createInvestmentsStyles } from './Investments.styles';
 
 /**
@@ -43,6 +44,7 @@ export function InvestmentsScreen() {
   const { data, loading, error, loadChart } = useMarketChartViewModel();
   const [typewriterKey, setTypewriterKey] = React.useState(0);
   const [tab, setTab] = React.useState<SegmentedTextTabsValue>(0);
+  const [stockSearchModalOpen, setStockSearchModalOpen] = React.useState(false);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -57,7 +59,12 @@ export function InvestmentsScreen() {
   };
 
   const handleSearchPress = () => {
-    // TODO: Abrir buscador (modal o pantalla)
+    setStockSearchModalOpen(true);
+  };
+
+  const handleStockSearchSelect = (symbol: string) => {
+    setStockSearchModalOpen(false);
+    router.push({ pathname: '/stock', params: { symbol } });
   };
 
   const handleOrdersPress = () => {
@@ -292,6 +299,12 @@ export function InvestmentsScreen() {
             <ClipboardList size={20} color={palette.primary} strokeWidth={2} />
           </Pressable>
         </View>
+
+        <StockSearchModal
+          open={stockSearchModalOpen}
+          onClose={() => setStockSearchModalOpen(false)}
+          onSelectSymbol={handleStockSearchSelect}
+        />
       </View>
   );
 }
