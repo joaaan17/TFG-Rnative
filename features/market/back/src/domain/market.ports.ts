@@ -2,6 +2,7 @@ import type {
   Candle,
   CandleInterval,
   CandleRange,
+  MarketOverview,
   MarketSearchResult,
   QuoteItem,
 } from './market.types';
@@ -31,4 +32,11 @@ export interface MarketCandlesPort {
  */
 export interface MarketQuotesPort {
   getQuotes(symbols: string[]): Promise<QuoteItem[]>;
+}
+
+/**
+ * Port para overview (quote del día + fundamentales).
+ */
+export interface MarketOverviewPort {
+  getOverview(symbol: string): Promise<MarketOverview>;
 }

@@ -2,8 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { ChevronLeft, Minus, Plus, X } from 'lucide-react-native';
 import { CardModal } from '@/shared/components/card-modal';
@@ -12,7 +14,10 @@ import { LightweightChartView, type Candle } from '@/features/market-chart';
 import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
 import { useMarketCandles } from '../hooks/useMarketCandles';
+import { useMarketOverview } from '../hooks/useMarketOverview';
 import type { CandleRange } from '../api/marketCandlesClient';
+import { QuoteGrid } from './QuoteGrid';
+import { FundamentalsList } from './FundamentalsList';
 import { InvertirSheet } from './InvertirSheet';
 import { VenderSheet } from './VenderSheet';
 
@@ -63,6 +68,7 @@ export function MarketCandlesModal({
   onOrdenes,
 }: MarketCandlesModalProps) {
   const palette = usePalette();
+  const insets = useSafeAreaInsets();
   const [range, setRange] = useState<CandleRange>('1mo');
   const [operarStep, setOperarStep] = useState<OperarStep>('chart');
   const [venderOpen, setVenderOpen] = useState(false);
@@ -83,6 +89,12 @@ export function MarketCandlesModal({
     '1d',
     visible && !!symbol,
   );
+  const {
+    data: overviewData,
+    loading: overviewLoading,
+    error: overviewError,
+    refetch: refetchOverview,
+  } = useMarketOverview(symbol, visible && !!symbol);
 
   const chartCandles = useMemo(() => {
     if (!data?.candles?.length) return [];
@@ -120,18 +132,20 @@ export function MarketCandlesModal({
     <CardModal
       open={visible}
       onClose={onClose}
-      maxHeightPct={0.85}
+      maxHeightPct={1}
       closeOnBackdropPress
-      scrollable={false}
+      scrollable={true}
+      contentNoPaddingTop
     >
-      <View style={{ flex: 1, minHeight: 320 }}>
+      <View style={{ flex: 1, minHeight: 0 }}>
         <View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
             paddingHorizontal: 16,
-            paddingVertical: 12,
+            paddingTop: 54 + Math.max(insets.top, 0),
+            paddingBottom: 12,
           }}
         >
           <View style={{ minWidth: 42, alignItems: 'flex-start' }}>
@@ -178,7 +192,16 @@ export function MarketCandlesModal({
           </View>
         </View>
 
-        {showChart && operarStep === 'chart' && (
+        {operarStep === 'chart' && (
+        <ScrollView
+          style={{ flex: 1, minHeight: 0 }}
+          contentContainerStyle={{
+            paddingBottom: 24 + Math.max(insets.bottom, 0),
+          }}
+          showsVerticalScrollIndicator={true}
+          keyboardShouldPersistTaps="handled"
+        >
+        {showChart && (
         <View
           style={{
             flexDirection: 'row',
@@ -216,6 +239,231 @@ export function MarketCandlesModal({
             </Pressable>
           ))}
         </View>
+        )}
+
+        {operarStep === 'chart' && (
+        <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
+          {loading && (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: 280,
+              }}
+            >
+              <ActivityIndicator size="large" color={palette.primary} />
+              <Text
+                variant="muted"
+                style={[Hierarchy.bodySmall, { marginTop: 12, color: palette.icon }]}
+              >
+                Cargando histórico...
+              </Text>
+            </View>
+          )}
+
+          {error && !loading && (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: 280,
+              }}
+            >
+              <Text
+                variant="muted"
+                style={[Hierarchy.bodySmall, { textAlign: 'center', color: palette.icon }]}
+              >
+                {error}
+              </Text>
+              <Pressable
+                onPress={refetch}
+                style={{
+                  marginTop: 16,
+                  paddingHorizontal: 20,
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                  backgroundColor: palette.primary,
+                }}
+              >
+                <Text
+                  style={[Hierarchy.action, { color: palette.primaryText ?? '#FFF' }]}
+                >
+                  Reintentar
+                </Text>
+              </Pressable>
+            </View>
+          )}
+
+          {!loading && !error && chartCandles.length === 0 && symbol && (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: 280,
+              }}
+            >
+              <Text
+                variant="muted"
+                style={[Hierarchy.bodySmall, { textAlign: 'center', color: palette.icon }]}
+              >
+                No hay datos para este período
+              </Text>
+            </View>
+          )}
+
+          {!loading && !error && chartCandles.length > 0 && (
+            <LightweightChartView
+              candles={chartCandles}
+              height={280}
+              priceLines={priceLines}
+              theme={{
+                layoutBackgroundColor:
+                  palette.mainBackground ?? palette.background,
+                textColor: palette.text,
+                gridColor: palette.surfaceBorder ?? '#D6DEE8',
+                upColor: palette.primary,
+                downColor: `${palette.primary}66`,
+                fontSize: Hierarchy.captionSmall.fontSize,
+              }}
+            />
+          )}
+
+          {(
+            <>
+              {overviewLoading && !overviewData && (
+                <View style={{ paddingTop: 8, paddingBottom: 8 }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      flexWrap: 'wrap',
+                      gap: 10,
+                      marginBottom: 12,
+                    }}
+                  >
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <View
+                        key={i}
+                        style={{
+                          width: '30%',
+                          height: 52,
+                          borderRadius: 10,
+                          backgroundColor: palette.surfaceMuted ?? '#eee',
+                        }}
+                      />
+                    ))}
+                  </View>
+                  <View style={{ gap: 8 }}>
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <View
+                        key={i}
+                        style={{
+                          height: 40,
+                          borderRadius: 8,
+                          backgroundColor: palette.surfaceMuted ?? '#eee',
+                        }}
+                      />
+                    ))}
+                  </View>
+                </View>
+              )}
+              {overviewError && !overviewData && (
+                <View
+                  style={{
+                    paddingVertical: 16,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text
+                    variant="muted"
+                    style={[Hierarchy.bodySmall, { textAlign: 'center', color: palette.icon }]}
+                  >
+                    {overviewError}
+                  </Text>
+                  <Pressable
+                    onPress={refetchOverview}
+                    style={{
+                      marginTop: 12,
+                      paddingHorizontal: 20,
+                      paddingVertical: 10,
+                      borderRadius: 8,
+                      backgroundColor: palette.primary,
+                    }}
+                  >
+                    <Text style={[Hierarchy.action, { color: palette.primaryText ?? '#FFF' }]}>
+                      Reintentar
+                    </Text>
+                  </Pressable>
+                </View>
+              )}
+              {overviewData && (
+                <>
+                  <QuoteGrid quote={overviewData.quote} palette={palette} />
+                  <FundamentalsList fundamentals={overviewData.fundamentals} palette={palette} />
+                </>
+              )}
+            </>
+          )}
+        </View>
+        )}
+
+        {showChart && (
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: 12,
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: 24,
+          }}
+        >
+          <Pressable
+            onPress={() => setOperarStep('actions')}
+            style={({ pressed }) => ({
+              flex: 1,
+              height: 48,
+              borderRadius: 12,
+              backgroundColor: palette.primary,
+              justifyContent: 'center',
+              alignItems: 'center',
+              opacity: pressed ? 0.85 : 1,
+            })}
+            accessibilityRole="button"
+            accessibilityLabel="Operar"
+          >
+            <Text
+              style={[Hierarchy.action, { color: palette.primaryText ?? '#FFF', fontWeight: '600' }]}
+            >
+              Operar
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={onOrdenes}
+            style={({ pressed }) => ({
+              flex: 1,
+              height: 48,
+              borderRadius: 12,
+              backgroundColor: palette.surfaceMuted ?? '#f0f0f0',
+              borderWidth: 1,
+              borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
+              justifyContent: 'center',
+              alignItems: 'center',
+              opacity: pressed ? 0.85 : 1,
+            })}
+            accessibilityRole="button"
+            accessibilityLabel="Órdenes"
+          >
+            <Text
+              style={[Hierarchy.action, { color: palette.primary }]}
+            >
+              Órdenes
+            </Text>
+          </Pressable>
+        </View>
+        )}
+        </ScrollView>
         )}
 
         {showActions && (
@@ -280,153 +528,6 @@ export function MarketCandlesModal({
               </Pressable>
             </Animated.View>
           </Animated.View>
-        )}
-
-        {operarStep === 'chart' && (
-        <View style={{ flex: 1, paddingHorizontal: 16, paddingBottom: 24 }}>
-          {showChart && loading && (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: 280,
-              }}
-            >
-              <ActivityIndicator size="large" color={palette.primary} />
-              <Text
-                variant="muted"
-                style={[Hierarchy.bodySmall, { marginTop: 12, color: palette.icon }]}
-              >
-                Cargando histórico...
-              </Text>
-            </View>
-          )}
-
-          {showChart && error && !loading && (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: 280,
-              }}
-            >
-              <Text
-                variant="muted"
-                style={[Hierarchy.bodySmall, { textAlign: 'center', color: palette.icon }]}
-              >
-                {error}
-              </Text>
-              <Pressable
-                onPress={refetch}
-                style={{
-                  marginTop: 16,
-                  paddingHorizontal: 20,
-                  paddingVertical: 10,
-                  borderRadius: 8,
-                  backgroundColor: palette.primary,
-                }}
-              >
-                <Text
-                  style={[Hierarchy.action, { color: palette.primaryText ?? '#FFF' }]}
-                >
-                  Reintentar
-                </Text>
-              </Pressable>
-            </View>
-          )}
-
-          {showChart && !loading && !error && chartCandles.length === 0 && symbol && (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: 280,
-              }}
-            >
-              <Text
-                variant="muted"
-                style={[Hierarchy.bodySmall, { textAlign: 'center', color: palette.icon }]}
-              >
-                No hay datos para este período
-              </Text>
-            </View>
-          )}
-
-          {showChart && !loading && !error && chartCandles.length > 0 && (
-            <LightweightChartView
-              candles={chartCandles}
-              height={280}
-              priceLines={priceLines}
-              theme={{
-                layoutBackgroundColor:
-                  palette.mainBackground ?? palette.background,
-                textColor: palette.text,
-                gridColor: palette.surfaceBorder ?? '#D6DEE8',
-                upColor: palette.primary,
-                downColor: `${palette.primary}66`,
-                fontSize: Hierarchy.captionSmall.fontSize,
-              }}
-            />
-          )}
-        </View>
-        )}
-
-        {showChart && operarStep === 'chart' && (
-        <View
-          style={{
-            flexDirection: 'row',
-            gap: 12,
-            paddingHorizontal: 16,
-            paddingTop: 16,
-            paddingBottom: 24,
-          }}
-        >
-          <Pressable
-            onPress={() => setOperarStep('actions')}
-            style={({ pressed }) => ({
-              flex: 1,
-              height: 48,
-              borderRadius: 12,
-              backgroundColor: palette.primary,
-              justifyContent: 'center',
-              alignItems: 'center',
-              opacity: pressed ? 0.85 : 1,
-            })}
-            accessibilityRole="button"
-            accessibilityLabel="Operar"
-          >
-            <Text
-              style={[Hierarchy.action, { color: palette.primaryText ?? '#FFF', fontWeight: '600' }]}
-            >
-              Operar
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={onOrdenes}
-            style={({ pressed }) => ({
-              flex: 1,
-              height: 48,
-              borderRadius: 12,
-              backgroundColor: palette.surfaceMuted ?? '#f0f0f0',
-              borderWidth: 1,
-              borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
-              justifyContent: 'center',
-              alignItems: 'center',
-              opacity: pressed ? 0.85 : 1,
-            })}
-            accessibilityRole="button"
-            accessibilityLabel="Órdenes"
-          >
-            <Text
-              style={[Hierarchy.action, { color: palette.primary }]}
-            >
-              Órdenes
-            </Text>
-          </Pressable>
-        </View>
         )}
       </View>
     </CardModal>

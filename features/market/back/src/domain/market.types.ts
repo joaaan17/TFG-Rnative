@@ -61,3 +61,32 @@ export interface QuoteItem {
   price?: number;
   currency?: string;
 }
+
+/** Snapshot del día: OHLC + volumen + market cap (quote del día). */
+export interface QuoteSnapshot {
+  open: number | null;
+  high: number | null;
+  low: number | null;
+  volume: number | null;
+  marketCap: number | null;
+  currency: string | null;
+}
+
+/** Fundamentales: ratios y perfil. */
+export interface FundamentalsSnapshot {
+  pe: number | null;
+  eps: number | null;
+  quickRatio: number | null;
+  beta: number | null;
+  marketCap: number | null;
+  sector: string | null;
+  industry: string | null;
+}
+
+/** Overview completo: quote del día + fundamentales. */
+export interface MarketOverview {
+  symbol: string;
+  asOf: number;
+  quote: QuoteSnapshot;
+  fundamentals: FundamentalsSnapshot;
+}

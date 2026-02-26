@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import type { CandleInterval, CandleRange } from '../domain/market.types';
 import {
   getCandlesUseCase,
+  getMarketOverviewUseCase,
   getQuotesUseCase,
   searchMarketUseCase,
 } from '../config/market.wiring';
@@ -193,5 +194,50 @@ export const getQuotesController = async (
     }
     console.error('[market] Quotes error:', err);
     res.status(500).json({ message: 'An error occurred while fetching quotes.' });
+  }
+};
+
+export const getOverviewController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const symbol =
+      typeof req.query.symbol === 'string' ? req.query.symbol.trim() : '';
+    if (!symbol) {
+      res.status(400).json({ message: 'Query "symbol" is required.' });
+      return;
+    }
+
+    const overview = await getMarketOverviewUseCase.execute({ symbol });
+    res.status(200).json(overview);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Overview failed';
+    const isBadRequest =
+      message.includes('required') ||
+      message.includes('at most') ||
+      message.includes('characters') ||
+      message.includes('invalid');
+    const isBadGateway =
+      message.includes('timeout') ||
+      message.includes('Yahoo') ||
+      message.includes('network') ||
+      message.includes('ECONNREFUSED') ||
+      message.includes('ETIMEDOUT');
+
+    if (isBadRequest) {
+      res.status(400).json({ message });
+      return;
+    }
+    if (isBadGateway) {
+      console.error('[market] Overview upstream error:', err);
+      res
+        .status(502)
+        .json({ message: 'Overview service temporarily unavailable.' });
+      return;
+    }
+
+    console.error('[market] Overview error:', err);
+    res.status(500).json({ message: 'An error occurred while fetching overview.' });
   }
 };
