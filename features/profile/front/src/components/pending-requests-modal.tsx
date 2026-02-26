@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { CardModal } from '@/shared/components/card-modal';
+import { ModalHeader } from '@/shared/components/modal-header';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Text } from '@/shared/components/ui/text';
@@ -84,11 +85,9 @@ export function PendingRequestsModal({
   processingIds,
 }: PendingRequestsModalProps) {
   return (
-    <CardModal open={open} onClose={onClose} maxHeightPct={0.7}>
+    <CardModal open={open} onClose={onClose} maxHeightPct={0.7} contentNoPaddingTop>
+      <ModalHeader title="Solicitudes de amistad" onBack={onClose} onClose={onClose} backAccessibilityLabel="Volver" />
       <View style={{ paddingHorizontal: 16, gap: 16, flex: 1 }}>
-        <View style={{ width: '100%', alignItems: 'center' }}>
-          <Text variant="h4">Solicitudes de amistad</Text>
-        </View>
         {loading ? (
           <View style={{ paddingVertical: 24, alignItems: 'center' }}>
             <ActivityIndicator size="small" />

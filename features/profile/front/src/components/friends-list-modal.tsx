@@ -6,6 +6,7 @@ import {
   View,
 } from 'react-native';
 import { CardModal } from '@/shared/components/card-modal';
+import { ModalHeader } from '@/shared/components/modal-header';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Text } from '@/shared/components/ui/text';
 import { ProfileAvatar } from './profileAvatar';
@@ -62,11 +63,9 @@ export function FriendsListModal({
   onSelectFriend,
 }: FriendsListModalProps) {
   return (
-    <CardModal open={open} onClose={onClose} maxHeightPct={0.7}>
+    <CardModal open={open} onClose={onClose} maxHeightPct={0.7} contentNoPaddingTop>
+      <ModalHeader title="Mis amigos" onBack={onClose} onClose={onClose} backAccessibilityLabel="Volver" />
       <View style={{ paddingHorizontal: 16, gap: 16, flex: 1 }}>
-        <View style={{ width: '100%', alignItems: 'center' }}>
-          <Text variant="h4">Mis amigos</Text>
-        </View>
         {loading ? (
           <View style={{ paddingVertical: 24, alignItems: 'center' }}>
             <ActivityIndicator size="small" />

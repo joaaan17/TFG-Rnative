@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import { CardModal } from '@/shared/components/card-modal';
+import { ModalHeader } from '@/shared/components/modal-header';
 import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
@@ -43,20 +44,15 @@ export function VenderSheet({
       maxHeightPct={0.45}
       closeOnBackdropPress
       scrollable={false}
+      contentNoPaddingTop
     >
-      <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 24 }}>
-        <Text
-          style={[Hierarchy.titleModal, { color: palette.text }]}
-        >
-          Vender
-        </Text>
-        <Text
-          variant="muted"
-          style={[Hierarchy.bodySmall, { marginTop: 6, color: palette.icon ?? palette.text }]}
-        >
-          Tienes {formattedAmount} €{symbol ? ` (${symbol})` : ''}
-        </Text>
-
+      <View style={{ flex: 1, minHeight: 0 }}>
+        <ModalHeader
+          title="Vender"
+          subtitle={`Tienes ${formattedAmount} €${symbol ? ` (${symbol})` : ''}`}
+          onClose={onClose}
+        />
+        <View style={{ paddingHorizontal: 20, paddingBottom: 24 }}>
         <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
           {PERCENT_OPTIONS.slice(0, 2).map((opt) => (
             <Pressable
@@ -123,6 +119,7 @@ export function VenderSheet({
               ...
             </Text>
           </Pressable>
+        </View>
         </View>
       </View>
     </CardModal>

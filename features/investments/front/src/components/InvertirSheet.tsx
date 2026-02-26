@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { CardModal } from '@/shared/components/card-modal';
+import { ModalHeader } from '@/shared/components/modal-header';
 import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
@@ -83,13 +84,11 @@ export function InvertirSheet({
       maxHeightPct={0.92}
       closeOnBackdropPress
       scrollable={false}
+      contentNoPaddingTop
     >
-      <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 }}>
-        <Text
-          style={[Hierarchy.titleModal, { color: palette.text }]}
-        >
-          Invertir
-        </Text>
+      <View style={{ flex: 1, minHeight: 0 }}>
+        <ModalHeader title="Invertir" onClose={onClose} />
+        <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 24 }}>
         <Pressable
           style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}
           accessibilityRole="button"
@@ -184,6 +183,7 @@ export function InvertirSheet({
             </Text>
             <ChevronRight size={18} color={palette.primary} style={{ marginLeft: 4 }} />
           </Pressable>
+        </View>
         </View>
       </View>
     </CardModal>

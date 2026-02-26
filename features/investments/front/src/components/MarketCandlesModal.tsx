@@ -7,8 +7,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
-import { ChevronLeft, Minus, Plus, X } from 'lucide-react-native';
+import { Minus, Plus } from 'lucide-react-native';
 import { CardModal } from '@/shared/components/card-modal';
+import { ModalHeader } from '@/shared/components/modal-header';
 import { Text } from '@/shared/components/ui/text';
 import { LightweightChartView, type Candle } from '@/features/market-chart';
 import { Hierarchy } from '@/design-system/typography';
@@ -138,59 +139,19 @@ export function MarketCandlesModal({
       contentNoPaddingTop
     >
       <View style={{ flex: 1, minHeight: 0 }}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingHorizontal: 16,
-            paddingTop: 54 + Math.max(insets.top, 0),
-            paddingBottom: 12,
-          }}
-        >
-          <View style={{ minWidth: 42, alignItems: 'flex-start' }}>
-            {(showActions || onBack != null) ? (
-              <Pressable
-                onPress={showActions ? () => setOperarStep('chart') : onBack!}
-                style={({ pressed }) => ({
-                  padding: 8,
-                  opacity: pressed ? 0.7 : 1,
-                })}
-                accessibilityRole="button"
-                accessibilityLabel={showActions ? 'Volver al gráfico' : 'Volver al buscador'}
-              >
-                <ChevronLeft size={26} color={palette.text} strokeWidth={2} />
-              </Pressable>
-            ) : null}
-          </View>
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 }}>
-            <Text
-              style={[Hierarchy.titleModal, { color: palette.text, textAlign: 'center' }]}
-              numberOfLines={1}
-            >
-              {asset?.name ?? ''}
-            </Text>
-            <Text
-              variant="muted"
-              style={[Hierarchy.bodySmall, { marginTop: 4, color: palette.icon ?? palette.text, textAlign: 'center' }]}
-            >
-              {asset?.symbol ?? ''}
-            </Text>
-          </View>
-          <View style={{ minWidth: 42, alignItems: 'flex-end' }}>
-            <Pressable
-              onPress={onClose}
-              style={({ pressed }) => ({
-                padding: 8,
-                opacity: pressed ? 0.7 : 1,
-              })}
-              accessibilityRole="button"
-              accessibilityLabel="Cerrar"
-            >
-              <X size={24} color={palette.text} />
-            </Pressable>
-          </View>
-        </View>
+        <ModalHeader
+          title={asset?.name ?? ''}
+          subtitle={asset?.symbol ?? ''}
+          onBack={
+            showActions || onBack != null
+              ? showActions
+                ? () => setOperarStep('chart')
+                : onBack!
+              : undefined
+          }
+          onClose={onClose}
+          backAccessibilityLabel={showActions ? 'Volver al gráfico' : 'Volver al buscador'}
+        />
 
         {operarStep === 'chart' && (
         <ScrollView
@@ -408,15 +369,20 @@ export function MarketCandlesModal({
           )}
         </View>
         )}
+        </ScrollView>
+        )}
 
-        {showChart && (
+        {operarStep === 'chart' && showChart && (
         <View
           style={{
             flexDirection: 'row',
             gap: 12,
             paddingHorizontal: 16,
-            paddingTop: 16,
-            paddingBottom: 24,
+            paddingTop: 12,
+            paddingBottom: 16 + Math.max(insets.bottom, 0),
+            backgroundColor: 'transparent',
+            borderTopWidth: 1,
+            borderTopColor: (palette.surfaceBorder ?? palette.surfaceMuted) + '60',
           }}
         >
           <Pressable
@@ -462,8 +428,6 @@ export function MarketCandlesModal({
             </Text>
           </Pressable>
         </View>
-        )}
-        </ScrollView>
         )}
 
         {showActions && (

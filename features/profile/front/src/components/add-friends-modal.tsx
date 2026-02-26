@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { CardModal } from '@/shared/components/card-modal';
+import { ModalHeader } from '@/shared/components/modal-header';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { SearchBar } from '@/shared/components/ui/search-bar';
@@ -98,11 +99,9 @@ export function AddFriendsModal({
     searchValue.trim().length > 0 && !searchLoading && searchResults.length === 0 && !searchError;
 
   return (
-    <CardModal open={open} onClose={onClose} maxHeightPct={0.7}>
+    <CardModal open={open} onClose={onClose} maxHeightPct={0.7} contentNoPaddingTop>
+      <ModalHeader title="Buscar amigos" onBack={onClose} onClose={onClose} backAccessibilityLabel="Volver" />
       <View style={{ paddingHorizontal: 16, gap: 16, flex: 1 }}>
-        <View style={{ width: '100%', alignItems: 'center' }}>
-          <Text variant="h4">Buscar amigos</Text>
-        </View>
         <SearchBar
           value={searchValue}
           onChangeText={onSearchChange}

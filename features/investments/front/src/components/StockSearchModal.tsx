@@ -6,6 +6,7 @@ import {
   View,
 } from 'react-native';
 import { CardModal } from '@/shared/components/card-modal';
+import { ModalHeader } from '@/shared/components/modal-header';
 import { SearchBar } from '@/shared/components/ui/search-bar';
 import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
@@ -253,16 +254,19 @@ export function StockSearchModal({
     <CardModal
       open={open}
       onClose={onClose}
-      maxHeightPct={0.75}
+      maxHeightPct={1}
       closeOnBackdropPress
       scrollable
+      contentNoPaddingTop
     >
-      <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 24, minHeight: 200 }}>
-        <Text
-          style={[Hierarchy.titleModal, { color: palette.text, marginBottom: 12 }]}
-        >
-          Buscador por nombre o símbolo
-        </Text>
+      <View style={{ flex: 1, minHeight: 0 }}>
+        <ModalHeader
+          title="Buscador"
+          onBack={onClose}
+          onClose={onClose}
+          backAccessibilityLabel="Volver"
+        />
+        <View style={{ flex: 1, paddingHorizontal: 16, paddingBottom: 24, minHeight: 200 }}>
         <SearchBar
           value={query}
           onChangeText={setQuery}
@@ -322,6 +326,7 @@ export function StockSearchModal({
             showsVerticalScrollIndicator={true}
           />
         )}
+        </View>
       </View>
     </CardModal>
   );

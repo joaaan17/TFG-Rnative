@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { CardModal } from '@/shared/components/card-modal';
+import { ModalHeader } from '@/shared/components/modal-header';
 import { Button } from '@/shared/components/ui/button';
 import { Text } from '@/shared/components/ui/text';
 
@@ -66,16 +67,13 @@ export function SettingsModal({
   const displayJoined = formatJoinedYear(profile?.joinedAt);
 
   return (
-    <CardModal open={open} onClose={onClose} maxHeightPct={0.75}>
+    <CardModal open={open} onClose={onClose} maxHeightPct={0.75} contentNoPaddingTop>
+      <ModalHeader title="Ajustes" onBack={onClose} onClose={onClose} backAccessibilityLabel="Volver" />
       <ScrollView
         style={{ paddingHorizontal: 16, flexGrow: 1 }}
         contentContainerStyle={{ paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={{ width: '100%', alignItems: 'center', marginBottom: 16 }}>
-          <Text variant="h4">Ajustes</Text>
-        </View>
-
         <View style={{ gap: 12, marginBottom: 24 }}>
           <View>
             <Text variant="muted" style={{ fontSize: 12, marginBottom: 2 }}>

@@ -57,6 +57,18 @@ export function createNewsCardStyles(palette: Palette) {
       height: '100%',
       justifyContent: 'center',
       alignItems: 'center',
+      overflow: 'hidden',
+    },
+    imagePlaceholderIconWrap: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 10,
+    },
+    imagePlaceholderLabel: {
+      ...Hierarchy.captionSmall,
+      letterSpacing: 1.6,
+      textTransform: 'uppercase',
+      opacity: 0.7,
     },
     content: {
       paddingHorizontal: 20,

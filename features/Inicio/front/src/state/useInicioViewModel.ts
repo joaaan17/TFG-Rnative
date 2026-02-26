@@ -50,6 +50,8 @@ export function useInicioViewModel(): UseInicioViewModelResult {
   const answersStoreRef = React.useRef<Map<string, Record<number, number>>>(
     new Map(),
   );
+  /** newsId del quiz actual (se mantiene al cerrar el modal de noticia para que las respuestas funcionen) */
+  const currentQuizNewsIdRef = React.useRef<string | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [loadingNews, setLoadingNews] = React.useState(false);
   const [loadingQuiz, setLoadingQuiz] = React.useState(false);
@@ -120,8 +122,9 @@ export function useInicioViewModel(): UseInicioViewModelResult {
 
   const openQuiz = React.useCallback(async () => {
     if (!token || !selectedNews) return;
-    setIsQuizModalOpen(true);
     const newsId = selectedNews.id;
+    currentQuizNewsIdRef.current = newsId;
+    setIsQuizModalOpen(true);
 
     const cached = quizStoreRef.current.get(newsId);
     if (cached) {
@@ -151,7 +154,7 @@ export function useInicioViewModel(): UseInicioViewModelResult {
 
   const closeQuizModal = React.useCallback(() => {
     setIsQuizModalOpen(false);
-    // No limpiamos quiz: se mantiene hasta cerrar la noticia
+    currentQuizNewsIdRef.current = null;
   }, []);
 
   useFocusEffect(
@@ -164,8 +167,8 @@ export function useInicioViewModel(): UseInicioViewModelResult {
 
   const onQuizAnswer = React.useCallback(
     (qIndex: number, optionIndex: number) => {
-      if (!selectedNews) return;
-      const newsId = selectedNews.id;
+      const newsId = currentQuizNewsIdRef.current ?? selectedNews?.id;
+      if (!newsId) return;
       const next = { ...(answersStoreRef.current.get(newsId) ?? {}), [qIndex]: optionIndex };
       answersStoreRef.current.set(newsId, next);
       setQuizAnswers(next);

@@ -236,28 +236,32 @@ function NewsModalContent({
           </Button>
         </View>
       </ScrollView>
-      {/* Solo los botones del hero (atrás, test en header) en overlay para que reciban toques */}
-      <View style={modalStyles.newsHeroActionsOverlay} pointerEvents="box-none">
+      {/* Botones del hero (atrás, test) en overlay para que siempre reciban toques por encima del scroll */}
+      <View
+        style={modalStyles.newsHeroActionsOverlay}
+        pointerEvents="box-none"
+        collapsable={false}
+      >
         <Pressable
-          onPress={() => onBack()}
-          hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+          onPress={onBack}
+          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
           style={({ pressed }) => [
             modalStyles.newsHeroButton,
             { opacity: pressed ? 0.8 : 1 },
           ]}
-          accessibilityLabel="Cerrar"
+          accessibilityLabel="Volver"
           accessibilityRole="button"
         >
           <ChevronLeft size={24} color={iconColor} strokeWidth={2} />
         </Pressable>
         <Pressable
-          onPress={() => onQuiz()}
-          hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+          onPress={onQuiz}
+          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
           style={({ pressed }) => [
             modalStyles.newsHeroButton,
             { opacity: pressed ? 0.8 : 1 },
           ]}
-          accessibilityLabel="Realizar test"
+          accessibilityLabel="Realizar test de comprensión"
           accessibilityRole="button"
         >
           <Sparkles size={22} color={iconColor} strokeWidth={2} />

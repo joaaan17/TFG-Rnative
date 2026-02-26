@@ -14,14 +14,18 @@ function formatNum(n: number | null): string {
   return n.toFixed(2);
 }
 
-const ROWS: { label: string; getValue: (f: FundamentalsSnapshot) => string }[] = [
-  { label: 'PER (P/E)', getValue: (f) => formatNum(f.pe) },
-  { label: 'EPS', getValue: (f) => formatNum(f.eps) },
-  { label: 'Quick Ratio', getValue: (f) => formatNum(f.quickRatio) },
-  { label: 'Beta', getValue: (f) => formatNum(f.beta) },
-  { label: 'Market Cap', getValue: (f) => formatNum(f.marketCap) },
-  { label: 'Sector', getValue: (f) => f.sector ?? EMPTY },
-  { label: 'Industria', getValue: (f) => f.industry ?? EMPTY },
+const ROWS: {
+  label: string;
+  hint: string;
+  getValue: (f: FundamentalsSnapshot) => string;
+}[] = [
+  { label: 'PER (P/E)', hint: 'Valoración', getValue: (f) => formatNum(f.pe) },
+  { label: 'EPS', hint: 'Ganancias', getValue: (f) => formatNum(f.eps) },
+  { label: 'Quick Ratio', hint: 'Solidez', getValue: (f) => formatNum(f.quickRatio) },
+  { label: 'Beta', hint: 'Riesgo', getValue: (f) => formatNum(f.beta) },
+  { label: 'Market Cap', hint: 'Dimensión', getValue: (f) => formatNum(f.marketCap) },
+  { label: 'Sector', hint: 'Área', getValue: (f) => f.sector ?? EMPTY },
+  { label: 'Industria', hint: 'Actividad', getValue: (f) => f.industry ?? EMPTY },
 ];
 
 export type FundamentalsListProps = {
@@ -45,7 +49,7 @@ export function FundamentalsList({ fundamentals, palette }: FundamentalsListProp
         Fundamentales
       </Text>
       <View style={{ gap: 8 }}>
-        {ROWS.map(({ label, getValue }) => (
+        {ROWS.map(({ label, hint, getValue }) => (
           <View
             key={label}
             style={{
@@ -60,9 +64,15 @@ export function FundamentalsList({ fundamentals, palette }: FundamentalsListProp
               borderColor: borderColor + '30',
             }}
           >
-            <Text style={[Hierarchy.caption, { color: mutedColor }]}>
-              {label}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
+              <Text style={[Hierarchy.caption, { color: textColor }]} numberOfLines={1}>
+                {label}
+              </Text>
+              <Text style={[Hierarchy.captionSmall, { color: mutedColor }]}> – </Text>
+              <Text style={[Hierarchy.captionSmall, { color: mutedColor }]} numberOfLines={1}>
+                {hint}
+              </Text>
+            </View>
             <Text
               style={[Hierarchy.bodySmallSemibold, { color: textColor }]}
               numberOfLines={1}

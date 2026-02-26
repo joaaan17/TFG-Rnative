@@ -1,6 +1,8 @@
 import React from 'react';
 import { View } from 'react-native';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ImageOff } from 'lucide-react-native';
 
 import { Button } from '@/shared/components/ui/button';
 import { Text } from '@/shared/components/ui/text';
@@ -36,6 +38,22 @@ export function NewsCard({
 }: NewsCardProps) {
   const palette = usePalette();
   const s = React.useMemo(() => createNewsCardStyles(palette), [palette]);
+  const isDark = palette.background === '#070B14' || (palette.background?.length && palette.background.startsWith('#0'));
+  const placeholderGradientColors = React.useMemo(
+    () =>
+      isDark
+        ? [
+            palette.surfaceMuted ?? '#1A1F2E',
+            palette.cardBackground ?? '#151A26',
+            palette.surfaceMuted ?? '#1A1F2E',
+          ]
+        : [
+            palette.surfaceMuted ?? '#EEF2F7',
+            palette.cardBackground ?? '#F8FAFC',
+            palette.surfaceMuted ?? '#EEF2F7',
+          ],
+    [isDark, palette.surfaceMuted, palette.cardBackground],
+  );
   const dateLabel = formatDate(item.publishedAt);
   const sourceLabel = (item.source || '').trim() || 'Noticias';
   const metaLine = dateLabel ? `${sourceLabel.toUpperCase()} · ${dateLabel}` : sourceLabel.toUpperCase();
@@ -50,11 +68,26 @@ export function NewsCard({
             contentFit="cover"
           />
         ) : (
-          <View style={[s.imagePlaceholder, { backgroundColor: palette.surfaceMuted ?? '#EEF2F7' }]}>
-            <Text style={{ color: palette.icon ?? palette.text, fontSize: 14 }}>
+          <LinearGradient
+            colors={placeholderGradientColors}
+            locations={[0, 0.5, 1]}
+            style={s.imagePlaceholder}
+          >
+            <View style={s.imagePlaceholderIconWrap}>
+              <ImageOff
+                size={48}
+                color={palette.icon ?? palette.text}
+                strokeWidth={1.4}
+                style={{ opacity: 0.55 }}
+              />
+            </View>
+            <Text
+              style={[s.imagePlaceholderLabel, { color: palette.icon ?? palette.text }]}
+              numberOfLines={1}
+            >
               Sin imagen
             </Text>
-          </View>
+          </LinearGradient>
         )}
       </View>
 

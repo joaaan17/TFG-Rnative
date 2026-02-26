@@ -272,13 +272,14 @@ export function AssetCard({
 
 const CARD_MIN_HEIGHT = 196;
 
-const softShadow = Platform.select({
-  android: { elevation: 10 },
+// Misma sombra sutil que el input "Escribe tu pregunta" (shadow-sm shadow-black/5)
+const inputLikeShadow = Platform.select({
+  android: { elevation: 2 },
   default: {
     shadowColor: '#0B0A09',
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
   },
 });
 
@@ -291,7 +292,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 12,
     paddingBottom: 14,
-    ...(softShadow as object),
+    ...(inputLikeShadow as object),
   },
   topRow: {
     flexDirection: 'row',

@@ -1,7 +1,8 @@
 import React from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { CardModal } from '@/shared/components/card-modal';
-import { Card, CardHeader } from '@/shared/components/ui/card';
+import { ModalHeader } from '@/shared/components/modal-header';
+import { Card } from '@/shared/components/ui/card';
 import { Text } from '@/shared/components/ui/text';
 import { ProfileAvatar } from './profileAvatar';
 import { profileStyles } from '../ui/Profile.styles';
@@ -54,7 +55,9 @@ export function FriendProfileModal({
       maxHeightPct={0.98}
       scrollable
       contentHeight={contentHeight}
+      contentNoPaddingTop
     >
+      <ModalHeader title={displayName} onBack={onClose} onClose={onClose} backAccessibilityLabel="Volver" />
       {loading ? (
         <View style={[profileStyles.loadingContainer, { paddingVertical: 48 }]}>
           <ActivityIndicator size="large" />
@@ -73,11 +76,6 @@ export function FriendProfileModal({
           onContentSizeChange={(_w, h) => setContentHeight(h)}
         >
           <Card className="rounded-none" style={profileStyles.topCard}>
-            <CardHeader style={profileStyles.topCardHeader}>
-              <Text variant="h4" style={profileStyles.topCardTitle}>
-                {displayName}
-              </Text>
-            </CardHeader>
             <View
               style={[profileStyles.topCardCenter, { pointerEvents: 'none' }]}
             >
