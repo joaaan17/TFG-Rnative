@@ -40,7 +40,7 @@ export function QuoteGrid({ quote, palette }: QuoteGridProps) {
   const borderColor = palette.surfaceBorder ?? palette.surfaceMuted;
 
   return (
-    <View style={{ marginBottom: 16 }}>
+    <View style={{ marginTop: 16, marginBottom: 16 }}>
       <Text
         style={[
           Hierarchy.titleSection,
