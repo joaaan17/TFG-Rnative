@@ -6,9 +6,9 @@ import { getQuotes } from '../api/marketQuotesClient';
  * Fuente única para: Valor actual en modal, Beneficios no realizados, línea de precio del gráfico
  * y cards de posiciones (useHoldingsWithPrices). Evita que el precio varíe según el timeframe
  * de velas (6h/1D/1M) y garantiza coherencia con el precio de ejecución de órdenes.
- * @param refreshIntervalMs - Intervalo de refresco en ms (por defecto 30s; en modal se puede usar 10s para valor lo más actualizado posible).
+ * @param refreshIntervalMs - Intervalo de refresco en ms (por defecto 5 min).
  */
-const DEFAULT_REFRESH_INTERVAL_MS = 30_000;
+const DEFAULT_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
 export function useCurrentQuotePrice(
   symbol: string,

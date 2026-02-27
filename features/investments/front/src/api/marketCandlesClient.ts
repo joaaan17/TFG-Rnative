@@ -20,6 +20,14 @@ export interface ApiCandle {
   v?: number;
 }
 
+/** Origen de los datos (caché L1/L2 o fetch). Para indicador visual en el gráfico. */
+export type CacheStatusCandles =
+  | 'HIT_L1'
+  | 'HIT_L2'
+  | 'MISS_FETCH'
+  | 'STALE_SERVED_REFRESHING'
+  | 'INFLIGHT_JOINED';
+
 export interface MarketCandlesResponse {
   symbol: string;
   timeframe: CandleTimeframe;
@@ -27,6 +35,8 @@ export interface MarketCandlesResponse {
   interval: CandleTimeframe;
   count: number;
   candles: ApiCandle[];
+  /** Indica si los datos vienen de caché (L1/L2) o se acaban de pedir al proveedor. */
+  cacheStatus?: CacheStatusCandles;
 }
 
 /**

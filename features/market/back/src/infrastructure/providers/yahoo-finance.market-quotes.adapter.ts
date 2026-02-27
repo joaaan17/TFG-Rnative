@@ -24,6 +24,8 @@ export class YahooFinanceMarketQuotesAdapter implements MarketQuotesPort {
   async getQuotes(symbols: string[]): Promise<QuoteItem[]> {
     if (symbols.length === 0) return [];
 
+    const normalized = [...new Set(symbols.map((s) => String(s).trim().toUpperCase()).filter(Boolean))];
+
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const createYahooFinance =
       require('yahoo-finance2/createYahooFinance').default;
@@ -35,7 +37,7 @@ export class YahooFinanceMarketQuotesAdapter implements MarketQuotesPort {
     const client = new YahooFinanceClass();
 
     const raw = await withTimeout(
-      client.quote(symbols),
+      client.quote(normalized),
       QUOTES_TIMEOUT_MS,
     );
 

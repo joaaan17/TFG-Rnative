@@ -65,7 +65,7 @@ export function useMarketCandles(
       return;
     }
     fetchCandles();
-    const intervalMs = 60_000; // Gráfico: actualización cada 60 segundos
+    const intervalMs = 5 * 60 * 1000; // Gráfico: actualización cada 5 minutos
     const intervalId = setInterval(fetchCandles, intervalMs);
     return () => {
       clearInterval(intervalId);

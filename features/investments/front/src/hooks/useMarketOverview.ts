@@ -51,7 +51,7 @@ export function useMarketOverview(symbol: string, enabled: boolean) {
       return;
     }
     fetchOverview();
-    const intervalMs = 30_000; // Valor actual y datos del día: actualización cada 30 segundos
+    const intervalMs = 5 * 60 * 1000; // Backend con L1/L2; refetch cada 5 min
     const intervalId = setInterval(fetchOverview, intervalMs);
     return () => {
       clearInterval(intervalId);

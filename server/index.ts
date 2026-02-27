@@ -9,7 +9,7 @@ import iapreguntasRoutes from '../features/IApreguntas/back/src/api/api.routes';
 import iaNoticiasRoutes from '../features/iaNoticiasEducativas/back/src/api/api.routes';
 import investmentsRoutes from '../features/investments/back/src/api/api.routes';
 import marketChartRoutes from '../features/market-chart/back/src/api/api.routes';
-import { marketRouter } from '../features/market/back/src';
+import { marketRouter, startPriceCacheWarmup } from '../features/market/back/src';
 
 const app = express();
 app.use(cors());
@@ -30,6 +30,8 @@ const startServer = async () => {
     console.log('⏳ Conectando a MongoDB...');
     await mongoose.connect(authEnv.dbUri);
     console.log('✅ MongoDB Conectado exitosamente');
+
+    startPriceCacheWarmup();
 
     // B) Levantar Servidor Express
     const PORT = process.env.PORT || 3000;

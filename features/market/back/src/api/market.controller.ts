@@ -3,7 +3,7 @@ import type { CandleRange, CandleTimeframe } from '../domain/market.types';
 import {
   getCandlesByTimeframeUseCase,
   getMarketOverviewUseCase,
-  getQuotesUseCase,
+  priceCacheService,
   searchMarketUseCase,
 } from '../config/market.wiring';
 
@@ -102,9 +102,21 @@ export const getCandlesController = async (
         ? (rangeParam as CandleRange)
         : undefined;
 
-    const result = await getCandlesByTimeframeUseCase.execute(symbol, timeframe, range);
+    const strategy = (req.query.strategy as 'cache-first' | 'swr' | 'network-first') ?? 'swr';
+    const requestId = typeof req.headers['x-request-id'] === 'string' ? req.headers['x-request-id'] : undefined;
+    const effectiveRange: CandleRange =
+      range ?? (timeframe === '1mo' ? '5y' : timeframe === '1d' ? '6mo' : '3mo');
+    const { data: result, cacheStatus } = await priceCacheService.getHistorical(
+      symbol,
+      timeframe,
+      effectiveRange,
+      strategy,
+      requestId,
+    );
 
-    res.status(200).json(result);
+    const cacheEmoji = cacheStatus === 'HIT_L1' || cacheStatus === 'HIT_L2' ? '📦' : '🌐';
+    console.log(`[market] ${cacheEmoji} Candles ${cacheStatus === 'HIT_L1' || cacheStatus === 'HIT_L2' ? 'CACHÉ (sin API)' : 'API'} symbol=${symbol} timeframe=${timeframe} status=${cacheStatus}`);
+    res.status(200).json({ ...result, cacheStatus });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Candles failed';
     const isBadRequest =
@@ -150,7 +162,9 @@ export const getQuotesController = async (
       res.status(200).json({ quotes: [] });
       return;
     }
-    const quotes = await getQuotesUseCase.execute(symbols);
+    const strategy = (req.query.strategy as 'cache-first' | 'swr' | 'network-first') ?? 'swr';
+    const requestId = typeof req.headers['x-request-id'] === 'string' ? req.headers['x-request-id'] : undefined;
+    const { quotes } = await priceCacheService.getQuotes(symbols, strategy, requestId);
     res.status(200).json({ quotes });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Quotes failed';
@@ -214,5 +228,28 @@ export const getOverviewController = async (
 
     console.error('[market] Overview error:', err);
     res.status(500).json({ message: 'An error occurred while fetching overview.' });
+  }
+};
+
+/** GET /api/market/cache/stats - estadísticas de caché (hits L1/L2, misses, inflight, size L1). */
+export const getCacheStatsController = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const stats = priceCacheService.getStats();
+    res.status(200).json(stats);
+  } catch (err) {
+    console.error('[market] Cache stats error:', err);
+    res.status(500).json({ message: 'Error al obtener estadísticas de caché.' });
+  }
+};
+
+/** POST /api/market/cache/warmup - calienta HOT_SYMBOLS (network-first). */
+export const postCacheWarmupController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const requestId = typeof req.headers['x-request-id'] === 'string' ? req.headers['x-request-id'] : undefined;
+    const { warmed, errors } = await priceCacheService.warmupHotSymbols(requestId);
+    res.status(200).json({ warmed, errors });
+  } catch (err) {
+    console.error('[market] Cache warmup error:', err);
+    res.status(500).json({ message: 'Error al ejecutar warmup.' });
   }
 };

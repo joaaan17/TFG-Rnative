@@ -85,7 +85,7 @@ export function MarketCandlesModal({
   const { price: currentQuotePrice } = useCurrentQuotePrice(
     symbol,
     visible && !!symbol,
-    10_000,
+    5 * 60 * 1000,
   );
   // Velas 6h solo para "Valor actual" en Tu posición: usamos el cierre de la última vela de 6h (más actualizado que 1D)
   const { data: candles6h } = useMarketCandles(

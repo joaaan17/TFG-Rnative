@@ -28,8 +28,9 @@ import { PortfolioChart } from '../components/PortfolioChart';
 import { StockSearchModal } from '../components/StockSearchModal';
 import { TransactionsHistoryModal } from '../components/TransactionsHistoryModal';
 import { useCurrentQuotePrice } from '../hooks/useCurrentQuotePrice';
-import { usePortfolio } from '../hooks/usePortfolio';
+import { useHoldingsSparklines } from '../hooks/useHoldingsSparklines';
 import { useHoldingsWithPrices } from '../hooks/useHoldingsWithPrices';
+import { usePortfolio } from '../hooks/usePortfolio';
 import { createInvestmentsStyles } from './Investments.styles';
 
 const DEFAULT_CHART_SYMBOL = 'AAPL';
@@ -55,6 +56,11 @@ export function InvestmentsScreen() {
   const { holdingsWithPrice, totalValue: holdingsTotalValue } = useHoldingsWithPrices(
     portfolioData?.holdings,
   );
+  const holdingSymbols = useMemo(
+    () => (portfolioData?.holdings ?? []).map((h) => h.symbol),
+    [portfolioData?.holdings],
+  );
+  const sparklines = useHoldingsSparklines(holdingSymbols, !!session && holdingSymbols.length > 0);
   const { price: chartSymbolPrice } = useCurrentQuotePrice(DEFAULT_CHART_SYMBOL, true);
   const [typewriterKey, setTypewriterKey] = React.useState(0);
   const [tab, setTab] = React.useState<SegmentedTextTabsValue>(0);
@@ -223,6 +229,7 @@ export function InvestmentsScreen() {
                       trend={changeVal >= 0 ? 'up' : 'down'}
                       profits={`${changeStr} $`}
                       variant="primaryTransparent"
+                      sparklineData={sparklines[h.symbol]}
                       onPress={() => handleOpenPositionModal(h)}
                     />
                   </View>
