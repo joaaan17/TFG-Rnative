@@ -121,14 +121,7 @@ function AssetAvatar({
           />
         ) : (
           <Text
-            style={[
-              Hierarchy.bodySmallSemibold,
-              {
-                color: textColor,
-                opacity: 0.78,
-                fontSize: 16,
-              },
-            ]}
+            style={[Hierarchy.bodySmallSemibold, { color: textColor, opacity: 0.78 }]}
             numberOfLines={1}
           >
             {getInitial(name)}
@@ -281,12 +274,17 @@ export function StockSearchModal({
           palette={palette}
         />
         <View style={{ marginLeft: 12, flex: 1, minWidth: 0 }}>
-          <Text style={{ fontWeight: '600', color: palette.text }} numberOfLines={1}>
+          <Text
+            style={[Hierarchy.bodySmallSemibold, { color: palette.text }]}
+            numberOfLines={1}
+          >
             {item.name}
           </Text>
           <Text
-            variant="muted"
-            style={{ marginTop: 2, fontSize: 13 }}
+            style={[
+              Hierarchy.caption,
+              { marginTop: 2, color: palette.icon ?? palette.text },
+            ]}
             numberOfLines={1}
           >
             {item.symbol}
@@ -341,19 +339,26 @@ export function StockSearchModal({
             palette={palette}
           />
           <View style={{ marginLeft: 12, flex: 1, minWidth: 0 }}>
-            <Text style={{ fontWeight: '600', color: palette.text }} numberOfLines={1}>
+            <Text
+              style={[Hierarchy.bodySmallSemibold, { color: palette.text }]}
+              numberOfLines={1}
+            >
               {displayName}
             </Text>
             <Text
-              variant="muted"
-              style={{ marginTop: 2, fontSize: 13 }}
+              style={[
+                Hierarchy.caption,
+                { marginTop: 2, color: palette.icon ?? palette.text },
+              ]}
               numberOfLines={1}
             >
               {item.symbol}
             </Text>
           </View>
           {item.price != null && (
-            <Text style={{ fontSize: 15, fontWeight: '600', color: palette.text }}>
+            <Text
+              style={[Hierarchy.action, { color: palette.text }]}
+            >
               {formatPrice(item)}
             </Text>
           )}
@@ -417,7 +422,12 @@ export function StockSearchModal({
 
         {error && !loading && (
           <View style={{ paddingVertical: 16 }}>
-            <Text variant="muted" style={{ textAlign: 'center' }}>
+            <Text
+              style={[
+                Hierarchy.bodySmall,
+                { textAlign: 'center', color: palette.icon ?? palette.text },
+              ]}
+            >
               {error}
             </Text>
           </View>
@@ -425,7 +435,12 @@ export function StockSearchModal({
 
         {!loading && !error && results.length === 0 && query.trim().length >= 1 && (
           <View style={{ paddingVertical: 24 }}>
-            <Text variant="muted" style={{ textAlign: 'center' }}>
+            <Text
+              style={[
+                Hierarchy.bodySmall,
+                { textAlign: 'center', color: palette.icon ?? palette.text },
+              ]}
+            >
               No se encontraron resultados para "{query.trim()}"
             </Text>
           </View>

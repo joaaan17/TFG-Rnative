@@ -1,50 +1,25 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  View,
-} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
-import { BarChart3, LineChart, Minus, Plus } from 'lucide-react-native';
+import { Minus, Plus } from 'lucide-react-native';
 import { CardModal } from '@/shared/components/card-modal';
 import { ModalHeader } from '@/shared/components/modal-header';
 import { Text } from '@/shared/components/ui/text';
-import {
-  LightweightChartView,
-  type Candle,
-  type ChartSeriesType,
-} from '@/features/market-chart';
 import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
 import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
-import { useMarketCandles } from '../hooks/useMarketCandles';
 import { useMarketOverview } from '../hooks/useMarketOverview';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useBuyOrder } from '../hooks/useBuyOrder';
-import type { CandleRange, CandleTimeframe } from '../api/marketCandlesClient';
+import { useSellOrder } from '../hooks/useSellOrder';
 import { QuoteGrid } from './QuoteGrid';
 import { FundamentalsList } from './FundamentalsList';
 import { InvertirSheet } from './InvertirSheet';
 import { VenderSheet } from './VenderSheet';
 import { PurchaseSuccessModal } from './PurchaseSuccessModal';
-
-/** Periodos de visualización (parte superior): cuánto tiempo se muestra en el gráfico. */
-const RANGE_OPTIONS: { value: CandleRange; label: string }[] = [
-  { value: '1wk', label: '1 s' },
-  { value: '1mo', label: '1 m' },
-  { value: '3mo', label: '3 m' },
-  { value: '6mo', label: '6 m' },
-  { value: '1y', label: '1 a' },
-];
-
-/** Granularidad de vela (parte inferior): tamaño de cada vela. */
-const TIMEFRAME_OPTIONS: { value: CandleTimeframe; label: string }[] = [
-  { value: '6h', label: '6h' },
-  { value: '1d', label: '1D' },
-  { value: '1mo', label: '1M' },
-];
+import { SaleSuccessModal } from './SaleSuccessModal';
+import { PortfolioChart } from './PortfolioChart';
 
 export type MarketCandlesModalAsset = { symbol: string; name: string };
 
@@ -62,20 +37,6 @@ export type MarketCandlesModalProps = {
   onGoToMain?: () => void;
 };
 
-/** Convierte velas del API (t en ms) al formato del chart (time en segundos). */
-function apiCandlesToChartCandles(
-  candles: Array<{ t: number; o: number; h: number; l: number; c: number; v?: number }>,
-): Candle[] {
-  return candles.map((c) => ({
-    time: Math.floor(c.t / 1000),
-    open: c.o,
-    high: c.h,
-    low: c.l,
-    close: c.c,
-    volume: c.v,
-  }));
-}
-
 type OperarStep = 'chart' | 'actions';
 
 export function MarketCandlesModal({
@@ -89,13 +50,11 @@ export function MarketCandlesModal({
 }: MarketCandlesModalProps) {
   const palette = usePalette();
   const insets = useSafeAreaInsets();
-  const [range, setRange] = useState<CandleRange>('1mo');
-  const [timeframe, setTimeframe] = useState<CandleTimeframe>('1d');
-  const [chartMode, setChartMode] = useState<ChartSeriesType>('candlestick');
   const [operarStep, setOperarStep] = useState<OperarStep>('chart');
   const [venderOpen, setVenderOpen] = useState(false);
   const [comprarOpen, setComprarOpen] = useState(false);
   const [purchaseSuccessOpen, setPurchaseSuccessOpen] = useState(false);
+  const [saleSuccessOpen, setSaleSuccessOpen] = useState(false);
 
   useEffect(() => {
     if (!visible) {
@@ -103,6 +62,7 @@ export function MarketCandlesModal({
       setVenderOpen(false);
       setComprarOpen(false);
       setPurchaseSuccessOpen(false);
+      setSaleSuccessOpen(false);
     }
   }, [visible]);
 
@@ -113,12 +73,7 @@ export function MarketCandlesModal({
     visible,
   );
   const { execute: executeBuy, loading: buyLoading, error: buyError, clearError: clearBuyError } = useBuyOrder(session?.token ?? null);
-  const { data, loading, error, refetch } = useMarketCandles(
-    symbol,
-    timeframe,
-    visible && !!symbol,
-    range,
-  );
+  const { execute: executeSell, loading: sellLoading, error: sellError, clearError: clearSellError } = useSellOrder(session?.token ?? null);
   const {
     data: overviewData,
     loading: overviewLoading,
@@ -126,34 +81,15 @@ export function MarketCandlesModal({
     refetch: refetchOverview,
   } = useMarketOverview(symbol, visible && !!symbol);
 
-  const chartCandles = useMemo(() => {
-    if (!data?.candles?.length) return [];
-    return apiCandlesToChartCandles(data.candles);
-  }, [data?.candles]);
-
-  const lastClose =
-    chartCandles.length > 0
-      ? chartCandles[chartCandles.length - 1].close
-      : undefined;
-
-  const priceLines = useMemo(() => {
-    if (lastClose == null) return [];
-    return [
-      {
-        price: lastClose,
-        color: palette.primary,
-        lineWidth: 1,
-        lineStyle: 2,
-        title: lastClose.toFixed(2),
-        axisLabelVisible: true,
-      },
-    ];
-  }, [lastClose, palette.primary]);
-
   const showChart = operarStep === 'chart';
   const showActions = operarStep === 'actions';
   const cashBalance = portfolioData?.cashBalance ?? 0;
   const holdingForSymbol = portfolioData?.holdings?.find((h) => h.symbol === symbol);
+  const quote = overviewData?.quote;
+  const lastClose =
+    quote?.high != null && quote?.low != null
+      ? (quote.high + quote.low) / 2
+      : quote?.high ?? quote?.low ?? undefined;
   const positionAmount = (holdingForSymbol?.shares ?? 0) * (lastClose ?? 0);
 
   if (!visible) return null;
@@ -192,236 +128,74 @@ export function MarketCandlesModal({
           showsVerticalScrollIndicator={true}
           keyboardShouldPersistTaps="handled"
         >
-        {showChart && (
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            paddingHorizontal: 16,
-            paddingVertical: 10,
-            gap: 6,
-          }}
-        >
-          <View style={{ flex: 1, flexDirection: 'row', gap: 6 }}>
-            {RANGE_OPTIONS.map((opt) => (
-              <Pressable
-                key={opt.value}
-                onPress={() => setRange(opt.value)}
-                style={{
-                  flex: 1,
-                  paddingVertical: 10,
-                  borderRadius: 8,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor:
-                    range === opt.value
-                      ? palette.primary
-                      : palette.surfaceMuted ?? '#f0f0f0',
-                }}
-              >
-                <Text
-                  style={[
-                    Hierarchy.action,
-                    {
-                      color: range === opt.value ? palette.primaryText ?? '#FFF' : palette.text,
-                    },
-                  ]}
-                >
-                  {opt.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-        )}
-
         {operarStep === 'chart' && (
         <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
-          {loading && (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: 280,
-              }}
-            >
-              <ActivityIndicator size="large" color={palette.primary} />
-              <Text
-                variant="muted"
-                style={[Hierarchy.bodySmall, { marginTop: 12, color: palette.icon }]}
-              >
-                Cargando histórico...
-              </Text>
-            </View>
-          )}
-
-          {error && !loading && (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: 280,
-              }}
-            >
-              <Text
-                variant="muted"
-                style={[Hierarchy.bodySmall, { textAlign: 'center', color: palette.icon }]}
-              >
-                {error}
-              </Text>
-              <Pressable
-                onPress={refetch}
-                style={{
-                  marginTop: 16,
-                  paddingHorizontal: 20,
-                  paddingVertical: 10,
-                  borderRadius: 8,
-                  backgroundColor: palette.primary,
-                }}
-              >
-                <Text
-                  style={[Hierarchy.action, { color: palette.primaryText ?? '#FFF' }]}
-                >
-                  Reintentar
-                </Text>
-              </Pressable>
-            </View>
-          )}
-
-          {!loading && !error && chartCandles.length === 0 && symbol && (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: 280,
-              }}
-            >
-              <Text
-                variant="muted"
-                style={[Hierarchy.bodySmall, { textAlign: 'center', color: palette.icon }]}
-              >
-                No hay datos para este período
-              </Text>
-            </View>
-          )}
-
-          {!loading && !error && chartCandles.length > 0 && (
-            <LightweightChartView
-              key={`chart-${symbol}-${timeframe}-${range}`}
-              candles={chartCandles}
+          {showChart && symbol ? (
+            <PortfolioChart
+              symbol={symbol}
+              enabled={!!symbol}
               height={280}
-              seriesType={chartMode}
-              priceLines={priceLines}
-              theme={{
-                layoutBackgroundColor:
-                  palette.mainBackground ?? palette.background,
-                textColor: palette.text,
-                gridColor: palette.surfaceBorder ?? '#D6DEE8',
-                upColor: palette.primary,
-                downColor: `${palette.primary}66`,
-                fontSize: Hierarchy.captionSmall.fontSize,
-              }}
+              containerStyle={{ paddingHorizontal: 0 }}
             />
-          )}
+          ) : null}
 
-          {showChart && (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingHorizontal: 0,
-                paddingTop: 12,
-                paddingBottom: 8,
-                gap: 6,
-              }}
-            >
-              <View style={{ flex: 1, flexDirection: 'row', gap: 6 }}>
-                {TIMEFRAME_OPTIONS.map((opt) => (
-                  <Pressable
-                    key={opt.value}
-                    onPress={() => setTimeframe(opt.value)}
-                    style={{
-                      flex: 1,
-                      paddingVertical: 10,
-                      borderRadius: 8,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      backgroundColor:
-                        timeframe === opt.value
-                          ? palette.primary
-                          : palette.surfaceMuted ?? '#f0f0f0',
-                    }}
-                  >
+          {holdingForSymbol && (
+            <View style={{ marginTop: 20, marginBottom: 16 }}>
+              <Text
+                style={[
+                  Hierarchy.titleSection,
+                  { color: palette.icon ?? palette.text, marginBottom: 10 },
+                ]}
+              >
+                Tu posición
+              </Text>
+              <View style={{ gap: 8 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={[Hierarchy.bodySmall, { color: palette.icon ?? palette.text }]}>
+                    Acciones
+                  </Text>
+                  <Text style={[Hierarchy.action, { color: palette.text, fontWeight: '600' }]}>
+                    {holdingForSymbol.shares.toLocaleString('es-ES', { maximumFractionDigits: 4 })}
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={[Hierarchy.bodySmall, { color: palette.icon ?? palette.text }]}>
+                    Precio medio compra
+                  </Text>
+                  <Text style={[Hierarchy.action, { color: palette.text }]}>
+                    {holdingForSymbol.avgBuyPrice.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={[Hierarchy.bodySmall, { color: palette.icon ?? palette.text }]}>
+                    Valor actual
+                  </Text>
+                  <Text style={[Hierarchy.action, { color: palette.text, fontWeight: '600' }]}>
+                    {positionAmount.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $
+                  </Text>
+                </View>
+                {lastClose != null && (
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, paddingTop: 8, borderTopWidth: 1, borderTopColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.08)' }}>
+                    <Text style={[Hierarchy.bodySmall, { color: palette.icon ?? palette.text }]}>
+                      Beneficios
+                    </Text>
                     <Text
                       style={[
                         Hierarchy.action,
                         {
-                          color: timeframe === opt.value ? palette.primaryText ?? '#FFF' : palette.text,
+                          fontWeight: '600',
+                          color:
+                            positionAmount - holdingForSymbol.shares * holdingForSymbol.avgBuyPrice >= 0
+                              ? palette.positive ?? '#16A34A'
+                              : palette.destructive ?? '#E5484D',
                         },
                       ]}
                     >
-                      {opt.label}
+                      {(positionAmount - holdingForSymbol.shares * holdingForSymbol.avgBuyPrice >= 0 ? '+' : '')}
+                      {(positionAmount - holdingForSymbol.shares * holdingForSymbol.avgBuyPrice).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $
                     </Text>
-                  </Pressable>
-                ))}
-              </View>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 4,
-                  paddingLeft: 4,
-                }}
-              >
-                <Pressable
-                  onPress={() => setChartMode('candlestick')}
-                  style={({ pressed }) => ({
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    opacity: pressed ? 0.7 : 1,
-                  })}
-                  accessibilityRole="button"
-                  accessibilityLabel="Gráfico de velas"
-                >
-                  <BarChart3
-                    size={18}
-                    color={
-                      chartMode === 'candlestick'
-                        ? palette.primary
-                        : palette.icon ?? palette.text
-                    }
-                    strokeWidth={2}
-                  />
-                </Pressable>
-                <Pressable
-                  onPress={() => setChartMode('line')}
-                  style={({ pressed }) => ({
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    opacity: pressed ? 0.7 : 1,
-                  })}
-                  accessibilityRole="button"
-                  accessibilityLabel="Gráfico de línea"
-                >
-                  <LineChart
-                    size={18}
-                    color={
-                      chartMode === 'line'
-                        ? palette.primary
-                        : palette.icon ?? palette.text
-                    }
-                    strokeWidth={2}
-                  />
-                </Pressable>
+                  </View>
+                )}
               </View>
             </View>
           )}
@@ -602,7 +376,8 @@ export function MarketCandlesModal({
               style={{ marginTop: 12 }}
             >
               <Pressable
-                onPress={() => setVenderOpen(true)}
+                onPress={() => (holdingForSymbol?.shares ?? 0) > 0 && setVenderOpen(true)}
+                disabled={!holdingForSymbol || (holdingForSymbol?.shares ?? 0) <= 0}
                 style={({ pressed }) => ({
                   width: '100%',
                   flexDirection: 'row',
@@ -614,10 +389,10 @@ export function MarketCandlesModal({
                   backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
                   borderWidth: 1,
                   borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
-                  opacity: pressed ? 0.85 : 1,
+                  opacity: pressed ? 0.85 : (holdingForSymbol?.shares ?? 0) > 0 ? 1 : 0.5,
                 })}
                 accessibilityRole="button"
-                accessibilityLabel="Vender"
+                accessibilityLabel={(holdingForSymbol?.shares ?? 0) > 0 ? 'Vender' : 'No tienes posición para vender'}
               >
                 <Text style={[Hierarchy.action, { color: palette.text, fontWeight: '600' }]}>
                   Vender
@@ -633,16 +408,19 @@ export function MarketCandlesModal({
     <VenderSheet
       visible={venderOpen}
       onClose={() => setVenderOpen(false)}
-      amountAvailable={positionAmount}
+      sharesAvailable={holdingForSymbol?.shares ?? 0}
+      price={lastClose ?? 0}
       symbol={asset?.symbol}
-      onSelectPercent={(p) => {
-        setVenderOpen(false);
-        onOperar?.();
+      onSell={async (sym, shares) => {
+        const result = await executeSell(sym, shares);
+        if (result) {
+          setVenderOpen(false);
+          setSaleSuccessOpen(true);
+        }
       }}
-      onCustomAmount={() => {
-        setVenderOpen(false);
-        onOperar?.();
-      }}
+      sellLoading={sellLoading}
+      sellError={sellError}
+      onClearSellError={clearSellError}
     />
     <InvertirSheet
       visible={comprarOpen}
@@ -666,6 +444,19 @@ export function MarketCandlesModal({
       onClose={() => setPurchaseSuccessOpen(false)}
       onGoToMain={() => {
         setPurchaseSuccessOpen(false);
+        if (onGoToMainFromParent) {
+          onGoToMainFromParent();
+        } else {
+          refetchPortfolio();
+          onClose();
+        }
+      }}
+    />
+    <SaleSuccessModal
+      visible={saleSuccessOpen}
+      onClose={() => setSaleSuccessOpen(false)}
+      onGoToMain={() => {
+        setSaleSuccessOpen(false);
         if (onGoToMainFromParent) {
           onGoToMainFromParent();
         } else {

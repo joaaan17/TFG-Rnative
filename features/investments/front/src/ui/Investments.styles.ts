@@ -66,8 +66,6 @@ export function createInvestmentsStyles(
     },
     chartSection: {
       marginBottom: 28,
-      marginLeft: -20,
-      width: screenWidth,
       alignSelf: 'stretch',
     },
     chartLabel: {

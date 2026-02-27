@@ -34,6 +34,11 @@ export interface BuyOrderResponse {
   createdTransaction: TransactionResponse;
 }
 
+export interface SellOrderResponse {
+  updatedPortfolio: PortfolioResponse;
+  createdTransaction: TransactionResponse;
+}
+
 async function parseJsonSafe(response: Response): Promise<unknown> {
   try {
     return await response.json();
@@ -81,6 +86,28 @@ export async function postBuyOrder(
     throw new Error(getMessage(data, 'Error al ejecutar la compra'));
   }
   return data as BuyOrderResponse;
+}
+
+export async function postSellOrder(
+  token: string,
+  symbol: string,
+  shares: number,
+  signal?: AbortSignal,
+): Promise<SellOrderResponse> {
+  const response = await fetch(`${getBaseUrl()}/orders/sell`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ symbol: symbol.trim().toUpperCase(), shares }),
+    signal,
+  });
+  const data = await parseJsonSafe(response);
+  if (!response.ok) {
+    throw new Error(getMessage(data, 'Error al ejecutar la venta'));
+  }
+  return data as SellOrderResponse;
 }
 
 export async function getTransactions(

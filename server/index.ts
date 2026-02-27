@@ -10,7 +10,6 @@ import iaNoticiasRoutes from '../features/iaNoticiasEducativas/back/src/api/api.
 import investmentsRoutes from '../features/investments/back/src/api/api.routes';
 import marketChartRoutes from '../features/market-chart/back/src/api/api.routes';
 import { marketRouter } from '../features/market/back/src';
-import { startQuizScheduler } from '../features/iaNoticiasEducativas/back/src/config/quiz-scheduler';
 
 const app = express();
 app.use(cors());
@@ -40,9 +39,11 @@ const startServer = async () => {
         `📡 Endpoint de Auth listo en http://localhost:${PORT}/api/auth/login`,
       );
       console.log(
-        `📋 Quiz listo en POST http://localhost:${PORT}/api/ia-noticias/quiz`,
+        `📋 Noticias/quiz (sin scheduler automático): POST http://localhost:${PORT}/api/ia-noticias/quiz`,
       );
-      startQuizScheduler();
+      console.log(
+        `💰 Inversiones: POST http://localhost:${PORT}/api/investments/orders/buy | POST http://localhost:${PORT}/api/investments/orders/sell`,
+      );
     });
   } catch (error) {
     console.error('❌ Error al iniciar el servidor:', error);

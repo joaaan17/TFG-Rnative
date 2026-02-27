@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   useWindowDimensions,
@@ -8,7 +7,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { BarChart3, ClipboardList, LineChart, Search } from 'lucide-react-native';
+import { ClipboardList, Search } from 'lucide-react-native';
 
 import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
 import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
@@ -18,12 +17,6 @@ import {
 } from '@/shared/components/ui/segmented-text-tabs';
 import { Text } from '@/shared/components/ui/text';
 import { AssetCard } from '@/shared/components/asset-card';
-import {
-  LightweightChartView,
-  useMarketChartViewModel,
-  type ChartSeriesType,
-  type PriceLine,
-} from '@/features/market-chart';
 import { usePalette } from '@/shared/hooks/use-palette';
 import { Hierarchy } from '@/design-system/typography';
 
@@ -31,10 +24,13 @@ import {
   MarketCandlesModal,
   type MarketCandlesModalAsset,
 } from '../components/MarketCandlesModal';
+import { PortfolioChart } from '../components/PortfolioChart';
 import { StockSearchModal } from '../components/StockSearchModal';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useHoldingsWithPrices } from '../hooks/useHoldingsWithPrices';
 import { createInvestmentsStyles } from './Investments.styles';
+
+const DEFAULT_CHART_SYMBOL = 'AAPL';
 
 /**
  * Pantalla de Inversiones: evolución global de la cartera, buscador y cards de acciones.
@@ -57,13 +53,13 @@ export function InvestmentsScreen() {
   const { holdingsWithPrice, totalValue: holdingsTotalValue } = useHoldingsWithPrices(
     portfolioData?.holdings,
   );
-  const { data, loading, error, loadChart } = useMarketChartViewModel();
   const [typewriterKey, setTypewriterKey] = React.useState(0);
   const [tab, setTab] = React.useState<SegmentedTextTabsValue>(0);
-  const [chartMode, setChartMode] = React.useState<ChartSeriesType>('candlestick');
   const [stockSearchModalOpen, setStockSearchModalOpen] = React.useState(false);
   const [candlesModalOpen, setCandlesModalOpen] = React.useState(false);
   const [selectedAsset, setSelectedAsset] = React.useState<MarketCandlesModalAsset | null>(null);
+  /** true si el modal de velas se abrió desde el buscador (atrás → volver al buscador). */
+  const [candlesOpenedFromSearch, setCandlesOpenedFromSearch] = React.useState(false);
 
   const cashBalance = portfolioData?.cashBalance ?? 0;
   const totalCarteraValue = cashBalance + holdingsTotalValue;
@@ -71,10 +67,9 @@ export function InvestmentsScreen() {
   useFocusEffect(
     React.useCallback(() => {
       setTypewriterKey((k) => k + 1);
-      loadChart();
       refetchPortfolio();
       return undefined;
-    }, [loadChart, refetchPortfolio]),
+    }, [refetchPortfolio]),
   );
 
   const handleAssetPress = (symbol: string) => {
@@ -87,28 +82,21 @@ export function InvestmentsScreen() {
 
   const handleSelectAsset = (asset: MarketCandlesModalAsset) => {
     setStockSearchModalOpen(false);
+    setCandlesOpenedFromSearch(true);
     setSelectedAsset(asset);
+    setCandlesModalOpen(true);
+  };
+
+  /** Abrir modal del valor al pulsar una card de posición (mismo modal que desde el buscador). */
+  const handleOpenPositionModal = (h: (typeof holdingsWithPrice)[0]) => {
+    setCandlesOpenedFromSearch(false);
+    setSelectedAsset({ symbol: h.symbol, name: h.symbol });
     setCandlesModalOpen(true);
   };
 
   const handleOrdersPress = () => {
     // TODO: Navegar a órdenes
   };
-
-  const chartPriceLines = useMemo((): PriceLine[] => {
-    const c = data?.candles;
-    if (!c?.length) return [];
-    const last = c[c.length - 1];
-    return [
-      {
-        price: last.close,
-        color: palette.destructive,
-        lineStyle: 2,
-        title: last.close.toFixed(2),
-        axisLabelVisible: true,
-      },
-    ];
-  }, [data?.candles, palette.destructive]);
 
   return (
     <View
@@ -180,100 +168,11 @@ export function InvestmentsScreen() {
                 Evolución de la cartera
               </Text>
             </View>
-            {loading && (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={palette.primary} />
-                <Text
-                  variant="muted"
-                  style={[styles.errorText, { color: palette.icon }]}
-                >
-                  Cargando gráfico...
-                </Text>
-              </View>
-            )}
-            {error && (
-              <Text
-                variant="muted"
-                style={[styles.errorText, { color: palette.icon }]}
-              >
-                {error}
-              </Text>
-            )}
-            {!loading && !error && data?.candles && data.candles.length > 0 && (
-              <View style={styles.chartContainer}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'flex-end',
-                    gap: 4,
-                    marginBottom: 8,
-                    paddingHorizontal: 4,
-                  }}
-                >
-                  <Pressable
-                    onPress={() => setChartMode('candlestick')}
-                    style={({ pressed }) => ({
-                      width: 36,
-                      height: 36,
-                      borderRadius: 18,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      opacity: pressed ? 0.7 : 1,
-                    })}
-                    accessibilityRole="button"
-                    accessibilityLabel="Gráfico de velas"
-                  >
-                    <BarChart3
-                      size={18}
-                      color={
-                        chartMode === 'candlestick'
-                          ? palette.primary
-                          : palette.icon ?? palette.text
-                      }
-                      strokeWidth={2}
-                    />
-                  </Pressable>
-                  <Pressable
-                    onPress={() => setChartMode('line')}
-                    style={({ pressed }) => ({
-                      width: 36,
-                      height: 36,
-                      borderRadius: 18,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      opacity: pressed ? 0.7 : 1,
-                    })}
-                    accessibilityRole="button"
-                    accessibilityLabel="Gráfico de línea"
-                  >
-                    <LineChart
-                      size={18}
-                      color={
-                        chartMode === 'line'
-                          ? palette.primary
-                          : palette.icon ?? palette.text
-                      }
-                      strokeWidth={2}
-                    />
-                  </Pressable>
-                </View>
-                <LightweightChartView
-                  candles={data.candles}
-                  height={280}
-                  seriesType={chartMode}
-                  priceLines={chartPriceLines}
-                  theme={{
-                    layoutBackgroundColor:
-                      palette.mainBackground ?? palette.background,
-                    textColor: palette.text,
-                    gridColor: palette.surfaceBorder ?? '#D6DEE8',
-                    upColor: palette.primary,
-                    downColor: `${palette.primary}66`,
-                    fontSize: 11,
-                  }}
-                />
-              </View>
-            )}
+            <PortfolioChart
+              symbol={DEFAULT_CHART_SYMBOL}
+              enabled={true}
+              height={280}
+            />
           </View>
 
           <View style={styles.sectionTitleWrap}>
@@ -317,7 +216,7 @@ export function InvestmentsScreen() {
                       trend={changeVal >= 0 ? 'up' : 'down'}
                       profits={`${changeStr} $`}
                       variant="primaryTransparent"
-                      onPress={() => handleAssetPress(h.symbol)}
+                      onPress={() => handleOpenPositionModal(h)}
                     />
                   </View>
                 );
@@ -389,11 +288,18 @@ export function InvestmentsScreen() {
             setCandlesModalOpen(false);
             setSelectedAsset(null);
           }}
-          onBack={() => {
-            setCandlesModalOpen(false);
-            setSelectedAsset(null);
-            setStockSearchModalOpen(true);
-          }}
+          onBack={
+            candlesOpenedFromSearch
+              ? () => {
+                  setCandlesModalOpen(false);
+                  setSelectedAsset(null);
+                  setStockSearchModalOpen(true);
+                }
+              : () => {
+                  setCandlesModalOpen(false);
+                  setSelectedAsset(null);
+                }
+          }
           onOperar={() => {
             if (selectedAsset?.symbol) {
               setCandlesModalOpen(false);

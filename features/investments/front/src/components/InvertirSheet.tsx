@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight, Minus, Plus } from 'lucide-react-native';
 import { CardModal } from '@/shared/components/card-modal';
 import { ModalHeader } from '@/shared/components/modal-header';
 import { Text } from '@/shared/components/ui/text';
@@ -69,6 +69,21 @@ export function InvertirSheet({
     maximumFractionDigits: 2,
   });
 
+  const handlePlusOne = useCallback(() => {
+    setSharesStr((prev) => {
+      const n = Math.floor(parseFloat(prev.replace(',', '.')) || 0);
+      return String(n + 1);
+    });
+  }, []);
+
+  const handleMinusOne = useCallback(() => {
+    setSharesStr((prev) => {
+      const n = Math.floor(parseFloat(prev.replace(',', '.')) || 0);
+      const next = Math.max(0, n - 1);
+      return String(next);
+    });
+  }, []);
+
   const handleKey = useCallback((key: string) => {
     if (key === 'backspace') {
       setSharesStr((prev) => {
@@ -133,11 +148,62 @@ export function InvertirSheet({
           </Pressable>
 
           <View style={{ alignItems: 'center', marginTop: 28, marginBottom: 16 }}>
-            <Text
-              style={[Hierarchy.value, { color: palette.text, fontSize: 32 }]}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 16,
+              }}
             >
-              {sharesStr} {sharesNum === 1 ? 'acción' : 'acciones'}
-            </Text>
+              <Pressable
+                onPress={handleMinusOne}
+                disabled={buyLoading || sharesNum <= 0}
+                style={({ pressed }) => ({
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  opacity: pressed || buyLoading || sharesNum <= 0 ? 0.6 : 1,
+                })}
+                accessibilityRole="button"
+                accessibilityLabel="Quitar una acción"
+              >
+                <Minus
+                  size={24}
+                  color={sharesNum <= 0 ? palette.icon ?? palette.text : palette.primary}
+                  strokeWidth={2.5}
+                />
+              </Pressable>
+              <Text
+                style={[Hierarchy.value, { color: palette.text, fontSize: 32, minWidth: 120, textAlign: 'center' }]}
+              >
+                {sharesStr} {sharesNum === 1 ? 'acción' : 'acciones'}
+              </Text>
+              <Pressable
+                onPress={handlePlusOne}
+                disabled={buyLoading}
+                style={({ pressed }) => ({
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  opacity: pressed || buyLoading ? 0.85 : 1,
+                })}
+                accessibilityRole="button"
+                accessibilityLabel="Añadir una acción"
+              >
+                <Plus
+                  size={24}
+                  color={palette.primary}
+                  strokeWidth={2.5}
+                />
+              </Pressable>
+            </View>
             <Text
               variant="muted"
               style={[Hierarchy.bodySmall, { marginTop: 8, color: palette.icon }]}

@@ -5,6 +5,7 @@
 import { getQuotesUseCase } from '../../../../market/back/src/config/market.wiring';
 import { GetOrCreatePortfolioUseCase } from '../application/usecases/get-or-create-portfolio.usecase';
 import { ExecuteBuyOrderUseCase } from '../application/usecases/execute-buy-order.usecase';
+import { ExecuteSellOrderUseCase } from '../application/usecases/execute-sell-order.usecase';
 import { GetTransactionsUseCase } from '../application/usecases/get-transactions.usecase';
 import { MarketQuoteAdapter } from '../infrastructure/adapters/market-quote.adapter';
 import { MongoPortfolioRepository } from '../infrastructure/persistence/mongo/portfolio.repository';
@@ -25,6 +26,11 @@ export const getOrCreatePortfolioUseCase = new GetOrCreatePortfolioUseCase(
   initialCash,
 );
 export const executeBuyOrderUseCase = new ExecuteBuyOrderUseCase(
+  getQuoteAdapter,
+  portfolioRepository,
+  transactionRepository,
+);
+export const executeSellOrderUseCase = new ExecuteSellOrderUseCase(
   getQuoteAdapter,
   portfolioRepository,
   transactionRepository,
