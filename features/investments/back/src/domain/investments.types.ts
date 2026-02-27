@@ -31,6 +31,8 @@ export interface Transaction {
   price: number;
   total: number;
   executedAt: Date;
+  /** Precio medio de compra en el momento de la venta (solo para type SELL). Para calcular beneficio/pérdida por acción. */
+  avgBuyPrice?: number;
 }
 
 /** Respuesta de GET portfolio (para API). */
@@ -51,4 +53,27 @@ export interface BuyOrderBody {
   shares: number;
   /** Opcional: precio mostrado en UI; el servidor valida contra precio real. */
   clientPrice?: number;
+}
+
+/** Item de asignación para composición de cartera (overview). */
+export interface AllocationItem {
+  symbol: string;
+  name: string;
+  value: number;
+  weight: number;
+}
+
+/** Marcador de transacciones por bucket de tiempo (para gráficos). */
+export interface PortfolioMarker {
+  t: number;
+  side: 'BUY' | 'SELL';
+  count: number;
+  amount: number;
+}
+
+/** Resumen de cartera para la API de overview. */
+export interface PortfolioOverview {
+  totalValue: number;
+  allocation: AllocationItem[];
+  markers: PortfolioMarker[];
 }

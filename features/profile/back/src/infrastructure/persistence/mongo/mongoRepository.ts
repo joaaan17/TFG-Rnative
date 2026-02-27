@@ -17,6 +17,10 @@ export class MongoProfileRepository implements ProfileRepository {
     return this.mapDocToProfile(doc);
   }
 
+  async updateCashBalance(userId: string, cashBalance: number): Promise<void> {
+    await ProfileModel.findByIdAndUpdate(userId, { $set: { cashBalance } }).exec();
+  }
+
   async deleteById(id: string): Promise<void> {
     await ProfileModel.findByIdAndDelete(id).exec();
   }
@@ -69,6 +73,7 @@ export class MongoProfileRepository implements ProfileRepository {
           patrimonio: profile.patrimonio ?? 0,
           following: profile.following ?? 0,
           followers: profile.followers ?? 0,
+          cashBalance: profile.cashBalance ?? 0,
         },
       },
       { upsert: true, new: true },
@@ -88,6 +93,7 @@ export class MongoProfileRepository implements ProfileRepository {
     patrimonio?: number;
     following?: number;
     followers?: number;
+    cashBalance?: number;
   }): Profile {
     return {
       id: String(doc._id),
@@ -101,6 +107,7 @@ export class MongoProfileRepository implements ProfileRepository {
       patrimonio: doc.patrimonio,
       following: doc.following,
       followers: doc.followers,
+      cashBalance: doc.cashBalance,
     };
   }
 }

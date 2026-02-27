@@ -102,6 +102,35 @@ export function createProfileStyles(palette: Palette) {
       ...tightShadow(),
     },
 
+    cashRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      marginHorizontal: 16,
+      marginTop: 16,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: palette.surfaceBorder ?? palette.text,
+      backgroundColor: palette.cardBackground,
+      ...tightShadow(),
+    },
+    cashLabelAccent: {
+      width: 3,
+      height: 20,
+      borderRadius: 999,
+      backgroundColor: palette.primary,
+    },
+    cashLabel: {
+      flex: 1,
+      opacity: 0.9,
+      letterSpacing: 0.8,
+    },
+    cashValue: {
+      fontSize: 18,
+      fontWeight: '400',
+    },
     joinedTextWrapper: {
       paddingHorizontal: 16,
       paddingTop: 10,

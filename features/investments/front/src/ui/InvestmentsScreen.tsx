@@ -26,6 +26,8 @@ import {
 } from '../components/MarketCandlesModal';
 import { PortfolioChart } from '../components/PortfolioChart';
 import { StockSearchModal } from '../components/StockSearchModal';
+import { TransactionsHistoryModal } from '../components/TransactionsHistoryModal';
+import { useCurrentQuotePrice } from '../hooks/useCurrentQuotePrice';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useHoldingsWithPrices } from '../hooks/useHoldingsWithPrices';
 import { createInvestmentsStyles } from './Investments.styles';
@@ -53,15 +55,19 @@ export function InvestmentsScreen() {
   const { holdingsWithPrice, totalValue: holdingsTotalValue } = useHoldingsWithPrices(
     portfolioData?.holdings,
   );
+  const { price: chartSymbolPrice } = useCurrentQuotePrice(DEFAULT_CHART_SYMBOL, true);
   const [typewriterKey, setTypewriterKey] = React.useState(0);
   const [tab, setTab] = React.useState<SegmentedTextTabsValue>(0);
   const [stockSearchModalOpen, setStockSearchModalOpen] = React.useState(false);
+  const [transactionsModalOpen, setTransactionsModalOpen] = React.useState(false);
   const [candlesModalOpen, setCandlesModalOpen] = React.useState(false);
   const [selectedAsset, setSelectedAsset] = React.useState<MarketCandlesModalAsset | null>(null);
   /** true si el modal de velas se abrió desde el buscador (atrás → volver al buscador). */
   const [candlesOpenedFromSearch, setCandlesOpenedFromSearch] = React.useState(false);
 
+  // Valor de efectivo desde la cartera en BD (portfolio/me); actualiza con compras/ventas
   const cashBalance = portfolioData?.cashBalance ?? 0;
+  // Valor total cartera = efectivo + valor actual de las posiciones (precios de mercado)
   const totalCarteraValue = cashBalance + holdingsTotalValue;
 
   useFocusEffect(
@@ -95,7 +101,7 @@ export function InvestmentsScreen() {
   };
 
   const handleOrdersPress = () => {
-    // TODO: Navegar a órdenes
+    setTransactionsModalOpen(true);
   };
 
   return (
@@ -129,32 +135,6 @@ export function InvestmentsScreen() {
             />
           </View>
 
-          <View style={styles.amountWrap}>
-            <Text
-              style={[
-                Hierarchy.value,
-                styles.amountValue,
-                { color: palette.text },
-              ]}
-            >
-              {session
-              ? tab === 0
-                ? `${totalCarteraValue.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
-                : `${cashBalance.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
-              : '—'}
-            </Text>
-            <Text
-              variant="muted"
-              style={[
-                Hierarchy.bodySmall,
-                styles.amountLabel,
-                { color: palette.icon },
-              ]}
-            >
-              {session ? (tab === 0 ? 'Valor total cartera' : 'Cash disponible') : 'Inicia sesión para ver tu cartera'}
-            </Text>
-          </View>
-
           <View style={styles.chartSection}>
             <View style={styles.chartLabel}>
               <View style={styles.chartLabelAccent} />
@@ -168,10 +148,37 @@ export function InvestmentsScreen() {
                 Evolución de la cartera
               </Text>
             </View>
+            <View style={styles.amountWrap}>
+              <Text
+                style={[
+                  Hierarchy.value,
+                  styles.amountValue,
+                  { color: palette.text },
+                ]}
+              >
+                {session
+                ? tab === 0
+                  ? `${totalCarteraValue.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
+                  : `${cashBalance.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
+                : '—'}
+              </Text>
+              <Text
+                variant="muted"
+                style={[
+                  Hierarchy.bodySmall,
+                  styles.amountLabel,
+                  { color: palette.icon },
+                ]}
+              >
+                {session ? (tab === 0 ? 'Valor total cartera' : 'Cash disponible') : 'Inicia sesión para ver tu cartera'}
+              </Text>
+            </View>
             <PortfolioChart
               symbol={DEFAULT_CHART_SYMBOL}
               enabled={true}
               height={280}
+              containerStyle={{ paddingHorizontal: 0 }}
+              currentPrice={chartSymbolPrice ?? undefined}
             />
           </View>
 
@@ -280,6 +287,10 @@ export function InvestmentsScreen() {
           open={stockSearchModalOpen}
           onClose={() => setStockSearchModalOpen(false)}
           onSelectAsset={handleSelectAsset}
+        />
+        <TransactionsHistoryModal
+          open={transactionsModalOpen}
+          onClose={() => setTransactionsModalOpen(false)}
         />
         <MarketCandlesModal
           visible={candlesModalOpen}

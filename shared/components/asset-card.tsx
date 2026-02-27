@@ -70,7 +70,10 @@ function MiniSparkline({
 
   const d =
     `M ${points[0].x} ${points[0].y} ` +
-    points.slice(1).map((p) => `L ${p.x} ${p.y}`).join(' ');
+    points
+      .slice(1)
+      .map((p) => `L ${p.x} ${p.y}`)
+      .join(' ');
 
   return (
     <Svg width={width} height={height}>
@@ -124,7 +127,7 @@ export function AssetCard({
         ? `${palette.primary}50`
         : variant === 'accent'
           ? `${palette.primary}25`
-          : palette.surfaceBorder ?? palette.surfaceMuted;
+          : (palette.surfaceBorder ?? palette.surfaceMuted);
   const separatorColor =
     variant === 'primary'
       ? `${palette.primaryText ?? '#FFFFFF'}40`
@@ -134,13 +137,11 @@ export function AssetCard({
       ? `${palette.primaryText ?? '#FFFFFF'}50`
       : `${palette.primary}50`;
   const textColor =
-    variant === 'primary'
-      ? (palette.primaryText ?? '#FFFFFF')
-      : palette.text;
+    variant === 'primary' ? (palette.primaryText ?? '#FFFFFF') : palette.text;
   const labelColor =
     variant === 'primary'
       ? `${palette.primaryText ?? '#FFFFFF'}CC`
-      : palette.icon ?? palette.text;
+      : (palette.icon ?? palette.text);
 
   return (
     <Pressable
@@ -160,8 +161,7 @@ export function AssetCard({
           style={[
             styles.iconWrap,
             {
-              backgroundColor:
-                iconBackgroundColor ?? palette.surfaceMuted,
+              backgroundColor: iconBackgroundColor ?? palette.surfaceMuted,
             },
           ]}
         >
@@ -213,15 +213,11 @@ export function AssetCard({
         </View>
       </View>
 
-      <View
-        style={[styles.separator, { backgroundColor: separatorColor }]}
-      />
+      <View style={[styles.separator, { backgroundColor: separatorColor }]} />
 
       <View
         style={styles.chartWrap}
-        onLayout={(e) =>
-          setChartWidth(e.nativeEvent.layout.width)
-        }
+        onLayout={(e) => setChartWidth(e.nativeEvent.layout.width)}
       >
         <MiniSparkline
           data={data}

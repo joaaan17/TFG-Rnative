@@ -14,6 +14,8 @@ export interface ProfileUser {
   patrimonio?: number;
   following?: number;
   followers?: number;
+  /** Efectivo disponible (sincronizado con la cartera de inversiones). */
+  cashBalance?: number;
 }
 
 export interface ProfileStats {

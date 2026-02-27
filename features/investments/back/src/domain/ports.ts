@@ -14,6 +14,11 @@ export interface GetQuotePort {
   getQuote(symbol: string): Promise<GetQuoteResult | null>;
 }
 
+/** Obtiene precios de varios símbolos (para allocation/overview). */
+export interface GetQuotesPort {
+  getQuotes(symbols: string[]): Promise<Array<{ symbol: string; price: number | null }>>;
+}
+
 export interface PortfolioRepository {
   findByUserId(userId: string): Promise<Portfolio | null>;
   create(userId: string, cashBalance: number, currency: string): Promise<Portfolio>;
@@ -32,6 +37,8 @@ export interface TransactionRepository {
     shares: number,
     price: number,
     total: number,
+    avgBuyPrice?: number,
   ): Promise<Transaction>;
   findByUserId(userId: string, limit: number): Promise<Transaction[]>;
+  findByUserIdBetween(userId: string, from: Date, to: Date): Promise<Transaction[]>;
 }

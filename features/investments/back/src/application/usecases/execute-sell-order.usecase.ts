@@ -77,7 +77,15 @@ export class ExecuteSellOrderUseCase {
     const newCashBalance = Math.round((portfolio.cashBalance + totalProceeds) * 100) / 100;
 
     const [createdTransaction, updatedPortfolio] = await Promise.all([
-      this.transactionRepository.create(uid, sym, 'SELL', shares, price, totalProceeds),
+      this.transactionRepository.create(
+        uid,
+        sym,
+        'SELL',
+        shares,
+        price,
+        totalProceeds,
+        holding.avgBuyPrice,
+      ),
       this.portfolioRepository.updateCashAndHoldings(uid, newCashBalance, newHoldings),
     ]);
 

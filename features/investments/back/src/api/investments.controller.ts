@@ -4,7 +4,9 @@ import {
   executeBuyOrderUseCase,
   executeSellOrderUseCase,
   getTransactionsUseCase,
+  getPortfolioOverviewUseCase,
 } from '../config/investments.wiring';
+import type { TimeframeParam, RangeParam } from '../application/usecases/get-portfolio-overview.usecase';
 import { InsufficientCashError } from '../application/usecases/execute-buy-order.usecase';
 import { InsufficientSharesError } from '../application/usecases/execute-sell-order.usecase';
 import { requireAuth } from '../../../../auth/back/src/api/auth.middleware';
@@ -192,15 +194,67 @@ export const postSellOrderController = async (req: Request, res: Response): Prom
 };
 
 /**
+ * GET /api/investments/portfolio/overview?timeframe=1d&range=6mo
+ * Resumen de cartera: allocation y markers para gráficos.
+ */
+export const getPortfolioOverviewController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = getUserId(req);
+    const timeframe = (typeof req.query.timeframe === 'string' ? req.query.timeframe : '1d') as TimeframeParam;
+    const range = (typeof req.query.range === 'string' ? req.query.range : '6mo') as RangeParam;
+    const result = await getPortfolioOverviewUseCase.execute(userId, timeframe, range);
+    res.status(200).json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Error al obtener resumen de cartera';
+    if (message.includes('required') || message.includes('autenticado')) {
+      res.status(401).json({ message });
+      return;
+    }
+    console.error('[investments] getPortfolioOverview error:', err);
+    res.status(500).json({ message });
+  }
+};
+
+/**
+ * Para ventas sin avgBuyPrice (operaciones antiguas), estima el precio medio de compra
+ * a partir de las compras del mismo símbolo anteriores a la venta (solo BUY, misma symbol, fecha < venta).
+ */
+function enrichSellsWithEstimatedAvgBuyPrice<
+  T extends { _id: string; symbol: string; type: string; executedAt: Date; avgBuyPrice?: number; shares: number; total: number },
+>(transactions: T[]): T[] {
+  const byDateAsc = [...transactions].sort(
+    (a, b) => new Date(a.executedAt).getTime() - new Date(b.executedAt).getTime(),
+  );
+  return transactions.map((t) => {
+    if (t.type !== 'SELL' || t.avgBuyPrice != null) return t;
+    const sellTime = new Date(t.executedAt).getTime();
+    let totalShares = 0;
+    let totalCost = 0;
+    for (const other of byDateAsc) {
+      if ((other as T)._id === t._id) continue;
+      if (other.symbol !== t.symbol || other.type !== 'BUY') continue;
+      if (new Date(other.executedAt).getTime() >= sellTime) continue;
+      totalShares += other.shares;
+      totalCost += other.total;
+    }
+    if (totalShares <= 0) return t;
+    const estimated = Math.round((totalCost / totalShares) * 100) / 100;
+    return { ...t, avgBuyPrice: estimated };
+  });
+}
+
+/**
  * GET /api/investments/transactions/me?limit=50
  * Historial de transacciones del usuario autenticado.
+ * Para ventas antiguas sin avgBuyPrice se estima a partir de compras previas del mismo símbolo.
  */
 export const getTransactionsController = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = getUserId(req);
     const limitParam = req.query.limit;
     const limit = typeof limitParam === 'string' ? parseInt(limitParam, 10) : 50;
-    const transactions = await getTransactionsUseCase.execute(userId, limit);
+    let transactions = await getTransactionsUseCase.execute(userId, limit);
+    transactions = enrichSellsWithEstimatedAvgBuyPrice(transactions);
     res.status(200).json({
       transactions: transactions.map((t) => ({
         _id: t._id,
@@ -211,6 +265,7 @@ export const getTransactionsController = async (req: Request, res: Response): Pr
         price: t.price,
         total: t.total,
         executedAt: t.executedAt.toISOString(),
+        ...(t.avgBuyPrice != null && { avgBuyPrice: t.avgBuyPrice }),
       })),
     });
   } catch (err) {

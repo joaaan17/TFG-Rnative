@@ -13,6 +13,13 @@ export class InMemoryProfileRepository implements ProfileRepository {
     return profile;
   }
 
+  async updateCashBalance(userId: string, cashBalance: number): Promise<void> {
+    const profile = InMemoryProfileRepository.profilesById.get(userId);
+    if (profile) {
+      InMemoryProfileRepository.profilesById.set(userId, { ...profile, cashBalance });
+    }
+  }
+
   async deleteById(id: string): Promise<void> {
     InMemoryProfileRepository.profilesById.delete(id);
   }

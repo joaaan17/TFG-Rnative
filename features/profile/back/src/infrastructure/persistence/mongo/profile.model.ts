@@ -13,6 +13,7 @@ export type ProfileDocument = mongoose.Document & {
   patrimonio?: number;
   following?: number;
   followers?: number;
+  cashBalance?: number;
 };
 
 const ProfileSchema = new Schema<ProfileDocument>(
@@ -29,6 +30,7 @@ const ProfileSchema = new Schema<ProfileDocument>(
     patrimonio: { type: Number, default: 0 },
     following: { type: Number, default: 0 },
     followers: { type: Number, default: 0 },
+    cashBalance: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

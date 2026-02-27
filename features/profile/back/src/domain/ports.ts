@@ -7,9 +7,15 @@ export interface ProfileSearchResult {
   avatarUrl?: string;
 }
 
+/** Obtiene el efectivo disponible del usuario desde la cartera de inversiones. */
+export interface CashBalanceProvider {
+  getCashBalance(userId: string): Promise<number>;
+}
+
 export interface ProfileRepository {
   findById(id: string): Promise<Profile | null>;
   save(profile: Profile): Promise<Profile>;
+  updateCashBalance(userId: string, cashBalance: number): Promise<void>;
   deleteById(id: string): Promise<void>;
   searchProfiles(
     q: string,

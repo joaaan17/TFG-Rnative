@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 
+import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
 import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
 import { Card, CardHeader } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -13,6 +14,7 @@ import ExpIcon from '@/shared/icons/exp.svg';
 import LigaIcon from '@/shared/icons/liga.svg';
 import RachaIcon from '@/shared/icons/racha.svg';
 import SettingsIcon from '@/shared/icons/settings.svg';
+import { usePortfolio } from '@/features/investments/front/src/hooks/usePortfolio';
 
 import { createProfileStyles } from './Profile.styles';
 import { AddFriendsModal } from '../components/add-friends-modal';
@@ -92,9 +94,16 @@ export function ProfileScreen() {
     refetchProfile,
   } = useProfileViewModel();
   const [typewriterKey, setTypewriterKey] = React.useState(0);
+  const { session } = useAuthSession();
+  const { data: portfolioData, refetch: refetchPortfolio } = usePortfolio(
+    session?.token ?? null,
+    true,
+  );
 
   const displayName = profile?.name ?? user?.name ?? '';
   const joinedText = formatJoinedText(profile?.username, profile?.joinedAt);
+  // Efectivo: priorizar cartera (fuente de verdad) y luego el valor guardado en perfil
+  const cashDisplay = portfolioData?.cashBalance ?? profile?.cashBalance ?? 0;
 
   const handleSettingsSignOut = React.useCallback(async () => {
     await handleSignOut();
@@ -115,8 +124,9 @@ export function ProfileScreen() {
     React.useCallback(() => {
       setTypewriterKey((k) => k + 1);
       refetchProfile();
+      refetchPortfolio();
       return undefined;
-    }, [refetchProfile]),
+    }, [refetchProfile, refetchPortfolio]),
   );
 
   if (isLoading) {
@@ -168,6 +178,20 @@ export function ProfileScreen() {
               <SettingsIcon width={22} height={22} fill={palette.text} />
             </Pressable>
           </Card>
+
+          <View style={styles.cashRow}>
+            <View style={styles.cashLabelAccent} />
+            <Text variant="muted" style={styles.cashLabel}>
+              Efectivo disponible
+            </Text>
+            <Text variant="default" style={[styles.cashValue, { color: palette.text }]}>
+              {cashDisplay.toLocaleString('es-ES', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}{' '}
+              $
+            </Text>
+          </View>
 
           <View style={styles.joinedTextWrapper}>
             <Text variant="muted">{joinedText}</Text>

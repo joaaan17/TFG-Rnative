@@ -9,6 +9,7 @@ import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
 import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
+import { useCurrentQuotePrice } from '../hooks/useCurrentQuotePrice';
 import { useMarketOverview } from '../hooks/useMarketOverview';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useBuyOrder } from '../hooks/useBuyOrder';
@@ -80,6 +81,7 @@ export function MarketCandlesModal({
     error: overviewError,
     refetch: refetchOverview,
   } = useMarketOverview(symbol, visible && !!symbol);
+  const { price: currentQuotePrice } = useCurrentQuotePrice(symbol, visible && !!symbol);
 
   const showChart = operarStep === 'chart';
   const showActions = operarStep === 'actions';
@@ -87,9 +89,11 @@ export function MarketCandlesModal({
   const holdingForSymbol = portfolioData?.holdings?.find((h) => h.symbol === symbol);
   const quote = overviewData?.quote;
   const lastClose =
-    quote?.high != null && quote?.low != null
-      ? (quote.high + quote.low) / 2
-      : quote?.high ?? quote?.low ?? undefined;
+    currentQuotePrice != null
+      ? currentQuotePrice
+      : quote?.high != null && quote?.low != null
+        ? (quote.high + quote.low) / 2
+        : quote?.high ?? quote?.low ?? undefined;
   const positionAmount = (holdingForSymbol?.shares ?? 0) * (lastClose ?? 0);
 
   if (!visible) return null;
@@ -136,6 +140,7 @@ export function MarketCandlesModal({
               enabled={!!symbol}
               height={280}
               containerStyle={{ paddingHorizontal: 0 }}
+              currentPrice={currentQuotePrice ?? undefined}
             />
           ) : null}
 
@@ -144,10 +149,18 @@ export function MarketCandlesModal({
               <Text
                 style={[
                   Hierarchy.titleSection,
-                  { color: palette.icon ?? palette.text, marginBottom: 10 },
+                  { color: palette.icon ?? palette.text, marginBottom: 4 },
                 ]}
               >
                 Tu posición
+              </Text>
+              <Text
+                style={[
+                  Hierarchy.caption,
+                  { color: palette.icon ?? palette.text, marginBottom: 10, opacity: 0.85 },
+                ]}
+              >
+                Valores en tiempo real (beneficio no realizado)
               </Text>
               <View style={{ gap: 8 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>

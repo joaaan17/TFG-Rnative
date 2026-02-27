@@ -8,6 +8,7 @@ export type TransactionDocument = mongoose.Document & {
   price: number;
   total: number;
   executedAt: Date;
+  avgBuyPrice?: number;
 };
 
 const TransactionSchema = new Schema<TransactionDocument>(
@@ -19,6 +20,7 @@ const TransactionSchema = new Schema<TransactionDocument>(
     price: { type: Number, required: true, min: 0 },
     total: { type: Number, required: true, min: 0 },
     executedAt: { type: Date, required: true, default: Date.now },
+    avgBuyPrice: { type: Number, required: false },
   },
   { timestamps: true },
 );

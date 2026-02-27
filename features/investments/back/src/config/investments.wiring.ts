@@ -7,7 +7,9 @@ import { GetOrCreatePortfolioUseCase } from '../application/usecases/get-or-crea
 import { ExecuteBuyOrderUseCase } from '../application/usecases/execute-buy-order.usecase';
 import { ExecuteSellOrderUseCase } from '../application/usecases/execute-sell-order.usecase';
 import { GetTransactionsUseCase } from '../application/usecases/get-transactions.usecase';
+import { GetPortfolioOverviewUseCase } from '../application/usecases/get-portfolio-overview.usecase';
 import { MarketQuoteAdapter } from '../infrastructure/adapters/market-quote.adapter';
+import { MarketQuotesAdapter } from '../infrastructure/adapters/market-quotes.adapter';
 import { MongoPortfolioRepository } from '../infrastructure/persistence/mongo/portfolio.repository';
 import { MongoTransactionRepository } from '../infrastructure/persistence/mongo/transaction.repository';
 
@@ -17,6 +19,11 @@ const portfolioRepository = new MongoPortfolioRepository(initialCash);
 const transactionRepository = new MongoTransactionRepository();
 
 const getQuoteAdapter = new MarketQuoteAdapter(async (symbols) => {
+  const items = await getQuotesUseCase.execute(symbols);
+  return items.map((q) => ({ symbol: q.symbol, price: q.price }));
+});
+
+const getQuotesAdapter = new MarketQuotesAdapter(async (symbols) => {
   const items = await getQuotesUseCase.execute(symbols);
   return items.map((q) => ({ symbol: q.symbol, price: q.price }));
 });
@@ -36,3 +43,8 @@ export const executeSellOrderUseCase = new ExecuteSellOrderUseCase(
   transactionRepository,
 );
 export const getTransactionsUseCase = new GetTransactionsUseCase(transactionRepository);
+export const getPortfolioOverviewUseCase = new GetPortfolioOverviewUseCase(
+  portfolioRepository,
+  getQuotesAdapter,
+  transactionRepository,
+);

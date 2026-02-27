@@ -72,7 +72,6 @@ export function createInvestmentsStyles(
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-      paddingHorizontal: 20,
       paddingTop: 16,
       paddingBottom: 10,
     },

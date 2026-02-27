@@ -27,6 +27,8 @@ export interface TransactionResponse {
   price: number;
   total: number;
   executedAt: string;
+  /** Precio medio de compra en el momento de la venta (solo SELL). Para beneficio/pérdida por acción. */
+  avgBuyPrice?: number;
 }
 
 export interface BuyOrderResponse {
@@ -123,4 +125,46 @@ export async function getTransactions(
     throw new Error(getMessage(data, 'Error al obtener transacciones'));
   }
   return data as { transactions: TransactionResponse[] };
+}
+
+// --- Portfolio overview (composición y markers) ---
+
+export type OverviewTimeframe = '6h' | '1d' | '1mo';
+export type OverviewRange = '1wk' | '1mo' | '3mo' | '6mo' | '1y';
+
+export interface AllocationItemResponse {
+  symbol: string;
+  name: string;
+  value: number;
+  weight: number;
+}
+
+export interface PortfolioMarkerResponse {
+  t: number;
+  side: 'BUY' | 'SELL';
+  count: number;
+  amount: number;
+}
+
+export interface PortfolioOverviewResponse {
+  totalValue: number;
+  allocation: AllocationItemResponse[];
+  markers: PortfolioMarkerResponse[];
+}
+
+export async function getPortfolioOverview(
+  token: string,
+  timeframe: OverviewTimeframe = '1d',
+  range: OverviewRange = '6mo',
+): Promise<PortfolioOverviewResponse> {
+  const params = new URLSearchParams({ timeframe, range });
+  const response = await fetch(`${getBaseUrl()}/portfolio/overview?${params}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await parseJsonSafe(response);
+  if (!response.ok) {
+    throw new Error(getMessage(data, 'Error al obtener resumen de cartera'));
+  }
+  return data as PortfolioOverviewResponse;
 }

@@ -57,6 +57,8 @@ export type PortfolioChartProps = {
   height?: number;
   /** Estilos adicionales del contenedor (padding, márgenes). Incluye padding horizontal por defecto. */
   containerStyle?: StyleProp<ViewStyle>;
+  /** Precio actual desde cotizaciones (misma fuente que compra/venta). Si se pasa, la línea de precio usa este valor en lugar del cierre de la última vela, para coherencia con operaciones y cards. */
+  currentPrice?: number;
 };
 
 /**
@@ -68,6 +70,7 @@ export function PortfolioChart({
   enabled = true,
   height = 280,
   containerStyle,
+  currentPrice,
 }: PortfolioChartProps) {
   const palette = usePalette();
   const [range, setRange] = useState<CandleRange>('1mo');
@@ -86,20 +89,22 @@ export function PortfolioChart({
     return apiCandlesToChartCandles(data.candles);
   }, [data?.candles]);
 
-  const lastClose = chartCandles.length > 0 ? chartCandles[chartCandles.length - 1].close : undefined;
+  const lastCandleClose =
+    chartCandles.length > 0 ? chartCandles[chartCandles.length - 1].close : undefined;
+  const priceForLine = currentPrice ?? lastCandleClose;
   const priceLines = useMemo((): PriceLine[] => {
-    if (lastClose == null) return [];
+    if (priceForLine == null) return [];
     return [
       {
-        price: lastClose,
+        price: priceForLine,
         color: palette.primary,
         lineWidth: 1,
         lineStyle: 2,
-        title: lastClose.toFixed(2),
+        title: '', // Sin título: el valor solo se muestra en el eje (axisLabelVisible), así no se duplica
         axisLabelVisible: true,
       },
     ];
-  }, [lastClose, palette.primary]);
+  }, [priceForLine, palette.primary]);
 
   if (!symbol) return null;
 
