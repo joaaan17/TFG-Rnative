@@ -75,4 +75,18 @@ export class MongoTransactionRepository implements ITransactionRepository {
       .exec();
     return docs.map(mapDocToTransaction);
   }
+
+  async findByUserIdExecutedBefore(
+    userId: string,
+    beforeOrAt: Date,
+  ): Promise<Transaction[]> {
+    const docs = await TransactionModel.find({
+      userId,
+      executedAt: { $lte: beforeOrAt },
+    })
+      .sort({ executedAt: 1 })
+      .lean()
+      .exec();
+    return docs.map(mapDocToTransaction);
+  }
 }

@@ -515,6 +515,7 @@ export class PriceCacheService {
   ): Promise<{ warmed: number; errors: string[] }> {
     const errors: string[] = [];
     let warmed = 0;
+    const concurrency = 2;
     const queue = [...HOT_SYMBOLS];
     const run = async (): Promise<void> => {
       while (queue.length > 0) {
@@ -530,7 +531,7 @@ export class PriceCacheService {
         }
       }
     };
-    await Promise.all([run(), run()]); // 2 workers en paralelo
+    await Promise.all([run(), run()]);
     log(`${E.WARMUP} warmup done warmed=${warmed} errors=${errors.length}`, {
       requestId,
     });

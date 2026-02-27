@@ -77,3 +77,27 @@ export interface PortfolioOverview {
   allocation: AllocationItem[];
   markers: PortfolioMarker[];
 }
+
+/** Rango para analytics (equity curve). */
+export type PerformanceRange = '1D' | '1W' | '1M' | '3M' | '6M' | '1Y';
+
+/** Punto de la curva de equity (GET performance). */
+export interface PerformancePoint {
+  t: string; // ISODate
+  equity: number;
+  cash: number;
+  positions: number;
+  /** Dinero invertido en el mercado (capital salido de efectivo = initialCash - cash). */
+  invested: number;
+}
+
+/** Respuesta GET portfolio/performance. */
+export interface PerformanceResponse {
+  range: PerformanceRange;
+  points: PerformancePoint[];
+  meta: {
+    computedAt: string;
+    cacheStatus: string;
+    symbolsUsed: string[];
+  };
+}

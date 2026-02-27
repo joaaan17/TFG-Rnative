@@ -44,6 +44,8 @@ interface LightweightChartViewProps {
   markers?: ChartMarker[];
   /** Tema opcional para integrar con la paleta de la app */
   theme?: ChartTheme;
+  /** Vista intradía (1D): muestra horas y medias horas en el eje de tiempo */
+  intraday?: boolean;
 }
 
 const DEFAULT_CHART_THEME: Required<Omit<ChartTheme, 'fontSize'>> & {
@@ -63,6 +65,7 @@ function buildChartHtml(
   markers: ChartMarker[] = [],
   theme: ChartTheme = {},
   seriesType: ChartSeriesType = 'candlestick',
+  intraday = false,
 ): string {
   const t = { ...DEFAULT_CHART_THEME, ...theme };
   const candleData = candles.map((c) => ({
@@ -114,17 +117,19 @@ function buildChartHtml(
           borderColor: 'transparent',
           scaleMargins: { top: 0.1, bottom: 0.15 },
         },
-        timeScale: {
-          timeVisible: true,
-          secondsVisible: false,
-          borderColor: 'transparent',
-        },
+      timeScale: Object.assign({
+        timeVisible: true,
+        secondsVisible: false,
+        borderColor: 'transparent',
+      }, ${intraday ? "{ tickMarkFormatter: function(time) { var d = new Date(time * 1000); var h = d.getUTCHours(); var m = d.getUTCMinutes(); var day = ('0' + d.getUTCDate()).slice(-2); var mon = ('0' + (d.getUTCMonth()+1)).slice(-2); if (h === 0 && m === 0) return day + '/' + mon + ' 00:00'; return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m; } }" : '{}'}),
         width: container.clientWidth,
         height: container.clientHeight || 280,
         crosshair: {
           vertLine: { color: '${t.textColor}', labelBackgroundColor: '${t.textColor}' },
           horzLine: { color: '${t.gridColor}' },
         },
+        handleScroll: ${intraday ? '{ horzTouchDrag: true, vertTouchDrag: false, pressedMouseMove: true, mouseWheel: true }' : 'true'},
+        handleScale: ${intraday ? '{ pinch: true, mouseWheel: true, axisPressedMouseMove: true }' : 'true'},
       });
       function formatPriceAbbrev(price) {
         if (price >= 1e12) return (price / 1e12).toFixed(2) + ' T';
@@ -191,6 +196,7 @@ export function LightweightChartView({
   priceLines = [],
   markers = [],
   theme,
+  intraday = false,
 }: LightweightChartViewProps) {
   if (isWeb) {
     return (
@@ -202,6 +208,7 @@ export function LightweightChartView({
         priceLines={priceLines}
         markers={markers}
         theme={theme}
+        intraday={intraday}
       />
     );
   }
@@ -214,6 +221,7 @@ export function LightweightChartView({
       priceLines={priceLines}
       markers={markers}
       theme={theme}
+      intraday={intraday}
     />
   );
 }
@@ -225,6 +233,7 @@ function LightweightChartWebView({
   priceLines,
   markers,
   theme,
+  intraday = false,
 }: LightweightChartViewProps) {
   const html = React.useMemo(
     () =>
@@ -234,8 +243,9 @@ function LightweightChartWebView({
         markers ?? [],
         theme ?? {},
         seriesType,
+        intraday,
       ),
-    [candles, priceLines, markers, theme, seriesType],
+    [candles, priceLines, markers, theme, seriesType, intraday],
   );
 
   return (
@@ -243,8 +253,9 @@ function LightweightChartWebView({
       <WebView
         source={{ html }}
         style={styles.webview}
-        scrollEnabled={false}
+        scrollEnabled={intraday}
         originWhitelist={['*']}
+        nestedScrollEnabled={intraday}
       />
     </View>
   );
@@ -257,6 +268,7 @@ function LightweightChartWeb({
   priceLines = [],
   markers = [],
   theme,
+  intraday = false,
 }: LightweightChartViewProps) {
   const containerRef = useRef<HTMLElement | null>(null);
   const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
@@ -296,9 +308,24 @@ function LightweightChartWeb({
         timeVisible: true,
         secondsVisible: false,
         borderColor: 'transparent',
+        ...(intraday && {
+          tickMarkFormatter: (time: number) => {
+            const d = new Date(time * 1000);
+            const h = d.getUTCHours();
+            const m = d.getUTCMinutes();
+            const day = String(d.getUTCDate()).padStart(2, '0');
+            const mon = String(d.getUTCMonth() + 1).padStart(2, '0');
+            if (h === 0 && m === 0) return `${day}/${mon} 00:00`;
+            return `${h < 10 ? '0' : ''}${h}:${m < 10 ? '0' : ''}${m}`;
+          },
+        }),
       },
       width: w,
       height: h,
+      ...(intraday && {
+        handleScroll: { horzTouchDrag: true, vertTouchDrag: false, pressedMouseMove: true, mouseWheel: true },
+        handleScale: { pinch: true, mouseWheel: true, axisPressedMouseMove: true },
+      }),
       crosshair: {
         vertLine: {
           color: chartTheme.textColor,
@@ -419,6 +446,7 @@ function LightweightChartWeb({
     chartTheme,
     dimensions.width,
     dimensions.height,
+    intraday,
   ]);
 
   const handleLayout = React.useCallback(

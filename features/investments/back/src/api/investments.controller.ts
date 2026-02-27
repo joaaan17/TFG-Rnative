@@ -10,6 +10,8 @@ import type { TimeframeParam, RangeParam } from '../application/usecases/get-por
 import { InsufficientCashError } from '../application/usecases/execute-buy-order.usecase';
 import { InsufficientSharesError } from '../application/usecases/execute-sell-order.usecase';
 import { requireAuth } from '../../../../auth/back/src/api/auth.middleware';
+import type { PerformanceRange } from '../domain/investments.types';
+import { portfolioAnalyticsService } from '../config/investments.wiring';
 
 function getUserId(req: Request): string {
   const id = req.auth?.userId;
@@ -23,6 +25,14 @@ function getUserId(req: Request): string {
  * GET /api/investments/portfolio/me
  * Obtiene la cartera del usuario autenticado. Si no existe, la crea con saldo inicial.
  */
+const VALID_PERFORMANCE_RANGES: PerformanceRange[] = ['1D', '1W', '1M', '3M', '6M', '1Y'];
+
+function parsePerformanceRange(q: unknown): PerformanceRange {
+  const s = typeof q === 'string' ? q.trim().toUpperCase() : '';
+  if (VALID_PERFORMANCE_RANGES.includes(s as PerformanceRange)) return s as PerformanceRange;
+  return '1M';
+}
+
 export const getPortfolioController = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = getUserId(req);
@@ -286,5 +296,49 @@ export const getTransactionsController = async (req: Request, res: Response): Pr
     }
     console.error('[investments] getTransactions error:', err);
     res.status(500).json({ message: 'Error al obtener transacciones' });
+  }
+};
+
+/**
+ * GET /api/investments/portfolio/performance?range=1M|3M|6M|1Y
+ * Equity curve: valor total cartera (cash + posiciones) en el tiempo.
+ */
+export const getPerformanceController = async (req: Request, res: Response): Promise<void> => {
+  const start = Date.now();
+  try {
+    const userId = getUserId(req);
+    const range = parsePerformanceRange(req.query.range);
+    const requestId = typeof req.headers['x-request-id'] === 'string' ? req.headers['x-request-id'] : undefined;
+    const { points, symbolsUsed, cacheStatuses } = await portfolioAnalyticsService.getPerformance(
+      userId,
+      range,
+      requestId,
+    );
+    const cacheStatus = cacheStatuses.every((s) => s === 'HIT_L1' || s === 'HIT_L2')
+      ? 'HIT'
+      : cacheStatuses.some((s) => s === 'MISS_FETCH')
+        ? 'MISS'
+        : 'PARTIAL';
+    const took = Date.now() - start;
+    console.log(
+      `[API] GET /portfolio/performance range=${range} user=${userId} status=200 took=${took}ms`,
+    );
+    res.status(200).json({
+      range,
+      points,
+      meta: {
+        computedAt: new Date().toISOString(),
+        cacheStatus,
+        symbolsUsed,
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Error al obtener performance';
+    if (message.includes('autenticado')) {
+      res.status(401).json({ message });
+      return;
+    }
+    console.error('[investments] getPerformance error:', err);
+    res.status(500).json({ message });
   }
 };

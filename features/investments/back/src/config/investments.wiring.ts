@@ -1,15 +1,21 @@
 /**
  * Wiring de la feature Investments: cartera, órdenes de compra e historial.
- * Integra el servicio de precios de market (getQuotesUseCase).
+ * Integra el servicio de precios de market (getQuotesUseCase) y caché de históricos (priceCacheService).
  */
-import { getQuotesUseCase } from '../../../../market/back/src/config/market.wiring';
+import {
+  getQuotesUseCase,
+  priceCacheService,
+} from '../../../../market/back/src/config/market.wiring';
 import { GetOrCreatePortfolioUseCase } from '../application/usecases/get-or-create-portfolio.usecase';
 import { ExecuteBuyOrderUseCase } from '../application/usecases/execute-buy-order.usecase';
 import { ExecuteSellOrderUseCase } from '../application/usecases/execute-sell-order.usecase';
 import { GetTransactionsUseCase } from '../application/usecases/get-transactions.usecase';
 import { GetPortfolioOverviewUseCase } from '../application/usecases/get-portfolio-overview.usecase';
+import { PortfolioAnalyticsService } from '../application/services/portfolio-analytics.service';
 import { MarketQuoteAdapter } from '../infrastructure/adapters/market-quote.adapter';
 import { MarketQuotesAdapter } from '../infrastructure/adapters/market-quotes.adapter';
+import { createHistoricalDailyAdapter } from '../infrastructure/adapters/historical-daily.adapter';
+import { createHistoricalHourlyAdapter } from '../infrastructure/adapters/historical-hourly.adapter';
 import { MongoPortfolioRepository } from '../infrastructure/persistence/mongo/portfolio.repository';
 import { MongoTransactionRepository } from '../infrastructure/persistence/mongo/transaction.repository';
 
@@ -47,4 +53,22 @@ export const getPortfolioOverviewUseCase = new GetPortfolioOverviewUseCase(
   portfolioRepository,
   getQuotesAdapter,
   transactionRepository,
+);
+
+const getHistorical = (
+  symbol: string,
+  interval: string,
+  range: string,
+  strategy?: 'swr' | 'cache-first' | 'network-first',
+  requestId?: string,
+) => priceCacheService.getHistorical(symbol, interval, range, strategy ?? 'swr', requestId);
+
+const historicalDailyAdapter = createHistoricalDailyAdapter(getHistorical);
+const historicalHourlyAdapter = createHistoricalHourlyAdapter(getHistorical);
+
+export const portfolioAnalyticsService = new PortfolioAnalyticsService(
+  transactionRepository,
+  historicalDailyAdapter,
+  historicalHourlyAdapter,
+  initialCash,
 );

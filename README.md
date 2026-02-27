@@ -361,6 +361,26 @@ Si quieres “copiar” componentes de esta app a otra:
 
 ---
 
+## Portfolio Analytics (equity curve)
+
+En la pantalla **Inversiones**, el gráfico principal muestra la **curva de valor total de la cartera** (equity curve) calculada con holdings + efectivo + históricos de precios (caché global) + transacciones. También está “ventas”: la vista **Invertido** (dinero invertido).
+
+### Endpoint (requiere autenticación `Authorization: Bearer <token>`)
+
+| Método | Ruta | Query | Descripción |
+|--------|------|-------|-------------|
+| GET | `/api/investments/portfolio/performance` | `range=1D\|1W\|1M\|3M\|6M\|1Y` | Equity curve: puntos `{ t, equity, cash, positions, invested }` |
+
+### Ejemplo curl (reemplaza `TOKEN` y base URL si aplica)
+
+```bash
+curl -s -H "Authorization: Bearer TOKEN" "http://localhost:3000/api/investments/portfolio/performance?range=1M"
+```
+
+Los históricos de precios se obtienen del **caché global** (PriceCacheService). Pruebas unitarias del cálculo (equity): `npm run test`.
+
+---
+
 ## Scripts útiles
 
 ```bash
@@ -370,6 +390,8 @@ npm run ios
 npm run web
 npm run lint
 npm run format
+npm run test          # pruebas unitarias (vitest)
+npm run test:watch   # pruebas en modo watch
 ```
 
 ---

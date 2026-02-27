@@ -186,3 +186,41 @@ export async function getPortfolioOverview(
   }
   return data as PortfolioOverviewResponse;
 }
+
+// --- Portfolio analytics (equity curve) ---
+
+export type PerformanceRange = '1D' | '1W' | '1M' | '3M' | '6M' | '1Y';
+
+export interface PerformancePointResponse {
+  t: string;
+  equity: number;
+  cash: number;
+  positions: number;
+  invested: number;
+}
+
+export interface PerformanceResponse {
+  range: PerformanceRange;
+  points: PerformancePointResponse[];
+  meta: { computedAt: string; cacheStatus: string; symbolsUsed: string[] };
+}
+
+export async function getPerformance(
+  token: string,
+  range: PerformanceRange = '1M',
+  signal?: AbortSignal,
+): Promise<PerformanceResponse> {
+  const response = await fetch(
+    `${getBaseUrl()}/portfolio/performance?range=${range}`,
+    {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+      signal,
+    },
+  );
+  const data = await parseJsonSafe(response);
+  if (!response.ok) {
+    throw new Error(getMessage(data, 'Error al obtener performance'));
+  }
+  return data as PerformanceResponse;
+}

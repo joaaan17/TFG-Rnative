@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -24,16 +24,13 @@ import {
   MarketCandlesModal,
   type MarketCandlesModalAsset,
 } from '../components/MarketCandlesModal';
-import { PortfolioChart } from '../components/PortfolioChart';
+import { PortfolioPerformanceChart } from '../components/PortfolioPerformanceChart';
 import { StockSearchModal } from '../components/StockSearchModal';
 import { TransactionsHistoryModal } from '../components/TransactionsHistoryModal';
-import { useCurrentQuotePrice } from '../hooks/useCurrentQuotePrice';
 import { useHoldingsSparklines } from '../hooks/useHoldingsSparklines';
 import { useHoldingsWithPrices } from '../hooks/useHoldingsWithPrices';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { createInvestmentsStyles } from './Investments.styles';
-
-const DEFAULT_CHART_SYMBOL = 'AAPL';
 
 /**
  * Pantalla de Inversiones: evolución global de la cartera, buscador y cards de acciones.
@@ -53,15 +50,13 @@ export function InvestmentsScreen() {
     session?.token ?? null,
     true,
   );
-  const { holdingsWithPrice, totalValue: holdingsTotalValue } = useHoldingsWithPrices(
-    portfolioData?.holdings,
-  );
+  const { holdingsWithPrice, totalValue: holdingsTotalValue, refetch: refetchHoldingsQuotes } =
+    useHoldingsWithPrices(portfolioData?.holdings);
   const holdingSymbols = useMemo(
     () => (portfolioData?.holdings ?? []).map((h) => h.symbol),
     [portfolioData?.holdings],
   );
   const sparklines = useHoldingsSparklines(holdingSymbols, !!session && holdingSymbols.length > 0);
-  const { price: chartSymbolPrice } = useCurrentQuotePrice(DEFAULT_CHART_SYMBOL, true);
   const [typewriterKey, setTypewriterKey] = React.useState(0);
   const [tab, setTab] = React.useState<SegmentedTextTabsValue>(0);
   const [stockSearchModalOpen, setStockSearchModalOpen] = React.useState(false);
@@ -83,6 +78,21 @@ export function InvestmentsScreen() {
       return undefined;
     }, [refetchPortfolio]),
   );
+
+  // Actualizar valor global de la cartera y cotizaciones cada 10 min para ver evolución en tiempo casi real
+  const REFRESH_INTERVAL_MS = 10 * 60 * 1000;
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    if (!session?.token) return;
+    intervalRef.current = setInterval(() => {
+      refetchPortfolio();
+      refetchHoldingsQuotes();
+    }, REFRESH_INTERVAL_MS);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    };
+  }, [session?.token, refetchPortfolio, refetchHoldingsQuotes]);
 
   const handleAssetPress = (symbol: string) => {
     router.push({ pathname: '/stock', params: { symbol } });
@@ -179,12 +189,9 @@ export function InvestmentsScreen() {
                 {session ? (tab === 0 ? 'Valor total cartera' : 'Cash disponible') : 'Inicia sesión para ver tu cartera'}
               </Text>
             </View>
-            <PortfolioChart
-              symbol={DEFAULT_CHART_SYMBOL}
-              enabled={true}
+            <PortfolioPerformanceChart
+              token={session?.token ?? null}
               height={280}
-              containerStyle={{ paddingHorizontal: 0 }}
-              currentPrice={chartSymbolPrice ?? undefined}
             />
           </View>
 

@@ -112,30 +112,34 @@ export function AssetCard({
   const trendColor = isUp ? TREND_UP_COLOR : palette.destructive;
   const data = sparklineData ?? generateDefaultSparkline(symbol.charCodeAt(0));
 
+  // Estética alineada al gráfico: blanco, borde gris, acento azul, sparkline en primary
+  const chartCoherent =
+    variant === 'primaryTransparent' || variant === 'accent';
   const cardBg =
     variant === 'primary'
       ? palette.primary
-      : variant === 'primaryTransparent'
-        ? `${palette.primary}33`
-        : variant === 'accent'
-          ? `${palette.primary}12`
-          : palette.cardBackground;
+      : chartCoherent
+        ? palette.cardBackground
+        : palette.cardBackground;
+
   const cardBorder =
     variant === 'primary'
       ? palette.primary
-      : variant === 'primaryTransparent'
-        ? `${palette.primary}50`
-        : variant === 'accent'
-          ? `${palette.primary}25`
-          : (palette.surfaceBorder ?? palette.surfaceMuted);
+      : chartCoherent
+        ? (palette.surfaceBorder ?? '#E2E8F0')
+        : (palette.surfaceBorder ?? palette.surfaceMuted);
   const separatorColor =
     variant === 'primary'
       ? `${palette.primaryText ?? '#FFFFFF'}40`
-      : cardBorder;
+      : chartCoherent
+        ? (palette.surfaceBorder ?? '#E2E8F0')
+        : cardBorder;
   const chartLineColor =
     variant === 'primary'
       ? `${palette.primaryText ?? '#FFFFFF'}50`
-      : `${palette.primary}50`;
+      : chartCoherent
+        ? palette.primary
+        : `${palette.primary}50`;
   const textColor =
     variant === 'primary' ? (palette.primaryText ?? '#FFFFFF') : palette.text;
   const labelColor =
@@ -153,6 +157,10 @@ export function AssetCard({
         {
           backgroundColor: cardBg,
           borderColor: cardBorder,
+          ...(chartCoherent && {
+            borderLeftWidth: 3,
+            borderLeftColor: palette.primary,
+          }),
         },
       ]}
     >
@@ -161,7 +169,9 @@ export function AssetCard({
           style={[
             styles.iconWrap,
             {
-              backgroundColor: iconBackgroundColor ?? palette.surfaceMuted,
+              backgroundColor:
+                iconBackgroundColor ??
+                (chartCoherent ? `${palette.primary}14` : palette.surfaceMuted),
             },
           ]}
         >
@@ -216,7 +226,14 @@ export function AssetCard({
       <View style={[styles.separator, { backgroundColor: separatorColor }]} />
 
       <View
-        style={styles.chartWrap}
+        style={[
+          styles.chartWrap,
+          chartCoherent && {
+            backgroundColor: `${palette.primary}08`,
+            borderRadius: 10,
+            overflow: 'hidden',
+          },
+        ]}
         onLayout={(e) => setChartWidth(e.nativeEvent.layout.width)}
       >
         <MiniSparkline

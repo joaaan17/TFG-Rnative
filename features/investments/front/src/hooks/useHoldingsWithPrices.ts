@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getQuotes } from '../api/marketQuotesClient';
 import type { PortfolioHolding } from '../api/investmentsClient';
 
@@ -11,10 +11,15 @@ export interface HoldingWithPrice extends PortfolioHolding {
 export function useHoldingsWithPrices(holdings: PortfolioHolding[] | undefined) {
   const [prices, setPrices] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const symbols = useMemo(
     () => [...new Set((holdings ?? []).map((h) => h.symbol))],
     [holdings],
   );
+
+  const refetch = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+  }, []);
 
   useEffect(() => {
     if (symbols.length === 0) {
@@ -41,7 +46,7 @@ export function useHoldingsWithPrices(holdings: PortfolioHolding[] | undefined) 
     return () => {
       cancelled = true;
     };
-  }, [symbols.join(',')]);
+  }, [symbols.join(','), refreshKey]);
 
   const holdingsWithPrice: HoldingWithPrice[] = useMemo(() => {
     if (!holdings?.length) return [];
@@ -69,5 +74,5 @@ export function useHoldingsWithPrices(holdings: PortfolioHolding[] | undefined) 
     );
   }, [holdingsWithPrice]);
 
-  return { holdingsWithPrice, totalValue, loading };
+  return { holdingsWithPrice, totalValue, loading, refetch };
 }
