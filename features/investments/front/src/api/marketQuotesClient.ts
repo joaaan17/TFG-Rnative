@@ -10,6 +10,8 @@ export interface QuoteItem {
   name: string;
   price?: number;
   currency?: string;
+  /** URL de logo (opcional; si la API la devuelve, se usa en el avatar del listado). */
+  logoUrl?: string;
 }
 
 export interface MarketQuotesResponse {

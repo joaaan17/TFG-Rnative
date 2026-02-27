@@ -60,6 +60,8 @@ export interface QuoteItem {
   name: string;
   price?: number;
   currency?: string;
+  /** URL de logo/favicon del emisor (opcional; si no viene, el front puede usar inicial o favicon por dominio). */
+  logoUrl?: string;
 }
 
 /** Snapshot del día: OHLC + volumen + market cap (quote del día). */

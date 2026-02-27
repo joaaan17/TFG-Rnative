@@ -1,4 +1,7 @@
-export { LightweightChartView } from './components/LightweightChartView';
+export {
+  LightweightChartView,
+  type ChartSeriesType,
+} from './components/LightweightChartView';
 export { useMarketChartViewModel } from './state/useMarketChartViewModel';
 export { getMarketChart } from './services/marketChartService';
 export type {

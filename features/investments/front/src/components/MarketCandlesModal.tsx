@@ -7,11 +7,15 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
-import { Minus, Plus } from 'lucide-react-native';
+import { BarChart3, LineChart, Minus, Plus } from 'lucide-react-native';
 import { CardModal } from '@/shared/components/card-modal';
 import { ModalHeader } from '@/shared/components/modal-header';
 import { Text } from '@/shared/components/ui/text';
-import { LightweightChartView, type Candle } from '@/features/market-chart';
+import {
+  LightweightChartView,
+  type Candle,
+  type ChartSeriesType,
+} from '@/features/market-chart';
 import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
 import { useMarketCandles } from '../hooks/useMarketCandles';
@@ -23,11 +27,11 @@ import { InvertirSheet } from './InvertirSheet';
 import { VenderSheet } from './VenderSheet';
 
 const RANGE_OPTIONS: { value: CandleRange; label: string }[] = [
-  { value: '1wk', label: '1 sem' },
-  { value: '1mo', label: '1 mes' },
-  { value: '3mo', label: '3 mes' },
-  { value: '6mo', label: '6 mes' },
-  { value: '1y', label: '1 año' },
+  { value: '1wk', label: '1 s' },
+  { value: '1mo', label: '1 m' },
+  { value: '3mo', label: '3 m' },
+  { value: '6mo', label: '6 m' },
+  { value: '1y', label: '1 a' },
 ];
 
 export type MarketCandlesModalAsset = { symbol: string; name: string };
@@ -71,6 +75,7 @@ export function MarketCandlesModal({
   const palette = usePalette();
   const insets = useSafeAreaInsets();
   const [range, setRange] = useState<CandleRange>('1mo');
+  const [chartMode, setChartMode] = useState<ChartSeriesType>('candlestick');
   const [operarStep, setOperarStep] = useState<OperarStep>('chart');
   const [venderOpen, setVenderOpen] = useState(false);
   const [comprarOpen, setComprarOpen] = useState(false);
@@ -133,9 +138,9 @@ export function MarketCandlesModal({
     <CardModal
       open={visible}
       onClose={onClose}
-      maxHeightPct={1}
+      maxHeightPct={showActions ? 0.42 : 1}
       closeOnBackdropPress
-      scrollable={true}
+      scrollable={!showActions}
       contentNoPaddingTop
     >
       <View style={{ flex: 1, minHeight: 0 }}>
@@ -166,39 +171,97 @@ export function MarketCandlesModal({
         <View
           style={{
             flexDirection: 'row',
+            alignItems: 'center',
             paddingHorizontal: 16,
             paddingVertical: 10,
             gap: 6,
           }}
         >
-          {RANGE_OPTIONS.map((opt) => (
+          <View style={{ flex: 1, flexDirection: 'row', gap: 6 }}>
+            {RANGE_OPTIONS.map((opt) => (
+              <Pressable
+                key={opt.value}
+                onPress={() => setRange(opt.value)}
+                style={{
+                  flex: 1,
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor:
+                    range === opt.value
+                      ? palette.primary
+                      : palette.surfaceMuted ?? '#f0f0f0',
+                }}
+              >
+                <Text
+                  style={[
+                    Hierarchy.action,
+                    {
+                      color: range === opt.value ? palette.primaryText ?? '#FFF' : palette.text,
+                    },
+                  ]}
+                >
+                  {opt.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 4,
+              paddingLeft: 4,
+            }}
+          >
             <Pressable
-              key={opt.value}
-              onPress={() => setRange(opt.value)}
-              style={{
-                flex: 1,
-                paddingVertical: 10,
-                borderRadius: 8,
+              onPress={() => setChartMode('candlestick')}
+              style={({ pressed }) => ({
+                width: 36,
+                height: 36,
+                borderRadius: 18,
                 justifyContent: 'center',
                 alignItems: 'center',
-                backgroundColor:
-                  range === opt.value
-                    ? palette.primary
-                    : palette.surfaceMuted ?? '#f0f0f0',
-              }}
+                opacity: pressed ? 0.7 : 1,
+              })}
+              accessibilityRole="button"
+              accessibilityLabel="Gráfico de velas"
             >
-              <Text
-                style={[
-                  Hierarchy.action,
-                  {
-                    color: range === opt.value ? palette.primaryText ?? '#FFF' : palette.text,
-                  },
-                ]}
-              >
-                {opt.label}
-              </Text>
+              <BarChart3
+                size={18}
+                color={
+                  chartMode === 'candlestick'
+                    ? palette.primary
+                    : palette.icon ?? palette.text
+                }
+                strokeWidth={2}
+              />
             </Pressable>
-          ))}
+            <Pressable
+              onPress={() => setChartMode('line')}
+              style={({ pressed }) => ({
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                justifyContent: 'center',
+                alignItems: 'center',
+                opacity: pressed ? 0.7 : 1,
+              })}
+              accessibilityRole="button"
+              accessibilityLabel="Gráfico de línea"
+            >
+              <LineChart
+                size={18}
+                color={
+                  chartMode === 'line'
+                    ? palette.primary
+                    : palette.icon ?? palette.text
+                }
+                strokeWidth={2}
+              />
+            </Pressable>
+          </View>
         </View>
         )}
 
@@ -279,6 +342,7 @@ export function MarketCandlesModal({
             <LightweightChartView
               candles={chartCandles}
               height={280}
+              seriesType={chartMode}
               priceLines={priceLines}
               theme={{
                 layoutBackgroundColor:

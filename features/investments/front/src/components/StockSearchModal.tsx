@@ -5,6 +5,7 @@ import {
   Pressable,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { CardModal } from '@/shared/components/card-modal';
 import { ModalHeader } from '@/shared/components/modal-header';
 import { SearchBar } from '@/shared/components/ui/search-bar';
@@ -42,6 +43,101 @@ const DEFAULT_DISPLAY_NAMES: Record<string, string> = {
   'GLD': 'Oro (ETF)',
   'BTC-USD': 'Bitcoin',
 };
+
+/** Dominio por símbolo para favicon/logo minimalista (Google Favicon API, sin API key). */
+const DEFAULT_SYMBOL_DOMAINS: Record<string, string> = {
+  'AAPL': 'apple.com',
+  'TSLA': 'tesla.com',
+  'NVDA': 'nvidia.com',
+  'MSFT': 'microsoft.com',
+  'GOOGL': 'google.com',
+  'AMZN': 'amazon.com',
+  'META': 'meta.com',
+  'GLD': 'spdr.com',
+  'BTC-USD': 'bitcoin.org',
+};
+
+const ASSET_AVATAR_SIZE = 40;
+const ASSET_AVATAR_RING_WIDTH = 2.5;
+/** Tamaño total del avatar con el anillo azul. */
+const ASSET_AVATAR_TOTAL_SIZE = ASSET_AVATAR_SIZE + ASSET_AVATAR_RING_WIDTH * 2;
+
+function getLogoUrlForSymbol(symbol: string): string | undefined {
+  const domain = DEFAULT_SYMBOL_DOMAINS[symbol];
+  if (!domain) return undefined;
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+}
+
+function getInitial(name: string): string {
+  const trimmed = (name || '').trim();
+  if (!trimmed) return '?';
+  const first = trimmed[0];
+  return first.toUpperCase();
+}
+
+/** Avatar minimalista: favicon o inicial rodeado de un círculo azul corporativo. */
+function AssetAvatar({
+  logoUrl,
+  name,
+  palette,
+}: {
+  logoUrl: string | undefined;
+  name: string;
+  palette: ReturnType<typeof usePalette>;
+}) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = logoUrl && !imageFailed;
+  const bg = palette.surfaceMuted ?? 'rgba(0,0,0,0.06)';
+  const textColor = palette.text;
+  const corporateBlue = palette.primary;
+  return (
+    <View
+      style={{
+        width: ASSET_AVATAR_TOTAL_SIZE,
+        height: ASSET_AVATAR_TOTAL_SIZE,
+        borderRadius: ASSET_AVATAR_TOTAL_SIZE / 2,
+        backgroundColor: corporateBlue,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      <View
+        style={{
+          width: ASSET_AVATAR_SIZE,
+          height: ASSET_AVATAR_SIZE,
+          borderRadius: ASSET_AVATAR_SIZE / 2,
+          backgroundColor: bg,
+          justifyContent: 'center',
+          alignItems: 'center',
+          overflow: 'hidden',
+        }}
+      >
+        {showImage ? (
+          <Image
+            source={{ uri: logoUrl }}
+            style={{ width: ASSET_AVATAR_SIZE, height: ASSET_AVATAR_SIZE }}
+            contentFit="cover"
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          <Text
+            style={[
+              Hierarchy.bodySmallSemibold,
+              {
+                color: textColor,
+                opacity: 0.78,
+                fontSize: 16,
+              },
+            ]}
+            numberOfLines={1}
+          >
+            {getInitial(name)}
+          </Text>
+        )}
+      </View>
+    </View>
+  );
+}
 
 export type StockSearchModalProps = {
   open: boolean;
@@ -167,6 +263,8 @@ export function StockSearchModal({
     ({ item }: { item: MarketSearchResultItem }) => (
       <Pressable
         style={({ pressed }) => ({
+          flexDirection: 'row',
+          alignItems: 'center',
           paddingVertical: 14,
           paddingHorizontal: 16,
           borderBottomWidth: 1,
@@ -177,20 +275,28 @@ export function StockSearchModal({
         accessibilityRole="button"
         accessibilityLabel={`${item.name} ${item.symbol}`}
       >
-        <Text style={{ fontWeight: '600', color: palette.text }}>
-          {item.name}
-        </Text>
-        <Text
-          variant="muted"
-          style={{ marginTop: 2, fontSize: 13 }}
-        >
-          {item.symbol}
-          {item.exchange ? ` · ${item.exchange}` : ''}
-          {item.currency ? ` · ${item.currency}` : ''}
-        </Text>
+        <AssetAvatar
+          logoUrl={getLogoUrlForSymbol(item.symbol)}
+          name={item.name}
+          palette={palette}
+        />
+        <View style={{ marginLeft: 12, flex: 1, minWidth: 0 }}>
+          <Text style={{ fontWeight: '600', color: palette.text }} numberOfLines={1}>
+            {item.name}
+          </Text>
+          <Text
+            variant="muted"
+            style={{ marginTop: 2, fontSize: 13 }}
+            numberOfLines={1}
+          >
+            {item.symbol}
+            {item.exchange ? ` · ${item.exchange}` : ''}
+            {item.currency ? ` · ${item.currency}` : ''}
+          </Text>
+        </View>
       </Pressable>
     ),
-    [handleSelect, palette.surfaceBorder, palette.text],
+    [handleSelect, palette],
   );
 
   const formatPrice = (item: QuoteItem): string => {
@@ -211,27 +317,37 @@ export function StockSearchModal({
   };
 
   const renderDefaultItem = useCallback(
-    ({ item }: { item: QuoteItem }) => (
-      <Pressable
-        style={({ pressed }) => ({
-          paddingVertical: 14,
-          paddingHorizontal: 16,
-          borderBottomWidth: 1,
-          borderBottomColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.06)',
-          opacity: pressed ? 0.7 : 1,
-        })}
-        onPress={() => handleSelect(item)}
-        accessibilityRole="button"
-        accessibilityLabel={`${getDisplayName(item)} ${item.symbol}`}
-      >
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <View>
-            <Text style={{ fontWeight: '600', color: palette.text }}>
-              {getDisplayName(item)}
+    ({ item }: { item: QuoteItem }) => {
+      const displayName = getDisplayName(item);
+      const logoUrl = item.logoUrl ?? getLogoUrlForSymbol(item.symbol);
+      return (
+        <Pressable
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.06)',
+            opacity: pressed ? 0.7 : 1,
+          })}
+          onPress={() => handleSelect(item)}
+          accessibilityRole="button"
+          accessibilityLabel={`${displayName} ${item.symbol}`}
+        >
+          <AssetAvatar
+            logoUrl={logoUrl}
+            name={displayName}
+            palette={palette}
+          />
+          <View style={{ marginLeft: 12, flex: 1, minWidth: 0 }}>
+            <Text style={{ fontWeight: '600', color: palette.text }} numberOfLines={1}>
+              {displayName}
             </Text>
             <Text
               variant="muted"
               style={{ marginTop: 2, fontSize: 13 }}
+              numberOfLines={1}
             >
               {item.symbol}
             </Text>
@@ -241,10 +357,10 @@ export function StockSearchModal({
               {formatPrice(item)}
             </Text>
           )}
-        </View>
-      </Pressable>
-    ),
-    [handleSelect, getDisplayName, palette.surfaceBorder, palette.text],
+        </Pressable>
+      );
+    },
+    [handleSelect, getDisplayName, palette],
   );
 
   const showDefaultList = query.trim().length < 1 && !loading;

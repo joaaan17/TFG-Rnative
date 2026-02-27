@@ -7,6 +7,7 @@ export {
   useMarketChartViewModel,
   getMarketChart,
   type Candle,
+  type ChartSeriesType,
   type MarketChartData,
   type IndicatorSeries,
   type PriceLine,

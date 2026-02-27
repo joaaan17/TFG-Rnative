@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { ClipboardList, Search } from 'lucide-react-native';
+import { BarChart3, ClipboardList, LineChart, Search } from 'lucide-react-native';
 
 import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
 import {
@@ -20,6 +20,7 @@ import { AssetCard } from '@/shared/components/asset-card';
 import {
   LightweightChartView,
   useMarketChartViewModel,
+  type ChartSeriesType,
   type PriceLine,
 } from '@/features/market-chart';
 import { usePalette } from '@/shared/hooks/use-palette';
@@ -48,6 +49,7 @@ export function InvestmentsScreen() {
   const { data, loading, error, loadChart } = useMarketChartViewModel();
   const [typewriterKey, setTypewriterKey] = React.useState(0);
   const [tab, setTab] = React.useState<SegmentedTextTabsValue>(0);
+  const [chartMode, setChartMode] = React.useState<ChartSeriesType>('candlestick');
   const [stockSearchModalOpen, setStockSearchModalOpen] = React.useState(false);
   const [candlesModalOpen, setCandlesModalOpen] = React.useState(false);
   const [selectedAsset, setSelectedAsset] = React.useState<MarketCandlesModalAsset | null>(null);
@@ -180,9 +182,66 @@ export function InvestmentsScreen() {
             )}
             {!loading && !error && data?.candles && data.candles.length > 0 && (
               <View style={styles.chartContainer}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'flex-end',
+                    gap: 4,
+                    marginBottom: 8,
+                    paddingHorizontal: 4,
+                  }}
+                >
+                  <Pressable
+                    onPress={() => setChartMode('candlestick')}
+                    style={({ pressed }) => ({
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                    accessibilityRole="button"
+                    accessibilityLabel="Gráfico de velas"
+                  >
+                    <BarChart3
+                      size={18}
+                      color={
+                        chartMode === 'candlestick'
+                          ? palette.primary
+                          : palette.icon ?? palette.text
+                      }
+                      strokeWidth={2}
+                    />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => setChartMode('line')}
+                    style={({ pressed }) => ({
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                    accessibilityRole="button"
+                    accessibilityLabel="Gráfico de línea"
+                  >
+                    <LineChart
+                      size={18}
+                      color={
+                        chartMode === 'line'
+                          ? palette.primary
+                          : palette.icon ?? palette.text
+                      }
+                      strokeWidth={2}
+                    />
+                  </Pressable>
+                </View>
                 <LightweightChartView
                   candles={data.candles}
                   height={280}
+                  seriesType={chartMode}
                   priceLines={chartPriceLines}
                   theme={{
                     layoutBackgroundColor:

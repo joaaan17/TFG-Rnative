@@ -4,6 +4,7 @@ import { WebView } from 'react-native-webview';
 import {
   createChart,
   CandlestickSeries,
+  LineSeries,
   createSeriesMarkers,
   LineStyle,
   type LineWidth,
@@ -29,10 +30,14 @@ export type ChartTheme = {
   fontSize?: number;
 };
 
+export type ChartSeriesType = 'candlestick' | 'line';
+
 interface LightweightChartViewProps {
   candles: Candle[];
   height?: number;
   width?: number | string;
+  /** Tipo de serie: velas o línea (precio de cierre). Mismo chart, misma estética. */
+  seriesType?: ChartSeriesType;
   /** Líneas horizontales (precio compra, soporte, resistencia) */
   priceLines?: PriceLine[];
   /** Marcadores en puntos temporales (noticias, compras, eventos) */
@@ -57,17 +62,21 @@ function buildChartHtml(
   priceLines: PriceLine[] = [],
   markers: ChartMarker[] = [],
   theme: ChartTheme = {},
+  seriesType: ChartSeriesType = 'candlestick',
 ): string {
   const t = { ...DEFAULT_CHART_THEME, ...theme };
-  const dataJson = JSON.stringify(
-    candles.map((c) => ({
-      time: c.time,
-      open: c.open,
-      high: c.high,
-      low: c.low,
-      close: c.close,
-    })),
+  const candleData = candles.map((c) => ({
+    time: c.time,
+    open: c.open,
+    high: c.high,
+    low: c.low,
+    close: c.close,
+  }));
+  const dataJson = JSON.stringify(candleData);
+  const lineDataJson = JSON.stringify(
+    candles.map((c) => ({ time: c.time, value: c.close })),
   );
+  const isLine = seriesType === 'line';
 
   return `
 <!DOCTYPE html>
@@ -117,19 +126,36 @@ function buildChartHtml(
           horzLine: { color: '${t.gridColor}' },
         },
       });
-      var candlestickSeries = chart.addCandlestickSeries({
-        upColor: '${t.upColor}',
-        downColor: '${t.downColor}',
-        borderVisible: false,
-        wickUpColor: '${t.upColor}',
-        wickDownColor: '${t.downColor}',
-      });
-      candlestickSeries.setData(data);
+      function formatPriceAbbrev(price) {
+        if (price >= 1e12) return (price / 1e12).toFixed(2) + ' T';
+        if (price >= 1e9) return (price / 1e9).toFixed(2) + ' B';
+        if (price >= 1e6) return (price / 1e6).toFixed(2) + ' M';
+        if (price >= 1e3) return (price / 1e3).toFixed(2) + ' K';
+        if (price >= 1) return price.toFixed(2);
+        if (price >= 0.01) return price.toFixed(4);
+        return price.toFixed(6);
+      }
+      chart.applyOptions({ localization: { priceFormatter: formatPriceAbbrev } });
+      var series;
+      if (${isLine ? 'true' : 'false'}) {
+        var lineData = ${lineDataJson};
+        series = chart.addLineSeries({ color: '${t.upColor}', lineWidth: 2 });
+        series.setData(lineData);
+      } else {
+        series = chart.addCandlestickSeries({
+          upColor: '${t.upColor}',
+          downColor: '${t.downColor}',
+          borderVisible: false,
+          wickUpColor: '${t.upColor}',
+          wickDownColor: '${t.downColor}',
+        });
+        series.setData(data);
+      }
       var priceLinesData = ${JSON.stringify(priceLines)};
       var markersData = ${JSON.stringify(markers)};
       if (Array.isArray(priceLinesData)) {
         priceLinesData.forEach(function(pl) {
-          candlestickSeries.createPriceLine({
+          series.createPriceLine({
             price: pl.price,
             color: pl.color || '#ff0000',
             lineWidth: pl.lineWidth ?? 2,
@@ -140,7 +166,7 @@ function buildChartHtml(
         });
       }
       if (Array.isArray(markersData) && markersData.length > 0) {
-        candlestickSeries.setMarkers(markersData.map(function(m) {
+        series.setMarkers(markersData.map(function(m) {
           return {
             time: m.time,
             position: m.position || 'aboveBar',
@@ -161,6 +187,7 @@ export function LightweightChartView({
   candles,
   height = 280,
   width = '100%',
+  seriesType = 'candlestick',
   priceLines = [],
   markers = [],
   theme,
@@ -171,6 +198,7 @@ export function LightweightChartView({
         candles={candles}
         height={height}
         width={width}
+        seriesType={seriesType}
         priceLines={priceLines}
         markers={markers}
         theme={theme}
@@ -182,6 +210,7 @@ export function LightweightChartView({
       candles={candles}
       height={height}
       width={width}
+      seriesType={seriesType}
       priceLines={priceLines}
       markers={markers}
       theme={theme}
@@ -192,13 +221,21 @@ export function LightweightChartView({
 function LightweightChartWebView({
   candles,
   height,
+  seriesType = 'candlestick',
   priceLines,
   markers,
   theme,
 }: LightweightChartViewProps) {
   const html = React.useMemo(
-    () => buildChartHtml(candles, priceLines ?? [], markers ?? [], theme ?? {}),
-    [candles, priceLines, markers, theme],
+    () =>
+      buildChartHtml(
+        candles,
+        priceLines ?? [],
+        markers ?? [],
+        theme ?? {},
+        seriesType,
+      ),
+    [candles, priceLines, markers, theme, seriesType],
   );
 
   return (
@@ -216,6 +253,7 @@ function LightweightChartWebView({
 function LightweightChartWeb({
   candles,
   height,
+  seriesType = 'candlestick',
   priceLines = [],
   markers = [],
   theme,
@@ -270,26 +308,54 @@ function LightweightChartWeb({
       },
     });
 
-    const candlestickSeries = chart.addSeries(CandlestickSeries, {
-      upColor: chartTheme.upColor,
-      downColor: chartTheme.downColor,
-      borderVisible: false,
-      wickUpColor: chartTheme.upColor,
-      wickDownColor: chartTheme.downColor,
+    function formatPriceAbbrev(price: number): string {
+      if (price >= 1e12) return (price / 1e12).toFixed(2) + ' T';
+      if (price >= 1e9) return (price / 1e9).toFixed(2) + ' B';
+      if (price >= 1e6) return (price / 1e6).toFixed(2) + ' M';
+      if (price >= 1e3) return (price / 1e3).toFixed(2) + ' K';
+      if (price >= 1) return price.toFixed(2);
+      if (price >= 0.01) return price.toFixed(4);
+      return price.toFixed(6);
+    }
+    chart.applyOptions({
+      localization: { priceFormatter: formatPriceAbbrev },
     });
 
-    candlestickSeries.setData(
-      candles.map((c) => ({
-        time: c.time as import('lightweight-charts').UTCTimestamp,
-        open: c.open,
-        high: c.high,
-        low: c.low,
-        close: c.close,
-      })),
-    );
+    const isLine = seriesType === 'line';
+    const series = isLine
+      ? chart.addSeries(LineSeries, {
+          color: chartTheme.upColor,
+          lineWidth: 2,
+        })
+      : chart.addSeries(CandlestickSeries, {
+          upColor: chartTheme.upColor,
+          downColor: chartTheme.downColor,
+          borderVisible: false,
+          wickUpColor: chartTheme.upColor,
+          wickDownColor: chartTheme.downColor,
+        });
+
+    if (isLine) {
+      series.setData(
+        candles.map((c) => ({
+          time: c.time as import('lightweight-charts').UTCTimestamp,
+          value: c.close,
+        })),
+      );
+    } else {
+      series.setData(
+        candles.map((c) => ({
+          time: c.time as import('lightweight-charts').UTCTimestamp,
+          open: c.open,
+          high: c.high,
+          low: c.low,
+          close: c.close,
+        })),
+      );
+    }
 
     for (const pl of priceLines) {
-      candlestickSeries.createPriceLine({
+      series.createPriceLine({
         price: pl.price,
         color: pl.color ?? '#ff0000',
         lineWidth: (pl.lineWidth ?? 2) as LineWidth,
@@ -301,7 +367,7 @@ function LightweightChartWeb({
 
     if (markers.length > 0) {
       createSeriesMarkers(
-        candlestickSeries,
+        series,
         markers.map((m) => ({
           time: m.time as import('lightweight-charts').UTCTimestamp,
           position: (m.position ?? 'aboveBar') as
@@ -347,6 +413,7 @@ function LightweightChartWeb({
   }, [
     candles,
     height,
+    seriesType,
     priceLines,
     markers,
     chartTheme,
@@ -388,10 +455,12 @@ function LightweightChartWeb({
   );
 }
 
+const CHART_BORDER_RADIUS = 12;
+
 const styles = StyleSheet.create({
   container: {
     overflow: 'hidden',
-    borderRadius: 0,
+    borderRadius: CHART_BORDER_RADIUS,
     backgroundColor: 'transparent',
   },
   responsive: {
