@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { CardModal } from '@/shared/components/card-modal';
 import { ModalHeader } from '@/shared/components/modal-header';
@@ -17,12 +17,19 @@ const KEYPAD_KEYS = [
 export type InvertirSheetProps = {
   visible: boolean;
   onClose: () => void;
-  /** Importe disponible para invertir. */
+  /** Cash disponible (USD). */
   availableAmount: number;
   /** Precio actual del activo. */
   price: number;
   symbol?: string;
-  onNext?: (amount: number) => void;
+  /** Al confirmar compra: (símbolo, número de acciones). */
+  onBuy?: (symbol: string, shares: number) => Promise<unknown>;
+  /** Mientras se ejecuta la orden. */
+  buyLoading?: boolean;
+  /** Error de la última orden (ej. Fondos insuficientes). */
+  buyError?: string | null;
+  /** Limpiar error al cerrar/abrir. */
+  onClearBuyError?: () => void;
 };
 
 export function InvertirSheet({
@@ -31,16 +38,24 @@ export function InvertirSheet({
   availableAmount,
   price,
   symbol,
-  onNext,
+  onBuy,
+  buyLoading = false,
+  buyError = null,
+  onClearBuyError,
 }: InvertirSheetProps) {
   const palette = usePalette();
-  const [amountStr, setAmountStr] = useState('0');
+  const [sharesStr, setSharesStr] = useState('0');
 
   useEffect(() => {
-    if (visible) setAmountStr('0');
-  }, [visible]);
+    if (visible) {
+      setSharesStr('0');
+      onClearBuyError?.();
+    }
+  }, [visible, onClearBuyError]);
 
-  const amountNum = parseFloat(amountStr.replace(',', '.')) || 0;
+  const sharesNum = parseFloat(sharesStr.replace(',', '.')) || 0;
+  const totalCost = Math.round(sharesNum * price * 100) / 100;
+  const canBuy = sharesNum > 0 && totalCost > 0 && totalCost <= availableAmount && !!symbol;
   const formattedAvailable = availableAmount.toLocaleString('es-ES', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -49,31 +64,40 @@ export function InvertirSheet({
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+  const formattedCost = totalCost.toLocaleString('es-ES', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
   const handleKey = useCallback((key: string) => {
     if (key === 'backspace') {
-      setAmountStr((prev) => {
+      setSharesStr((prev) => {
         if (prev.length <= 1) return '0';
         const next = prev.slice(0, -1);
         return next === '' ? '0' : next;
       });
       return;
     }
-    setAmountStr((prev) => {
+    setSharesStr((prev) => {
       if (prev === '0' && key !== ',') return key;
       if (key === ',' && prev.includes(',')) return prev;
       if (key === ',' && !prev.includes(',')) return prev + ',';
       const next = prev + key;
       const parts = next.split(',');
-      if (parts[1]?.length > 2) return prev;
+      if (parts[1]?.length > 4) return prev;
       return next;
     });
   }, []);
 
-  const handleNext = useCallback(() => {
-    onNext?.(amountNum);
-    onClose();
-  }, [amountNum, onNext, onClose]);
+  const handleComprar = useCallback(async () => {
+    if (!canBuy || !symbol || !onBuy) return;
+    try {
+      await onBuy(symbol, sharesNum);
+      onClose();
+    } catch {
+      // Error mostrado vía buyError
+    }
+  }, [canBuy, symbol, sharesNum, onBuy, onClose]);
 
   if (!visible) return null;
 
@@ -94,101 +118,124 @@ export function InvertirSheet({
           backAccessibilityLabel="Volver atrás"
         />
         <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 24 }}>
-        <Pressable
-          style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}
-          accessibilityRole="button"
-          accessibilityLabel="Disponible"
-        >
-          <Text
-            variant="muted"
-            style={[Hierarchy.bodySmall, { color: palette.icon ?? palette.text }]}
-          >
-            {formattedAvailable} $ disponible
-          </Text>
-          <ChevronRight size={18} color={palette.icon ?? palette.text} style={{ marginLeft: 4 }} />
-        </Pressable>
-
-        <View style={{ alignItems: 'center', marginTop: 28, marginBottom: 16 }}>
-          <Text
-            style={[
-              Hierarchy.value,
-              { color: palette.text, fontSize: 32 },
-            ]}
-          >
-            {amountStr} $
-          </Text>
-          <Text
-            variant="muted"
-            style={[Hierarchy.bodySmall, { marginTop: 8, color: palette.icon }]}
-          >
-            Precio: {formattedPrice} ${symbol ? ` · ${symbol}` : ''}
-          </Text>
-        </View>
-
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, marginBottom: 24 }}>
-          {KEYPAD_KEYS.map((row, rowIndex) =>
-            row.map((key) => (
-              <Pressable
-                key={key === 'backspace' ? 'back' : key}
-                onPress={() => handleKey(key)}
-                style={({ pressed }) => ({
-                  width: key === '0' ? 72 : 64,
-                  height: 56,
-                  borderRadius: 12,
-                  backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  opacity: pressed ? 0.85 : 1,
-                })}
-                accessibilityRole="button"
-                accessibilityLabel={key === 'backspace' ? 'Borrar' : key}
-              >
-                {key === 'backspace' ? (
-                  <Text style={[Hierarchy.action, { color: palette.text }]}>←</Text>
-                ) : (
-                  <Text style={[Hierarchy.action, { color: palette.text, fontWeight: '600' }]}>
-                    {key}
-                  </Text>
-                )}
-              </Pressable>
-            )),
-          )}
-        </View>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingTop: 12,
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={[Hierarchy.action, { color: palette.text }]}>Importe</Text>
-            <Text style={[Hierarchy.captionSmall, { color: palette.icon, marginLeft: 4 }]}>⌄</Text>
-          </View>
           <Pressable
-            onPress={handleNext}
-            style={({ pressed }) => ({
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingHorizontal: 20,
-              paddingVertical: 12,
-              borderRadius: 12,
-              backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
-              borderWidth: 1,
-              borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
-              opacity: pressed ? 0.85 : 1,
-            })}
+            style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}
             accessibilityRole="button"
-            accessibilityLabel="Siguiente"
+            accessibilityLabel="Disponible"
           >
-            <Text style={[Hierarchy.action, { color: palette.primary, fontWeight: '600' }]}>
-              Siguiente
+            <Text
+              variant="muted"
+              style={[Hierarchy.bodySmall, { color: palette.icon ?? palette.text }]}
+            >
+              {formattedAvailable} $ disponible
             </Text>
-            <ChevronRight size={18} color={palette.primary} style={{ marginLeft: 4 }} />
+            <ChevronRight size={18} color={palette.icon ?? palette.text} style={{ marginLeft: 4 }} />
           </Pressable>
-        </View>
+
+          <View style={{ alignItems: 'center', marginTop: 28, marginBottom: 16 }}>
+            <Text
+              style={[Hierarchy.value, { color: palette.text, fontSize: 32 }]}
+            >
+              {sharesStr} {sharesNum === 1 ? 'acción' : 'acciones'}
+            </Text>
+            <Text
+              variant="muted"
+              style={[Hierarchy.bodySmall, { marginTop: 8, color: palette.icon }]}
+            >
+              Precio: {formattedPrice} ${symbol ? ` · ${symbol}` : ''}
+            </Text>
+            {sharesNum > 0 && (
+              <Text
+                variant="muted"
+                style={[Hierarchy.bodySmall, { marginTop: 4, color: palette.primary }]}
+              >
+                Coste total: {formattedCost} $
+              </Text>
+            )}
+          </View>
+
+          {buyError ? (
+            <View style={{ marginBottom: 12, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, backgroundColor: `${palette.destructive ?? '#E5484D'}20` }}>
+              <Text style={[Hierarchy.bodySmall, { color: palette.destructive ?? '#E5484D' }]}>
+                {buyError}
+              </Text>
+            </View>
+          ) : null}
+
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, marginBottom: 24 }}>
+            {KEYPAD_KEYS.map((row) =>
+              row.map((key) => (
+                <Pressable
+                  key={key === 'backspace' ? 'back' : key}
+                  onPress={() => handleKey(key)}
+                  disabled={buyLoading}
+                  style={({ pressed }) => ({
+                    width: key === '0' ? 72 : 64,
+                    height: 56,
+                    borderRadius: 12,
+                    backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    opacity: pressed || buyLoading ? 0.85 : 1,
+                  })}
+                  accessibilityRole="button"
+                  accessibilityLabel={key === 'backspace' ? 'Borrar' : key}
+                >
+                  {key === 'backspace' ? (
+                    <Text style={[Hierarchy.action, { color: palette.text }]}>←</Text>
+                  ) : (
+                    <Text style={[Hierarchy.action, { color: palette.text, fontWeight: '600' }]}>
+                      {key}
+                    </Text>
+                  )}
+                </Pressable>
+              )),
+            )}
+          </View>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12 }}>
+            <Text style={[Hierarchy.captionSmall, { color: palette.icon }]}>
+              Acciones
+            </Text>
+            <Pressable
+              onPress={handleComprar}
+              disabled={!canBuy || buyLoading}
+              style={({ pressed }) => ({
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 20,
+                paddingVertical: 12,
+                borderRadius: 12,
+                backgroundColor: canBuy && !buyLoading ? palette.primary : (palette.surfaceMuted ?? '#EEF2F7'),
+                opacity: pressed ? 0.85 : 1,
+              })}
+              accessibilityRole="button"
+              accessibilityLabel="Comprar"
+            >
+              {buyLoading ? (
+                <ActivityIndicator size="small" color={palette.primaryText ?? '#FFF'} />
+              ) : (
+                <>
+                  <Text
+                    style={[
+                      Hierarchy.action,
+                      {
+                        color: canBuy && !buyLoading ? (palette.primaryText ?? '#FFF') : palette.text,
+                        fontWeight: '600',
+                      },
+                    ]}
+                  >
+                    Comprar
+                  </Text>
+                  <ChevronRight
+                    size={18}
+                    color={canBuy && !buyLoading ? palette.primaryText ?? '#FFF' : palette.text}
+                    style={{ marginLeft: 4 }}
+                  />
+                </>
+              )}
+            </Pressable>
+          </View>
         </View>
       </View>
     </CardModal>

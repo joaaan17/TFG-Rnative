@@ -18,13 +18,17 @@ import {
 } from '@/features/market-chart';
 import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
+import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
 import { useMarketCandles } from '../hooks/useMarketCandles';
 import { useMarketOverview } from '../hooks/useMarketOverview';
+import { usePortfolio } from '../hooks/usePortfolio';
+import { useBuyOrder } from '../hooks/useBuyOrder';
 import type { CandleRange, CandleTimeframe } from '../api/marketCandlesClient';
 import { QuoteGrid } from './QuoteGrid';
 import { FundamentalsList } from './FundamentalsList';
 import { InvertirSheet } from './InvertirSheet';
 import { VenderSheet } from './VenderSheet';
+import { PurchaseSuccessModal } from './PurchaseSuccessModal';
 
 /** Periodos de visualización (parte superior): cuánto tiempo se muestra en el gráfico. */
 const RANGE_OPTIONS: { value: CandleRange; label: string }[] = [
@@ -54,6 +58,8 @@ export type MarketCandlesModalProps = {
   onOperar?: () => void;
   /** Al pulsar "Órdenes" (ej. ir a listado de órdenes). */
   onOrdenes?: () => void;
+  /** Al pulsar "Ir a Inversiones" en el modal de compra exitosa: recargar cartera en la pantalla principal y cerrar este modal. */
+  onGoToMain?: () => void;
 };
 
 /** Convierte velas del API (t en ms) al formato del chart (time en segundos). */
@@ -79,6 +85,7 @@ export function MarketCandlesModal({
   onBack,
   onOperar,
   onOrdenes,
+  onGoToMain: onGoToMainFromParent,
 }: MarketCandlesModalProps) {
   const palette = usePalette();
   const insets = useSafeAreaInsets();
@@ -88,16 +95,24 @@ export function MarketCandlesModal({
   const [operarStep, setOperarStep] = useState<OperarStep>('chart');
   const [venderOpen, setVenderOpen] = useState(false);
   const [comprarOpen, setComprarOpen] = useState(false);
+  const [purchaseSuccessOpen, setPurchaseSuccessOpen] = useState(false);
 
   useEffect(() => {
     if (!visible) {
       setOperarStep('chart');
       setVenderOpen(false);
       setComprarOpen(false);
+      setPurchaseSuccessOpen(false);
     }
   }, [visible]);
 
   const symbol = asset?.symbol ?? '';
+  const { session } = useAuthSession();
+  const { data: portfolioData, refetch: refetchPortfolio } = usePortfolio(
+    session?.token ?? null,
+    visible,
+  );
+  const { execute: executeBuy, loading: buyLoading, error: buyError, clearError: clearBuyError } = useBuyOrder(session?.token ?? null);
   const { data, loading, error, refetch } = useMarketCandles(
     symbol,
     timeframe,
@@ -137,8 +152,9 @@ export function MarketCandlesModal({
 
   const showChart = operarStep === 'chart';
   const showActions = operarStep === 'actions';
-  const positionAmount = lastClose != null ? lastClose * 7.5 : 1023.73;
-  const availableToInvest = 7.84;
+  const cashBalance = portfolioData?.cashBalance ?? 0;
+  const holdingForSymbol = portfolioData?.holdings?.find((h) => h.symbol === symbol);
+  const positionAmount = (holdingForSymbol?.shares ?? 0) * (lastClose ?? 0);
 
   if (!visible) return null;
 
@@ -631,12 +647,31 @@ export function MarketCandlesModal({
     <InvertirSheet
       visible={comprarOpen}
       onClose={() => setComprarOpen(false)}
-      availableAmount={availableToInvest}
+      availableAmount={cashBalance}
       price={lastClose ?? 0}
       symbol={asset?.symbol}
-      onNext={(amount) => {
-        setComprarOpen(false);
-        onOperar?.();
+      onBuy={async (sym, shares) => {
+        const result = await executeBuy(sym, shares);
+        if (result) {
+          setComprarOpen(false);
+          setPurchaseSuccessOpen(true);
+        }
+      }}
+      buyLoading={buyLoading}
+      buyError={buyError}
+      onClearBuyError={clearBuyError}
+    />
+    <PurchaseSuccessModal
+      visible={purchaseSuccessOpen}
+      onClose={() => setPurchaseSuccessOpen(false)}
+      onGoToMain={() => {
+        setPurchaseSuccessOpen(false);
+        if (onGoToMainFromParent) {
+          onGoToMainFromParent();
+        } else {
+          refetchPortfolio();
+          onClose();
+        }
       }}
     />
     </>

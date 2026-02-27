@@ -7,5 +7,6 @@ import marketRouter from './api/market.routes';
 export { marketRouter };
 export {
   getCandlesUseCase,
+  getQuotesUseCase,
   searchMarketUseCase,
 } from './config/market.wiring';

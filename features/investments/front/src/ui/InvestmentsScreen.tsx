@@ -10,6 +10,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { BarChart3, ClipboardList, LineChart, Search } from 'lucide-react-native';
 
+import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
 import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
 import {
   SegmentedTextTabs,
@@ -31,6 +32,8 @@ import {
   type MarketCandlesModalAsset,
 } from '../components/MarketCandlesModal';
 import { StockSearchModal } from '../components/StockSearchModal';
+import { usePortfolio } from '../hooks/usePortfolio';
+import { useHoldingsWithPrices } from '../hooks/useHoldingsWithPrices';
 import { createInvestmentsStyles } from './Investments.styles';
 
 /**
@@ -46,6 +49,14 @@ export function InvestmentsScreen() {
     [palette, screenWidth],
   );
 
+  const { session } = useAuthSession();
+  const { data: portfolioData, refetch: refetchPortfolio } = usePortfolio(
+    session?.token ?? null,
+    true,
+  );
+  const { holdingsWithPrice, totalValue: holdingsTotalValue } = useHoldingsWithPrices(
+    portfolioData?.holdings,
+  );
   const { data, loading, error, loadChart } = useMarketChartViewModel();
   const [typewriterKey, setTypewriterKey] = React.useState(0);
   const [tab, setTab] = React.useState<SegmentedTextTabsValue>(0);
@@ -54,12 +65,16 @@ export function InvestmentsScreen() {
   const [candlesModalOpen, setCandlesModalOpen] = React.useState(false);
   const [selectedAsset, setSelectedAsset] = React.useState<MarketCandlesModalAsset | null>(null);
 
+  const cashBalance = portfolioData?.cashBalance ?? 0;
+  const totalCarteraValue = cashBalance + holdingsTotalValue;
+
   useFocusEffect(
     React.useCallback(() => {
       setTypewriterKey((k) => k + 1);
       loadChart();
+      refetchPortfolio();
       return undefined;
-    }, [loadChart]),
+    }, [loadChart, refetchPortfolio]),
   );
 
   const handleAssetPress = (symbol: string) => {
@@ -134,7 +149,11 @@ export function InvestmentsScreen() {
                 { color: palette.text },
               ]}
             >
-              1769 $
+              {session
+              ? tab === 0
+                ? `${totalCarteraValue.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
+                : `${cashBalance.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
+              : '—'}
             </Text>
             <Text
               variant="muted"
@@ -144,7 +163,7 @@ export function InvestmentsScreen() {
                 { color: palette.icon },
               ]}
             >
-              Valor total cartera
+              {session ? (tab === 0 ? 'Valor total cartera' : 'Cash disponible') : 'Inicia sesión para ver tu cartera'}
             </Text>
           </View>
 
@@ -266,73 +285,65 @@ export function InvestmentsScreen() {
                 { color: palette.icon ?? palette.text },
               ]}
             >
-              Inversiones
+              {portfolioData ? 'Tus posiciones' : 'Inversiones'}
             </Text>
           </View>
 
           <View style={styles.assetsList}>
-            <View style={styles.assetCardWrapper}>
-              <AssetCard
-                name="Bitcoin"
-                symbol="BTC"
-                shares="0,05 BTC"
-                price="1511,51 $"
-                change="58,36 $"
-                changePercent="+4,56%"
-                trend="up"
-                profits="58,36 $"
-                iconBackgroundColor="#F59E0B"
-                variant="primary"
-                onPress={() => handleAssetPress('BTC')}
-              />
-            </View>
-            <View style={styles.assetCardWrapper}>
-              <AssetCard
-                name="Ethereum"
-                symbol="ETH"
-                shares="2,35 ETH"
-                price="842,20 $"
-                change="28,15 $"
-                changePercent="+3,21%"
-                trend="up"
-                profits="28,15 $"
-                iconBackgroundColor="#627EEA"
-                variant="primaryTransparent"
-                onPress={() => handleAssetPress('ETH')}
-              />
-            </View>
-            <View style={styles.assetCardWrapper}>
-              <AssetCard
-                name="XRP"
-                symbol="XRP"
-                shares="150 XRP"
-                price="116,48 $"
-                change="38,53 $"
-                changePercent="-3,12%"
-                trend="down"
-                profits="-38,53 $"
-                iconBackgroundColor="#111827"
-                iconTextColor="#FFFFFF"
-                variant="primaryTransparent"
-                onPress={() => handleAssetPress('XRP')}
-              />
-            </View>
-            <View style={styles.assetCardWrapper}>
-              <AssetCard
-                name="Cardano"
-                symbol="ADA"
-                shares="1200 ADA"
-                price="89,40 $"
-                change="-12,20 $"
-                changePercent="-1,89%"
-                trend="down"
-                profits="-12,20 $"
-                iconBackgroundColor="#0033AD"
-                iconTextColor="#FFFFFF"
-                variant="neutral"
-                onPress={() => handleAssetPress('ADA')}
-              />
-            </View>
+            {holdingsWithPrice.length > 0 ? (
+              holdingsWithPrice.map((h) => {
+                const priceStr =
+                  h.currentPrice != null
+                    ? h.currentPrice.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    : '—';
+                const changePercentStr =
+                  h.changePercent != null
+                    ? `${h.changePercent >= 0 ? '+' : ''}${h.changePercent.toFixed(2)}%`
+                    : '—';
+                const changeVal =
+                  h.currentPrice != null
+                    ? (h.currentPrice - h.avgBuyPrice) * h.shares
+                    : 0;
+                const changeStr = changeVal.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return (
+                  <View key={h.symbol} style={styles.assetCardWrapper}>
+                    <AssetCard
+                      name={h.symbol}
+                      symbol={h.symbol}
+                      shares={`${h.shares} ${h.symbol}`}
+                      price={`${priceStr} $`}
+                      change={`${changeStr} $`}
+                      changePercent={changePercentStr}
+                      trend={changeVal >= 0 ? 'up' : 'down'}
+                      profits={`${changeStr} $`}
+                      variant="primaryTransparent"
+                      onPress={() => handleAssetPress(h.symbol)}
+                    />
+                  </View>
+                );
+              })
+            ) : (
+              <View style={{ paddingVertical: 24, paddingHorizontal: 16 }}>
+                <Text
+                  variant="muted"
+                  style={[Hierarchy.bodySmall, { textAlign: 'center', color: palette.icon }]}
+                >
+                  {session
+                    ? 'No tienes posiciones. Busca un activo para comprar.'
+                    : 'Inicia sesión para ver tu cartera y operar.'}
+                </Text>
+                {session && (
+                  <Pressable
+                    onPress={handleSearchPress}
+                    style={{ marginTop: 12, alignSelf: 'center', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, backgroundColor: palette.primary }}
+                  >
+                    <Text style={[Hierarchy.action, { color: palette.primaryText ?? '#FFF' }]}>
+                      Buscar activo
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
+            )}
           </View>
         </ScrollView>
 
@@ -391,6 +402,11 @@ export function InvestmentsScreen() {
             }
           }}
           onOrdenes={handleOrdersPress}
+          onGoToMain={() => {
+            refetchPortfolio();
+            setCandlesModalOpen(false);
+            setSelectedAsset(null);
+          }}
         />
       </View>
   );
