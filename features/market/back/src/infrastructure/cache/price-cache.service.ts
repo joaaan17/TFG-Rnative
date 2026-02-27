@@ -32,7 +32,7 @@ export const HOT_SYMBOLS = [
   'TSLA',
 ] as const;
 
-const TTL_QUOTE_HOT_MS = 10 * 60 * 1000;   // 10 min
+const TTL_QUOTE_HOT_MS = 10 * 60 * 1000; // 10 min
 const TTL_QUOTE_NORMAL_MS = 30 * 60 * 1000; // 30 min
 const TTL_HISTORICAL_MS = 12 * 60 * 60 * 1000; // 12 h
 /** Porcentaje del TTL tras el cual consideramos "stale" (servir + revalidar en background). */
@@ -42,12 +42,18 @@ const STALE_RATIO = 0.8;
 function quoteKey(symbol: string): string {
   return `QUOTE:${symbol.toUpperCase()}`;
 }
-function historicalKey(symbol: string, interval: string, range: string): string {
+function historicalKey(
+  symbol: string,
+  interval: string,
+  range: string,
+): string {
   return `HIST:${symbol.toUpperCase()}:${interval}:${range}`;
 }
 
 function isHot(symbol: string): boolean {
-  return HOT_SYMBOLS.includes(symbol.toUpperCase() as (typeof HOT_SYMBOLS)[number]);
+  return HOT_SYMBOLS.includes(
+    symbol.toUpperCase() as (typeof HOT_SYMBOLS)[number],
+  );
 }
 
 export type FetchQuotesFn = (symbols: string[]) => Promise<QuoteItem[]>;
@@ -92,8 +98,13 @@ export class PriceCacheService {
     symbols: string[],
     strategy: CacheStrategy = 'swr',
     requestId?: string,
-  ): Promise<{ quotes: QuoteWithStatus[]; stats?: { hitsL1: number; hitsL2: number; misses: number } }> {
-    const unique = [...new Set(symbols.map((s) => s.trim().toUpperCase()).filter(Boolean))];
+  ): Promise<{
+    quotes: QuoteWithStatus[];
+    stats?: { hitsL1: number; hitsL2: number; misses: number };
+  }> {
+    const unique = [
+      ...new Set(symbols.map((s) => s.trim().toUpperCase()).filter(Boolean)),
+    ];
     if (unique.length === 0) {
       return { quotes: [] };
     }
@@ -107,11 +118,18 @@ export class PriceCacheService {
       const age = l1Entry ? (now() - l1Entry.fetchedAt) / 1000 : null;
       const expiresIn = l1Entry ? (l1Entry.expiresAt - now()) / 1000 : null;
 
-      if (l1Entry && now() < l1Entry.expiresAt && (strategy === 'cache-first' || strategy === 'swr')) {
+      if (
+        l1Entry &&
+        now() < l1Entry.expiresAt &&
+        (strategy === 'cache-first' || strategy === 'swr')
+      ) {
         const isStale = now() >= l1Entry.staleAt;
         if (!isStale) {
           statsHitsL1++;
-          log(`${E.CACHE_L1} CACHÉ L1 (sin API) ${key} age=${age}s expiresIn=${expiresIn}s`, { requestId });
+          log(
+            `${E.CACHE_L1} CACHÉ L1 (sin API) ${key} age=${age}s expiresIn=${expiresIn}s`,
+            { requestId },
+          );
           results.push({
             ...l1Entry.value,
             fetchedAt: l1Entry.fetchedAt,
@@ -121,7 +139,10 @@ export class PriceCacheService {
         }
         if (strategy === 'swr') {
           statsHitsL1++;
-          log(`${E.STALE_REVALIDATE} CACHÉ (actualizando) ${key} age=${age}s refresh=START`, { requestId });
+          log(
+            `${E.STALE_REVALIDATE} CACHÉ (actualizando) ${key} age=${age}s refresh=START`,
+            { requestId },
+          );
           this.refreshQuoteInBackground(symbol).catch(() => {});
           results.push({
             ...l1Entry.value,
@@ -148,7 +169,9 @@ export class PriceCacheService {
               fetchedAt: now(),
               cacheStatus: 'INFLIGHT_JOINED',
             });
-            log(`${E.INFLIGHT} Esperando petición en curso ${key}`, { requestId });
+            log(`${E.INFLIGHT} Esperando petición en curso ${key}`, {
+              requestId,
+            });
           } else {
             toFetch.push(symbol);
           }
@@ -163,7 +186,9 @@ export class PriceCacheService {
         const value = fromL2.value as QuoteItem;
         const age = (now() - (fromL2.fetchedAt as number)) / 1000;
         statsHitsL2++;
-        log(`${E.CACHE_L2} CACHÉ L2 (sin API) ${key} age=${age}s → L1`, { requestId });
+        log(`${E.CACHE_L2} CACHÉ L2 (sin API) ${key} age=${age}s → L1`, {
+          requestId,
+        });
         this.setL1(key, value, 'QUOTE', { symbol: value.symbol });
         results.push({
           ...value,
@@ -189,9 +214,12 @@ export class PriceCacheService {
     const misses = results.filter((r) => r.cacheStatus === 'MISS_FETCH').length;
     if (unique.length > 1) {
       const emoji = misses > 0 ? E.API_CALL : E.CACHE_L1;
-      log(`${emoji} Quotes batch symbols=${unique.length} | L1=${hitsL1} L2=${hitsL2} API=${misses} | took=${took}ms`, {
-        requestId,
-      });
+      log(
+        `${emoji} Quotes batch symbols=${unique.length} | L1=${hitsL1} L2=${hitsL2} API=${misses} | took=${took}ms`,
+        {
+          requestId,
+        },
+      );
     }
     return {
       quotes: results,
@@ -199,7 +227,9 @@ export class PriceCacheService {
     };
   }
 
-  private async getFromL2(key: string): Promise<{ value: unknown; fetchedAt: number; expiresAt: number } | null> {
+  private async getFromL2(
+    key: string,
+  ): Promise<{ value: unknown; fetchedAt: number; expiresAt: number } | null> {
     const doc = await PriceCacheModel.findOne({ key }).lean().exec();
     if (!doc?.value) return null;
     return {
@@ -241,13 +271,17 @@ export class PriceCacheService {
     const promise = (async () => {
       try {
         statsMisses++;
-        log(`${E.API_CALL} API EXTERNA (Yahoo) symbols=${symbols.join(',')}`, { requestId });
+        log(`${E.API_CALL} API EXTERNA (Yahoo) symbols=${symbols.join(',')}`, {
+          requestId,
+        });
         const list = await this.options.fetchQuotes(symbols);
         const start = now();
         for (const item of list) {
           const k = quoteKey(item.symbol);
           const fetchedAt = now();
-          const ttlMs = isHot(item.symbol) ? TTL_QUOTE_HOT_MS : TTL_QUOTE_NORMAL_MS;
+          const ttlMs = isHot(item.symbol)
+            ? TTL_QUOTE_HOT_MS
+            : TTL_QUOTE_NORMAL_MS;
           const expiresAt = fetchedAt + ttlMs;
           const staleAt = fetchedAt + Math.floor(ttlMs * STALE_RATIO);
           L1.set(k, {
@@ -258,9 +292,19 @@ export class PriceCacheService {
             source: 'MISS_FETCH',
             meta: { symbol: item.symbol, type: 'QUOTE' },
           });
-          await this.setL2(k, item, 'QUOTE', { symbol: item.symbol }, expiresAt, staleAt);
+          await this.setL2(
+            k,
+            item,
+            'QUOTE',
+            { symbol: item.symbol },
+            expiresAt,
+            staleAt,
+          );
         }
-        log(`${E.DONE} refresh=DONE symbols=${symbols.length} took=${now() - start}ms`, { requestId });
+        log(
+          `${E.DONE} refresh=DONE symbols=${symbols.length} took=${now() - start}ms`,
+          { requestId },
+        );
         return list;
       } finally {
         for (const s of symbols) inFlight.delete(quoteKey(s));
@@ -295,7 +339,14 @@ export class PriceCacheService {
             source: 'MISS_FETCH',
             meta: { symbol: item.symbol, type: 'QUOTE' },
           });
-          await this.setL2(key, item, 'QUOTE', { symbol: item.symbol }, expiresAt, staleAt);
+          await this.setL2(
+            key,
+            item,
+            'QUOTE',
+            { symbol: item.symbol },
+            expiresAt,
+            staleAt,
+          );
           log(`${E.DONE} refresh=DONE ${key} newPrice=${item.price}`, {});
         }
       } finally {
@@ -343,13 +394,17 @@ export class PriceCacheService {
       const age = (now() - l1Entry.fetchedAt) / 1000;
       if (now() < l1Entry.staleAt) {
         statsHitsL1++;
-        log(`${E.CACHE_L1} CACHÉ L1 (sin API) ${key} age=${age}s`, { requestId });
+        log(`${E.CACHE_L1} CACHÉ L1 (sin API) ${key} age=${age}s`, {
+          requestId,
+        });
         return { data: l1Entry.value, cacheStatus: 'HIT_L1' };
       }
       if (strategy === 'swr') {
         statsHitsL1++;
         log(`${key} STALE_SERVED age=${age}s refresh=START`, { requestId });
-        this.refreshHistoricalInBackground(symbol, interval, range).catch(() => {});
+        this.refreshHistoricalInBackground(symbol, interval, range).catch(
+          () => {},
+        );
         return { data: l1Entry.value, cacheStatus: 'STALE_SERVED_REFRESHING' };
       }
     }
@@ -391,9 +446,14 @@ export class PriceCacheService {
           source: 'MISS_FETCH',
           meta: { symbol, type: 'HISTORICAL', interval, range },
         });
-        return this.setL2(key, data, 'HISTORICAL', { symbol, interval, range }, expiresAt, staleAt).then(
-          () => data,
-        );
+        return this.setL2(
+          key,
+          data,
+          'HISTORICAL',
+          { symbol, interval, range },
+          expiresAt,
+          staleAt,
+        ).then(() => data);
       })
       .finally(() => {
         inFlight.delete(key);
@@ -424,7 +484,14 @@ export class PriceCacheService {
           source: 'MISS_FETCH',
           meta: { symbol, type: 'HISTORICAL', interval, range },
         });
-        return this.setL2(key, data, 'HISTORICAL', { symbol, interval, range }, expiresAt, staleAt);
+        return this.setL2(
+          key,
+          data,
+          'HISTORICAL',
+          { symbol, interval, range },
+          expiresAt,
+          staleAt,
+        );
       })
       .finally(() => {
         inFlight.delete(key);
@@ -443,10 +510,11 @@ export class PriceCacheService {
   }
 
   /** Warmup: prellenar caché para HOT_SYMBOLS (network-first). */
-  async warmupHotSymbols(requestId?: string): Promise<{ warmed: number; errors: string[] }> {
+  async warmupHotSymbols(
+    requestId?: string,
+  ): Promise<{ warmed: number; errors: string[] }> {
     const errors: string[] = [];
     let warmed = 0;
-    const concurrency = 2;
     const queue = [...HOT_SYMBOLS];
     const run = async (): Promise<void> => {
       while (queue.length > 0) {
@@ -456,12 +524,16 @@ export class PriceCacheService {
           await this.getQuotes([symbol], 'network-first', requestId);
           warmed++;
         } catch (e) {
-          errors.push(`${symbol}: ${e instanceof Error ? e.message : String(e)}`);
+          errors.push(
+            `${symbol}: ${e instanceof Error ? e.message : String(e)}`,
+          );
         }
       }
     };
-    await Promise.all([run(), run()]);
-    log(`${E.WARMUP} warmup done warmed=${warmed} errors=${errors.length}`, { requestId });
+    await Promise.all([run(), run()]); // 2 workers en paralelo
+    log(`${E.WARMUP} warmup done warmed=${warmed} errors=${errors.length}`, {
+      requestId,
+    });
     return { warmed, errors };
   }
 }
