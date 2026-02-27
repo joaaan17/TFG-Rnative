@@ -10,10 +10,10 @@ export function createInvestmentsStyles(
       flex: 1,
       backgroundColor: palette.mainBackground ?? palette.background,
     },
-    header: {
+    topBar: {
       paddingHorizontal: 20,
-      paddingTop: 12,
-      paddingBottom: 16,
+      paddingTop: 14,
+      paddingBottom: 8,
     },
     bottomActions: {
       position: 'absolute',
@@ -37,7 +37,7 @@ export function createInvestmentsStyles(
     },
     scrollContent: {
       paddingHorizontal: 20,
-      paddingTop: 20,
+      paddingTop: 10,
       paddingBottom: 90,
     },
     tabsWrap: {
@@ -65,14 +65,14 @@ export function createInvestmentsStyles(
       opacity: 0.8,
     },
     chartSection: {
-      marginBottom: 28,
+      marginBottom: 16,
       alignSelf: 'stretch',
     },
     chartLabel: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-      paddingTop: 16,
+      paddingTop: 8,
       paddingBottom: 10,
     },
     chartLabelAccent: {

@@ -173,7 +173,7 @@ export function PortfolioPerformanceChart({
 
   return (
     <View style={{ paddingHorizontal: 0 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, gap: 6, marginBottom: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 6, marginBottom: 6 }}>
         {RANGE_OPTIONS.map((opt) => (
           <Pressable
             key={opt.value}
@@ -239,23 +239,7 @@ export function PortfolioPerformanceChart({
               fontSize: Hierarchy.captionSmall?.fontSize ?? 11,
             }}
           />
-          {range === '1D' && (
-            <Text
-              variant="muted"
-              style={[
-                Hierarchy.captionSmall,
-                {
-                  color: palette.icon ?? palette.textMuted,
-                  textAlign: 'center',
-                  marginTop: 8,
-                  paddingHorizontal: 16,
-                },
-              ]}
-            >
-              Eje horizontal: horas del día. Desliza para mover y pellizca para ampliar.
-            </Text>
-          )}
-          <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 12, gap: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 8, gap: 6 }}>
             {CHART_MODES.map((m) => (
               <Pressable
                 key={m.id}

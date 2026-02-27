@@ -46,9 +46,9 @@ export type CandleRange =
 
 /**
  * Timeframe seleccionable por el usuario (granularidad de vela).
- * El backend mapea a (range, interval) y opcionalmente agrega (ej. 1h -> 6h).
+ * El backend mapea a (range, interval). 1h y 6h usan datos 1h del proveedor.
  */
-export type CandleTimeframe = '6h' | '1d' | '1mo';
+export type CandleTimeframe = '1h' | '6h' | '1d' | '1mo';
 
 /** Respuesta del endpoint de velas por timeframe. */
 export interface CandlesResponse {

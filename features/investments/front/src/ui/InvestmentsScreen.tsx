@@ -10,7 +10,6 @@ import { useRouter } from 'expo-router';
 import { ClipboardList, Search } from 'lucide-react-native';
 
 import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
-import TypewriterTextComponent from '@/shared/components/TypewriterTextProps';
 import {
   SegmentedTextTabs,
   type SegmentedTextTabsValue,
@@ -30,6 +29,7 @@ import { TransactionsHistoryModal } from '../components/TransactionsHistoryModal
 import { useHoldingsSparklines } from '../hooks/useHoldingsSparklines';
 import { useHoldingsWithPrices } from '../hooks/useHoldingsWithPrices';
 import { usePortfolio } from '../hooks/usePortfolio';
+import { getLogoUrlForSymbol } from '../utils/logoForSymbol';
 import { createInvestmentsStyles } from './Investments.styles';
 
 /**
@@ -57,7 +57,6 @@ export function InvestmentsScreen() {
     [portfolioData?.holdings],
   );
   const sparklines = useHoldingsSparklines(holdingSymbols, !!session && holdingSymbols.length > 0);
-  const [typewriterKey, setTypewriterKey] = React.useState(0);
   const [tab, setTab] = React.useState<SegmentedTextTabsValue>(0);
   const [stockSearchModalOpen, setStockSearchModalOpen] = React.useState(false);
   const [transactionsModalOpen, setTransactionsModalOpen] = React.useState(false);
@@ -73,7 +72,6 @@ export function InvestmentsScreen() {
 
   useFocusEffect(
     React.useCallback(() => {
-      setTypewriterKey((k) => k + 1);
       refetchPortfolio();
       return undefined;
     }, [refetchPortfolio]),
@@ -126,14 +124,12 @@ export function InvestmentsScreen() {
         accessibilityElementsHidden={false}
         importantForAccessibility="yes"
       >
-        <View style={styles.header}>
-          <TypewriterTextComponent
-            key={typewriterKey}
-            text="INVERSIONES"
-            speed={40}
-            variant="h3"
-            useDefaultFontFamily
-            className="border-0 pb-0"
+        <View style={styles.topBar}>
+          <SegmentedTextTabs
+            labels={['Cartera', 'Efectivo']}
+            value={tab}
+            onValueChange={setTab}
+            variant="minimal"
           />
         </View>
 
@@ -142,15 +138,6 @@ export function InvestmentsScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.tabsWrap}>
-            <SegmentedTextTabs
-              labels={['Cartera', 'Efectivo']}
-              value={tab}
-              onValueChange={setTab}
-              variant="translucent"
-            />
-          </View>
-
           <View style={styles.chartSection}>
             <View style={styles.chartLabel}>
               <View style={styles.chartLabelAccent} />
@@ -237,6 +224,7 @@ export function InvestmentsScreen() {
                       profits={`${changeStr} $`}
                       variant="primaryTransparent"
                       sparklineData={sparklines[h.symbol]}
+                      logoUrl={getLogoUrlForSymbol(h.symbol)}
                       onPress={() => handleOpenPositionModal(h)}
                     />
                   </View>

@@ -14,6 +14,7 @@ import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
 import { searchMarket, type MarketSearchResultItem } from '../api/marketSearchClient';
 import { getQuotes, type QuoteItem } from '../api/marketQuotesClient';
+import { getLogoUrlForSymbol } from '../utils/logoForSymbol';
 
 const DEBOUNCE_MS = 400;
 const SEARCH_LIMIT = 15;
@@ -44,29 +45,10 @@ const DEFAULT_DISPLAY_NAMES: Record<string, string> = {
   'BTC-USD': 'Bitcoin',
 };
 
-/** Dominio por símbolo para favicon/logo minimalista (Google Favicon API, sin API key). */
-const DEFAULT_SYMBOL_DOMAINS: Record<string, string> = {
-  'AAPL': 'apple.com',
-  'TSLA': 'tesla.com',
-  'NVDA': 'nvidia.com',
-  'MSFT': 'microsoft.com',
-  'GOOGL': 'google.com',
-  'AMZN': 'amazon.com',
-  'META': 'meta.com',
-  'GLD': 'spdr.com',
-  'BTC-USD': 'bitcoin.org',
-};
-
 const ASSET_AVATAR_SIZE = 40;
 const ASSET_AVATAR_RING_WIDTH = 2.5;
 /** Tamaño total del avatar con el anillo azul. */
 const ASSET_AVATAR_TOTAL_SIZE = ASSET_AVATAR_SIZE + ASSET_AVATAR_RING_WIDTH * 2;
-
-function getLogoUrlForSymbol(symbol: string): string | undefined {
-  const domain = DEFAULT_SYMBOL_DOMAINS[symbol];
-  if (!domain) return undefined;
-  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
-}
 
 function getInitial(name: string): string {
   const trimmed = (name || '').trim();

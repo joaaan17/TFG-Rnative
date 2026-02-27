@@ -11,7 +11,7 @@ const MAX_CANDLES = 500;
 const CACHE_TTL_MS = 30_000;
 const MAX_SYMBOL_LENGTH = 15;
 
-const VALID_TIMEFRAMES: CandleTimeframe[] = ['6h', '1d', '1mo'];
+const VALID_TIMEFRAMES: CandleTimeframe[] = ['1h', '6h', '1d', '1mo'];
 
 /** Rangos que el usuario puede elegir (periodo de visualización). */
 const ALLOWED_RANGES: CandleRange[] = ['1wk', '1mo', '3mo', '6mo', '1y'];
@@ -27,6 +27,7 @@ const TIMEFRAME_TO_RANGE_INTERVAL: Record<
   CandleTimeframe,
   { range: CandleRange; interval: CandleInterval }
 > = {
+  '1h': { range: '1mo', interval: '1h' },
   '6h': { range: '3mo', interval: '1h' },
   '1d': { range: '6mo', interval: '1d' },
   '1mo': { range: '5y', interval: '1mo' },
@@ -105,8 +106,8 @@ export class GetCandlesByTimeframeUseCase {
         ? rangeOverride
         : defaultMapping.range;
 
-    // Para velas 6h pedimos datos 1h al proveedor; Yahoo limita 1h a ~60 días.
-    if (timeframe === '6h' && (range === '6mo' || range === '1y')) {
+    // Para velas 6h o 1h pedimos datos 1h al proveedor; Yahoo limita 1h a ~60 días.
+    if ((timeframe === '6h' || timeframe === '1h') && (range === '6mo' || range === '1y')) {
       range = MAX_RANGE_FOR_1H;
     }
 
@@ -131,6 +132,7 @@ export class GetCandlesByTimeframeUseCase {
     if (timeframe === '6h') {
       candles = aggregate1hTo6h(candles);
     }
+    // Para 1h no agregamos; devolvemos las velas 1h tal cual
 
     candles.sort((a, b) => a.t - b.t);
     if (candles.length > MAX_CANDLES) {

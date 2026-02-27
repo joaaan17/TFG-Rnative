@@ -66,11 +66,11 @@ export const searchMarketController = async (
   }
 };
 
-const VALID_TIMEFRAMES: CandleTimeframe[] = ['6h', '1d', '1mo'];
+const VALID_TIMEFRAMES: CandleTimeframe[] = ['1h', '6h', '1d', '1mo'];
 const VALID_RANGES: CandleRange[] = ['1wk', '1mo', '3mo', '6mo', '1y'];
 
 /**
- * GET /api/market/candles?symbol=XXX&timeframe=6h|1d|1mo&range=1wk|1mo|3mo|6mo|1y
+ * GET /api/market/candles?symbol=XXX&timeframe=1h|6h|1d|1mo&range=1wk|1mo|3mo|6mo|1y
  * range es opcional; si no se envía se usa el rango por defecto del timeframe.
  */
 export const getCandlesController = async (
@@ -105,7 +105,14 @@ export const getCandlesController = async (
     const strategy = (req.query.strategy as 'cache-first' | 'swr' | 'network-first') ?? 'swr';
     const requestId = typeof req.headers['x-request-id'] === 'string' ? req.headers['x-request-id'] : undefined;
     const effectiveRange: CandleRange =
-      range ?? (timeframe === '1mo' ? '5y' : timeframe === '1d' ? '6mo' : '3mo');
+      range ??
+      (timeframe === '1mo'
+        ? '5y'
+        : timeframe === '1d'
+          ? '6mo'
+          : timeframe === '1h'
+            ? '1mo'
+            : '3mo');
     const { data: result, cacheStatus } = await priceCacheService.getHistorical(
       symbol,
       timeframe,

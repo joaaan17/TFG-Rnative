@@ -3,9 +3,11 @@
  * Mock de TransactionRepository y GetHistoricalDailyPort.
  */
 import { describe, it, expect } from 'vitest';
-import type { Transaction } from '../../../domain/investments.types';
-import type { TransactionRepository } from '../../../domain/ports';
-import type { GetHistoricalDailyPort } from '../../../domain/ports';
+import type {
+  GetHistoricalDailyPort,
+  TransactionRepository,
+} from '../../domain/ports';
+import type { Transaction } from '../../domain/investments.types';
 import { PortfolioAnalyticsService } from './portfolio-analytics.service';
 
 const INITIAL_CASH = 10_000;
@@ -37,12 +39,10 @@ describe('PortfolioAnalyticsService', () => {
     it('devuelve puntos con equity, cash y positions', async () => {
       const buyDate = new Date();
       buyDate.setDate(buyDate.getDate() - 5);
-      const transactions: Transaction[] = [
-        tx('AAPL', 'BUY', 5, 200, buyDate),
-      ];
+      const transactions: Transaction[] = [tx('AAPL', 'BUY', 5, 200, buyDate)];
       const end = new Date();
       const startMs = end.getTime() - 31 * 24 * 60 * 60 * 1000;
-      const candles = [];
+      const candles: { t: number; c: number }[] = [];
       for (let i = 0; i < 35; i++) {
         const t = startMs + i * 24 * 60 * 60 * 1000;
         candles.push({ t, c: 200 + i });
@@ -62,7 +62,10 @@ describe('PortfolioAnalyticsService', () => {
         null,
         INITIAL_CASH,
       );
-      const { points, symbolsUsed } = await service.getPerformance('user1', '1M');
+      const { points, symbolsUsed } = await service.getPerformance(
+        'user1',
+        '1M',
+      );
       expect(symbolsUsed).toContain('AAPL');
       expect(points.length).toBeGreaterThan(0);
       const first = points[0];
@@ -80,13 +83,16 @@ describe('PortfolioAnalyticsService', () => {
 
     it('equity = cash + positions en cada punto', async () => {
       const mockRepo: TransactionRepository = {
-        create: async () => ({} as Transaction),
+        create: async () => ({}) as Transaction,
         findByUserId: async () => [],
         findByUserIdBetween: async () => [],
         findByUserIdExecutedBefore: async () => [],
       };
       const mockHistorical: GetHistoricalDailyPort = {
-        getHistoricalDaily: async () => ({ candles: [], cacheStatus: 'HIT_L1' }),
+        getHistoricalDaily: async () => ({
+          candles: [],
+          cacheStatus: 'HIT_L1',
+        }),
       };
       const service = new PortfolioAnalyticsService(
         mockRepo,

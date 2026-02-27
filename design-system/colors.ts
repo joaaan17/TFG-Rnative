@@ -24,6 +24,8 @@ export const Colors = {
     surfaceBorder: '#D6DEE8',
     link: '#1D4ED8',
     cardBackground: '#FFFFFF',
+    /** Fondo del área del minigráfico en cards (y pestaña seleccionada Cartera/Efectivo) */
+    chartAreaBackground: '#F2F4F7',
     headerBackground: '#0B1220',
     mainBackground: '#F7F9FC',
   },
@@ -44,6 +46,7 @@ export const Colors = {
     surfaceBorder: '#1B2A45',
     link: '#60A5FA',
     cardBackground: '#0B1220',
+    chartAreaBackground: '#1B2A45',
     headerBackground: '#070B14',
     mainBackground: '#070B14',
   },

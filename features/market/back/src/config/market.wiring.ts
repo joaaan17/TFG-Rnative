@@ -24,25 +24,10 @@ export const getMarketOverviewUseCase = new GetMarketOverviewUseCase(marketOverv
 export const priceCacheService = new PriceCacheService({
   fetchQuotes: (symbols) => getQuotesUseCase.execute(symbols),
   fetchCandles: async (symbol, interval, range) => {
-    if (interval === '1h') {
-      const candles = await getCandlesUseCase.execute({
-        symbol,
-        range: range as '1d' | '5d' | '1wk' | '1mo' | '3mo' | '6mo' | '1y',
-        interval: '1h',
-      });
-      return {
-        symbol,
-        timeframe: '1d',
-        range,
-        interval: '1d',
-        count: candles.length,
-        candles,
-      } as CandlesResponse;
-    }
     return getCandlesByTimeframeUseCase.execute(
       symbol,
-      interval as '6h' | '1d' | '1mo',
-      range,
+      interval as '1h' | '6h' | '1d' | '1mo',
+      range as import('../domain/market.types').CandleRange,
     );
   },
 });

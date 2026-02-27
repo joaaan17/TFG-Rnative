@@ -1,5 +1,6 @@
 import React from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image';
 import Svg, { Path } from 'react-native-svg';
 
 import { Text } from '@/shared/components/ui/text';
@@ -28,6 +29,8 @@ export type AssetCardProps = {
   variant?: 'primary' | 'primaryTransparent' | 'accent' | 'neutral';
   onPress?: () => void;
   icon?: React.ReactNode;
+  /** URL del logo del activo (favicon). Si falla la carga se muestra la inicial. */
+  logoUrl?: string;
 };
 
 function generateDefaultSparkline(seed: number): number[] {
@@ -104,9 +107,12 @@ export function AssetCard({
   variant = 'neutral',
   onPress,
   icon,
+  logoUrl,
 }: AssetCardProps) {
   const palette = usePalette();
   const [chartWidth, setChartWidth] = React.useState(0);
+  const [logoError, setLogoError] = React.useState(false);
+  const showLogo = Boolean(logoUrl && !logoError);
 
   const isUp = trend === 'up';
   const trendColor = isUp ? TREND_UP_COLOR : palette.destructive;
@@ -175,16 +181,24 @@ export function AssetCard({
             },
           ]}
         >
-          {icon ?? (
-            <Text
-              style={[
-                Hierarchy.bodySmallSemibold,
-                { color: iconTextColor ?? palette.text },
-              ]}
-            >
-              {name.slice(0, 1).toUpperCase()}
-            </Text>
-          )}
+          {icon ??
+            (showLogo ? (
+              <Image
+                source={{ uri: logoUrl }}
+                style={styles.iconImage}
+                contentFit="cover"
+                onError={() => setLogoError(true)}
+              />
+            ) : (
+              <Text
+                style={[
+                  Hierarchy.bodySmallSemibold,
+                  { color: iconTextColor ?? palette.text },
+                ]}
+              >
+                {name.slice(0, 1).toUpperCase()}
+              </Text>
+            ))}
         </View>
 
         <View style={styles.meta}>
@@ -229,7 +243,8 @@ export function AssetCard({
         style={[
           styles.chartWrap,
           chartCoherent && {
-            backgroundColor: `${palette.primary}08`,
+            backgroundColor:
+              palette.chartAreaBackground ?? `${palette.primary}08`,
             borderRadius: 10,
             overflow: 'hidden',
           },
@@ -318,6 +333,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  iconImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   meta: {
     flex: 1,

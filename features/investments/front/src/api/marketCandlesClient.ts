@@ -6,7 +6,7 @@ function getMarketBaseUrl(): string {
 }
 
 /** Timeframe seleccionable: granularidad de vela (6h, 1d, 1mo). */
-export type CandleTimeframe = '6h' | '1d' | '1mo';
+export type CandleTimeframe = '1h' | '6h' | '1d' | '1mo';
 
 /** Rango de visualización (periodo mostrado en el gráfico). */
 export type CandleRange = '1wk' | '1mo' | '3mo' | '6mo' | '1y';

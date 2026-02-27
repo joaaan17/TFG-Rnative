@@ -28,6 +28,7 @@ const RANGE_OPTIONS: { value: CandleRange; label: string }[] = [
 ];
 
 const TIMEFRAME_OPTIONS: { value: CandleTimeframe; label: string }[] = [
+  { value: '1h', label: '1h' },
   { value: '6h', label: '6h' },
   { value: '1d', label: '1D' },
   { value: '1mo', label: '1M' },
