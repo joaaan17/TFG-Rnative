@@ -1,3 +1,4 @@
+import { GetCandlesByTimeframeUseCase } from '../application/usecases/get-candles-by-timeframe.usecase';
 import { GetCandlesUseCase } from '../application/usecases/get-candles.usecase';
 import { GetMarketOverviewUseCase } from '../application/usecases/get-market-overview.usecase';
 import { GetQuotesUseCase } from '../application/usecases/get-quotes.usecase';
@@ -14,5 +15,6 @@ const marketOverviewAdapter = new YahooFinanceMarketOverviewAdapter();
 
 export const searchMarketUseCase = new SearchMarketUseCase(marketSearchAdapter);
 export const getCandlesUseCase = new GetCandlesUseCase(marketCandlesAdapter);
+export const getCandlesByTimeframeUseCase = new GetCandlesByTimeframeUseCase(marketCandlesAdapter);
 export const getQuotesUseCase = new GetQuotesUseCase(marketQuotesAdapter);
 export const getMarketOverviewUseCase = new GetMarketOverviewUseCase(marketOverviewAdapter);

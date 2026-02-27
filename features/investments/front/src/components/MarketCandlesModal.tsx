@@ -20,18 +20,26 @@ import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
 import { useMarketCandles } from '../hooks/useMarketCandles';
 import { useMarketOverview } from '../hooks/useMarketOverview';
-import type { CandleRange } from '../api/marketCandlesClient';
+import type { CandleRange, CandleTimeframe } from '../api/marketCandlesClient';
 import { QuoteGrid } from './QuoteGrid';
 import { FundamentalsList } from './FundamentalsList';
 import { InvertirSheet } from './InvertirSheet';
 import { VenderSheet } from './VenderSheet';
 
+/** Periodos de visualización (parte superior): cuánto tiempo se muestra en el gráfico. */
 const RANGE_OPTIONS: { value: CandleRange; label: string }[] = [
   { value: '1wk', label: '1 s' },
   { value: '1mo', label: '1 m' },
   { value: '3mo', label: '3 m' },
   { value: '6mo', label: '6 m' },
   { value: '1y', label: '1 a' },
+];
+
+/** Granularidad de vela (parte inferior): tamaño de cada vela. */
+const TIMEFRAME_OPTIONS: { value: CandleTimeframe; label: string }[] = [
+  { value: '6h', label: '6h' },
+  { value: '1d', label: '1D' },
+  { value: '1mo', label: '1M' },
 ];
 
 export type MarketCandlesModalAsset = { symbol: string; name: string };
@@ -75,6 +83,7 @@ export function MarketCandlesModal({
   const palette = usePalette();
   const insets = useSafeAreaInsets();
   const [range, setRange] = useState<CandleRange>('1mo');
+  const [timeframe, setTimeframe] = useState<CandleTimeframe>('1d');
   const [chartMode, setChartMode] = useState<ChartSeriesType>('candlestick');
   const [operarStep, setOperarStep] = useState<OperarStep>('chart');
   const [venderOpen, setVenderOpen] = useState(false);
@@ -91,9 +100,9 @@ export function MarketCandlesModal({
   const symbol = asset?.symbol ?? '';
   const { data, loading, error, refetch } = useMarketCandles(
     symbol,
-    range,
-    '1d',
+    timeframe,
     visible && !!symbol,
+    range,
   );
   const {
     data: overviewData,
@@ -207,61 +216,6 @@ export function MarketCandlesModal({
               </Pressable>
             ))}
           </View>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 4,
-              paddingLeft: 4,
-            }}
-          >
-            <Pressable
-              onPress={() => setChartMode('candlestick')}
-              style={({ pressed }) => ({
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                justifyContent: 'center',
-                alignItems: 'center',
-                opacity: pressed ? 0.7 : 1,
-              })}
-              accessibilityRole="button"
-              accessibilityLabel="Gráfico de velas"
-            >
-              <BarChart3
-                size={18}
-                color={
-                  chartMode === 'candlestick'
-                    ? palette.primary
-                    : palette.icon ?? palette.text
-                }
-                strokeWidth={2}
-              />
-            </Pressable>
-            <Pressable
-              onPress={() => setChartMode('line')}
-              style={({ pressed }) => ({
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                justifyContent: 'center',
-                alignItems: 'center',
-                opacity: pressed ? 0.7 : 1,
-              })}
-              accessibilityRole="button"
-              accessibilityLabel="Gráfico de línea"
-            >
-              <LineChart
-                size={18}
-                color={
-                  chartMode === 'line'
-                    ? palette.primary
-                    : palette.icon ?? palette.text
-                }
-                strokeWidth={2}
-              />
-            </Pressable>
-          </View>
         </View>
         )}
 
@@ -340,6 +294,7 @@ export function MarketCandlesModal({
 
           {!loading && !error && chartCandles.length > 0 && (
             <LightweightChartView
+              key={`chart-${symbol}-${timeframe}-${range}`}
               candles={chartCandles}
               height={280}
               seriesType={chartMode}
@@ -354,6 +309,105 @@ export function MarketCandlesModal({
                 fontSize: Hierarchy.captionSmall.fontSize,
               }}
             />
+          )}
+
+          {showChart && (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 0,
+                paddingTop: 12,
+                paddingBottom: 8,
+                gap: 6,
+              }}
+            >
+              <View style={{ flex: 1, flexDirection: 'row', gap: 6 }}>
+                {TIMEFRAME_OPTIONS.map((opt) => (
+                  <Pressable
+                    key={opt.value}
+                    onPress={() => setTimeframe(opt.value)}
+                    style={{
+                      flex: 1,
+                      paddingVertical: 10,
+                      borderRadius: 8,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      backgroundColor:
+                        timeframe === opt.value
+                          ? palette.primary
+                          : palette.surfaceMuted ?? '#f0f0f0',
+                    }}
+                  >
+                    <Text
+                      style={[
+                        Hierarchy.action,
+                        {
+                          color: timeframe === opt.value ? palette.primaryText ?? '#FFF' : palette.text,
+                        },
+                      ]}
+                    >
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  paddingLeft: 4,
+                }}
+              >
+                <Pressable
+                  onPress={() => setChartMode('candlestick')}
+                  style={({ pressed }) => ({
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                  accessibilityRole="button"
+                  accessibilityLabel="Gráfico de velas"
+                >
+                  <BarChart3
+                    size={18}
+                    color={
+                      chartMode === 'candlestick'
+                        ? palette.primary
+                        : palette.icon ?? palette.text
+                    }
+                    strokeWidth={2}
+                  />
+                </Pressable>
+                <Pressable
+                  onPress={() => setChartMode('line')}
+                  style={({ pressed }) => ({
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                  accessibilityRole="button"
+                  accessibilityLabel="Gráfico de línea"
+                >
+                  <LineChart
+                    size={18}
+                    color={
+                      chartMode === 'line'
+                        ? palette.primary
+                        : palette.icon ?? palette.text
+                    }
+                    strokeWidth={2}
+                  />
+                </Pressable>
+              </View>
+            </View>
           )}
 
           {(

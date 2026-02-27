@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
-import type { CandleInterval, CandleRange } from '../domain/market.types';
+import type { CandleRange, CandleTimeframe } from '../domain/market.types';
 import {
-  getCandlesUseCase,
+  getCandlesByTimeframeUseCase,
   getMarketOverviewUseCase,
   getQuotesUseCase,
   searchMarketUseCase,
@@ -66,31 +66,13 @@ export const searchMarketController = async (
   }
 };
 
-const VALID_RANGES: CandleRange[] = [
-  '1d',
-  '5d',
-  '1wk',
-  '1mo',
-  '3mo',
-  '6mo',
-  '1y',
-  '2y',
-  '5y',
-  'max',
-];
-const VALID_INTERVALS: CandleInterval[] = [
-  '1m',
-  '5m',
-  '15m',
-  '30m',
-  '1h',
-  '1d',
-  '1wk',
-  '1mo',
-];
-const DEFAULT_RANGE: CandleRange = '1mo';
-const DEFAULT_INTERVAL: CandleInterval = '1d';
+const VALID_TIMEFRAMES: CandleTimeframe[] = ['6h', '1d', '1mo'];
+const VALID_RANGES: CandleRange[] = ['1wk', '1mo', '3mo', '6mo', '1y'];
 
+/**
+ * GET /api/market/candles?symbol=XXX&timeframe=6h|1d|1mo&range=1wk|1mo|3mo|6mo|1y
+ * range es opcional; si no se envía se usa el rango por defecto del timeframe.
+ */
 export const getCandlesController = async (
   req: Request,
   res: Response,
@@ -103,40 +85,33 @@ export const getCandlesController = async (
       return;
     }
 
+    const timeframeParam =
+      typeof req.query.timeframe === 'string' ? req.query.timeframe.trim().toLowerCase() : '';
+    if (!timeframeParam || !VALID_TIMEFRAMES.includes(timeframeParam as CandleTimeframe)) {
+      res.status(400).json({
+        message: `Query "timeframe" is required and must be one of: ${VALID_TIMEFRAMES.join(', ')}.`,
+      });
+      return;
+    }
+
+    const timeframe = timeframeParam as CandleTimeframe;
     const rangeParam =
-      typeof req.query.range === 'string' ? req.query.range : undefined;
-    const range: CandleRange =
+      typeof req.query.range === 'string' ? req.query.range.trim().toLowerCase() : undefined;
+    const range: CandleRange | undefined =
       rangeParam != null && VALID_RANGES.includes(rangeParam as CandleRange)
         ? (rangeParam as CandleRange)
-        : DEFAULT_RANGE;
+        : undefined;
 
-    const intervalParam =
-      typeof req.query.interval === 'string' ? req.query.interval : undefined;
-    const interval: CandleInterval =
-      intervalParam != null &&
-      VALID_INTERVALS.includes(intervalParam as CandleInterval)
-        ? (intervalParam as CandleInterval)
-        : DEFAULT_INTERVAL;
+    const result = await getCandlesByTimeframeUseCase.execute(symbol, timeframe, range);
 
-    const candles = await getCandlesUseCase.execute({
-      symbol,
-      range,
-      interval,
-    });
-
-    res.status(200).json({
-      symbol: symbol.toUpperCase(),
-      range,
-      interval,
-      count: candles.length,
-      candles,
-    });
+    res.status(200).json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Candles failed';
     const isBadRequest =
       message.includes('required') ||
       message.includes('at most') ||
-      message.includes('characters');
+      message.includes('characters') ||
+      message.includes('timeframe');
     const isBadGateway =
       message.includes('timeout') ||
       message.includes('Yahoo') ||

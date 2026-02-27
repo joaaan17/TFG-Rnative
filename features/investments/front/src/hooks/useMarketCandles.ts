@@ -2,15 +2,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   getCandles,
   type CandleRange,
-  type CandleInterval,
+  type CandleTimeframe,
   type MarketCandlesResponse,
 } from '../api/marketCandlesClient';
 
 export function useMarketCandles(
   symbol: string,
-  range: CandleRange = '1mo',
-  interval: CandleInterval = '1d',
+  timeframe: CandleTimeframe,
   enabled: boolean,
+  range?: CandleRange,
 ) {
   const [data, setData] = useState<MarketCandlesResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,8 +25,15 @@ export function useMarketCandles(
     const signal = abortRef.current.signal;
     setLoading(true);
     setError(null);
+    setData((prev) => {
+      if (!prev) return null;
+      if (prev.symbol !== symbol.trim().toUpperCase() || prev.timeframe !== timeframe) {
+        return null;
+      }
+      return prev;
+    });
     try {
-      const result = await getCandles(symbol, range, interval, signal);
+      const result = await getCandles(symbol, timeframe, range, signal);
       if (!signal.aborted && mountedRef.current) {
         setData(result);
       }
@@ -40,7 +47,7 @@ export function useMarketCandles(
       }
       abortRef.current = null;
     }
-  }, [symbol, range, interval, enabled]);
+  }, [symbol, timeframe, range, enabled]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -61,7 +68,7 @@ export function useMarketCandles(
     return () => {
       if (abortRef.current) abortRef.current.abort();
     };
-  }, [enabled, symbol, range, interval, fetchCandles]);
+  }, [enabled, symbol, timeframe, range, fetchCandles]);
 
   const refetch = useCallback(() => {
     fetchCandles();

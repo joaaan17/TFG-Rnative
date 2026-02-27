@@ -5,26 +5,11 @@ function getMarketBaseUrl(): string {
   return 'http://localhost:3000/api/market';
 }
 
-export type CandleRange =
-  | '1d'
-  | '5d'
-  | '1wk'
-  | '1mo'
-  | '3mo'
-  | '6mo'
-  | '1y'
-  | '2y'
-  | '5y'
-  | 'max';
-export type CandleInterval =
-  | '1m'
-  | '5m'
-  | '15m'
-  | '30m'
-  | '1h'
-  | '1d'
-  | '1wk'
-  | '1mo';
+/** Timeframe seleccionable: granularidad de vela (6h, 1d, 1mo). */
+export type CandleTimeframe = '6h' | '1d' | '1mo';
+
+/** Rango de visualización (periodo mostrado en el gráfico). */
+export type CandleRange = '1wk' | '1mo' | '3mo' | '6mo' | '1y';
 
 export interface ApiCandle {
   t: number;
@@ -37,23 +22,28 @@ export interface ApiCandle {
 
 export interface MarketCandlesResponse {
   symbol: string;
-  range: CandleRange;
-  interval: CandleInterval;
+  timeframe: CandleTimeframe;
+  range: string;
+  interval: CandleTimeframe;
   count: number;
   candles: ApiCandle[];
 }
 
+/**
+ * Obtiene velas por timeframe y opcionalmente por range (periodo de visualización).
+ * Si no se pasa range, el backend usa el rango por defecto del timeframe.
+ */
 export async function getCandles(
   symbol: string,
-  range: CandleRange = '1mo',
-  interval: CandleInterval = '1d',
+  timeframe: CandleTimeframe,
+  range?: CandleRange,
   signal?: AbortSignal,
 ): Promise<MarketCandlesResponse> {
   const params = new URLSearchParams({
     symbol: symbol.trim().toUpperCase(),
-    range,
-    interval,
+    timeframe,
   });
+  if (range) params.set('range', range);
   const url = `${getMarketBaseUrl()}/candles?${params.toString()}`;
   const response = await fetch(url, { signal });
   const data = await response.json();

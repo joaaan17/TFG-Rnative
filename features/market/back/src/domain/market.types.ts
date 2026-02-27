@@ -20,7 +20,7 @@ export interface MarketSearchResult {
   currency?: string;
 }
 
-/** Intervalo de velas (alineado con opciones de Yahoo). */
+/** Intervalo de velas (granularidad soportada por el proveedor, ej. Yahoo). */
 export type CandleInterval =
   | '1m'
   | '5m'
@@ -31,7 +31,7 @@ export type CandleInterval =
   | '1wk'
   | '1mo';
 
-/** Rango de tiempo para histórico. */
+/** Rango de tiempo total mostrado en el histórico. */
 export type CandleRange =
   | '1d'
   | '5d'
@@ -43,6 +43,23 @@ export type CandleRange =
   | '2y'
   | '5y'
   | 'max';
+
+/**
+ * Timeframe seleccionable por el usuario (granularidad de vela).
+ * El backend mapea a (range, interval) y opcionalmente agrega (ej. 1h -> 6h).
+ */
+export type CandleTimeframe = '6h' | '1d' | '1mo';
+
+/** Respuesta del endpoint de velas por timeframe. */
+export interface CandlesResponse {
+  symbol: string;
+  timeframe: CandleTimeframe;
+  range: CandleRange;
+  /** Intervalo lógico de cada vela (6h, 1d o 1mo). */
+  interval: CandleTimeframe;
+  count: number;
+  candles: Candle[];
+}
 
 /** Vela OHLC(V), t en unix milliseconds. */
 export interface Candle {
