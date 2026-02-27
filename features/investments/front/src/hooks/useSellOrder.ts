@@ -10,7 +10,7 @@ export function useSellOrder(token: string | null) {
     async (
       symbol: string,
       shares: number,
-      onSuccess?: (result: SellOrderResponse) => void,
+      options?: { onSuccess?: (result: SellOrderResponse) => void; price?: number },
     ): Promise<SellOrderResponse | null> => {
       if (!token?.trim()) {
         setError('Debes iniciar sesión para vender');
@@ -19,9 +19,14 @@ export function useSellOrder(token: string | null) {
       setLoading(true);
       setError(null);
       try {
-        const result = await postSellOrder(token, symbol, shares);
+        const result = await postSellOrder(
+          token,
+          symbol,
+          shares,
+          options?.price,
+        );
         if (mountedRef.current) {
-          onSuccess?.(result);
+          options?.onSuccess?.(result);
           return result;
         }
         return null;

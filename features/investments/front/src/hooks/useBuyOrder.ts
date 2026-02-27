@@ -10,7 +10,7 @@ export function useBuyOrder(token: string | null) {
     async (
       symbol: string,
       shares: number,
-      onSuccess?: (result: BuyOrderResponse) => void,
+      options?: { onSuccess?: (result: BuyOrderResponse) => void; price?: number },
     ): Promise<BuyOrderResponse | null> => {
       if (!token?.trim()) {
         setError('Debes iniciar sesión para comprar');
@@ -19,9 +19,14 @@ export function useBuyOrder(token: string | null) {
       setLoading(true);
       setError(null);
       try {
-        const result = await postBuyOrder(token, symbol, shares);
+        const result = await postBuyOrder(
+          token,
+          symbol,
+          shares,
+          options?.price,
+        );
         if (mountedRef.current) {
-          onSuccess?.(result);
+          options?.onSuccess?.(result);
           return result;
         }
         return null;

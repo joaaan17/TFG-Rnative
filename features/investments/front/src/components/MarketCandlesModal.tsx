@@ -10,6 +10,7 @@ import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
 import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
 import { useCurrentQuotePrice } from '../hooks/useCurrentQuotePrice';
+import { useMarketCandles } from '../hooks/useMarketCandles';
 import { useMarketOverview } from '../hooks/useMarketOverview';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useBuyOrder } from '../hooks/useBuyOrder';
@@ -81,19 +82,38 @@ export function MarketCandlesModal({
     error: overviewError,
     refetch: refetchOverview,
   } = useMarketOverview(symbol, visible && !!symbol);
-  const { price: currentQuotePrice } = useCurrentQuotePrice(symbol, visible && !!symbol);
+  const { price: currentQuotePrice } = useCurrentQuotePrice(
+    symbol,
+    visible && !!symbol,
+    10_000,
+  );
+  // Velas 6h solo para "Valor actual" en Tu posición: usamos el cierre de la última vela de 6h (más actualizado que 1D)
+  const { data: candles6h } = useMarketCandles(
+    symbol,
+    '6h',
+    visible && !!symbol,
+    '1mo',
+  );
+  const lastClose6h =
+    candles6h?.candles?.length &&
+    typeof candles6h.candles[candles6h.candles.length - 1]?.c === 'number'
+      ? candles6h.candles[candles6h.candles.length - 1].c
+      : undefined;
 
   const showChart = operarStep === 'chart';
   const showActions = operarStep === 'actions';
   const cashBalance = portfolioData?.cashBalance ?? 0;
   const holdingForSymbol = portfolioData?.holdings?.find((h) => h.symbol === symbol);
   const quote = overviewData?.quote;
+  // Valor actual en Tu posición: prioridad velas 6h (más actualizado), luego quote, luego overview
   const lastClose =
-    currentQuotePrice != null
-      ? currentQuotePrice
-      : quote?.high != null && quote?.low != null
-        ? (quote.high + quote.low) / 2
-        : quote?.high ?? quote?.low ?? undefined;
+    lastClose6h != null
+      ? lastClose6h
+      : currentQuotePrice != null
+        ? currentQuotePrice
+        : quote?.high != null && quote?.low != null
+          ? (quote.high + quote.low) / 2
+          : quote?.high ?? quote?.low ?? undefined;
   const positionAmount = (holdingForSymbol?.shares ?? 0) * (lastClose ?? 0);
 
   if (!visible) return null;
@@ -140,7 +160,7 @@ export function MarketCandlesModal({
               enabled={!!symbol}
               height={280}
               containerStyle={{ paddingHorizontal: 0 }}
-              currentPrice={currentQuotePrice ?? undefined}
+              currentPrice={lastClose6h ?? currentQuotePrice ?? undefined}
             />
           ) : null}
 
@@ -425,7 +445,9 @@ export function MarketCandlesModal({
       price={lastClose ?? 0}
       symbol={asset?.symbol}
       onSell={async (sym, shares) => {
-        const result = await executeSell(sym, shares);
+        const result = await executeSell(sym, shares, {
+          price: lastClose ?? undefined,
+        });
         if (result) {
           setVenderOpen(false);
           setSaleSuccessOpen(true);
@@ -442,7 +464,9 @@ export function MarketCandlesModal({
       price={lastClose ?? 0}
       symbol={asset?.symbol}
       onBuy={async (sym, shares) => {
-        const result = await executeBuy(sym, shares);
+        const result = await executeBuy(sym, shares, {
+          price: lastClose ?? undefined,
+        });
         if (result) {
           setComprarOpen(false);
           setPurchaseSuccessOpen(true);

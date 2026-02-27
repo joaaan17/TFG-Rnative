@@ -23,6 +23,8 @@ export class ExecuteSellOrderUseCase {
     symbol: string,
     shares: number,
     requestId?: string,
+    /** Precio opcional desde el cliente (mismo criterio que "Valor actual" en el modal: 6h → quote → overview). Si es válido, se usa para la transacción; si no, se usa el quote del servidor. */
+    priceFromClient?: number,
   ): Promise<{ updatedPortfolio: Portfolio; createdTransaction: Transaction }> {
     const uid = typeof userId === 'string' ? userId.trim() : '';
     if (!uid) throw new Error('userId is required');
@@ -51,12 +53,20 @@ export class ExecuteSellOrderUseCase {
       throw new InsufficientSharesError('No tienes suficientes acciones para vender');
     }
 
-    const quote = await this.getQuote.getQuote(sym);
-    if (!quote?.price || !Number.isFinite(quote.price)) {
-      throw new Error('Precio no disponible para este activo');
+    const hasValidClientPrice =
+      typeof priceFromClient === 'number' &&
+      Number.isFinite(priceFromClient) &&
+      priceFromClient > 0;
+    let price: number;
+    if (hasValidClientPrice) {
+      price = priceFromClient;
+    } else {
+      const quote = await this.getQuote.getQuote(sym);
+      if (!quote?.price || !Number.isFinite(quote.price)) {
+        throw new Error('Precio no disponible para este activo');
+      }
+      price = quote.price;
     }
-
-    const price = quote.price;
     const totalProceeds = Math.round(shares * price * 100) / 100;
 
     const now = new Date();

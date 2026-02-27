@@ -23,6 +23,8 @@ export class ExecuteBuyOrderUseCase {
     symbol: string,
     shares: number,
     requestId?: string,
+    /** Precio opcional desde el cliente (mismo que "Valor actual" en el modal: 6h → quote). Si es válido, se usa para la transacción y precio medio compra; si no, se usa el quote del servidor. */
+    priceFromClient?: number,
   ): Promise<{ updatedPortfolio: Portfolio; createdTransaction: Transaction }> {
     const uid = typeof userId === 'string' ? userId.trim() : '';
     if (!uid) throw new Error('userId is required');
@@ -36,12 +38,20 @@ export class ExecuteBuyOrderUseCase {
       throw new Error('shares must be greater than 0');
     }
 
-    const quote = await this.getQuote.getQuote(sym);
-    if (!quote?.price || !Number.isFinite(quote.price)) {
-      throw new Error('Precio no disponible para este activo');
+    const hasValidClientPrice =
+      typeof priceFromClient === 'number' &&
+      Number.isFinite(priceFromClient) &&
+      priceFromClient > 0;
+    let price: number;
+    if (hasValidClientPrice) {
+      price = priceFromClient;
+    } else {
+      const quote = await this.getQuote.getQuote(sym);
+      if (!quote?.price || !Number.isFinite(quote.price)) {
+        throw new Error('Precio no disponible para este activo');
+      }
+      price = quote.price;
     }
-
-    const price = quote.price;
     const totalCost = Math.round(shares * price * 100) / 100;
 
     const portfolio = await this.portfolioRepository.findByUserId(uid);

@@ -72,15 +72,24 @@ export async function postBuyOrder(
   token: string,
   symbol: string,
   shares: number,
+  /** Precio opcional: mismo que "Valor actual" en el modal (6h → quote). Si se envía, el servidor lo usa para la transacción y precio medio compra. */
+  price?: number,
   signal?: AbortSignal,
 ): Promise<BuyOrderResponse> {
+  const body: { symbol: string; shares: number; price?: number } = {
+    symbol: symbol.trim().toUpperCase(),
+    shares,
+  };
+  if (typeof price === 'number' && Number.isFinite(price) && price > 0) {
+    body.price = price;
+  }
   const response = await fetch(`${getBaseUrl()}/orders/buy`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ symbol: symbol.trim().toUpperCase(), shares }),
+    body: JSON.stringify(body),
     signal,
   });
   const data = await parseJsonSafe(response);
@@ -94,15 +103,24 @@ export async function postSellOrder(
   token: string,
   symbol: string,
   shares: number,
+  /** Precio opcional: mismo criterio que "Valor actual" en el modal (6h → quote). Si se envía, el servidor lo usa para la transacción y el apartado operaciones. */
+  price?: number,
   signal?: AbortSignal,
 ): Promise<SellOrderResponse> {
+  const body: { symbol: string; shares: number; price?: number } = {
+    symbol: symbol.trim().toUpperCase(),
+    shares,
+  };
+  if (typeof price === 'number' && Number.isFinite(price) && price > 0) {
+    body.price = price;
+  }
   const response = await fetch(`${getBaseUrl()}/orders/sell`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ symbol: symbol.trim().toUpperCase(), shares }),
+    body: JSON.stringify(body),
     signal,
   });
   const data = await parseJsonSafe(response);

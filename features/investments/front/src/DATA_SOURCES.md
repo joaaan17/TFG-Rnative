@@ -3,16 +3,18 @@
 ## Precio actual (cotización)
 
 - **API:** `GET /api/market/quotes?symbols=...`
-- **Uso:** Misma fuente para ejecución de órdenes, valor de posiciones y visualización.
-- **Dónde se usa:**
-  - `useHoldingsWithPrices`: precios en cards de posiciones y valor total cartera.
-  - `useCurrentQuotePrice`: Valor actual y Beneficios en el modal de activo; línea de precio del gráfico (`PortfolioChart` con `currentPrice`).
-- **Objetivo:** Un solo “precio actual” para que beneficios realizados, no realizados y la línea del gráfico sean coherentes con el precio al que se ejecutan compra/venta. El precio ya no depende del timeframe de velas (6h / 1D / 1M).
+- **Uso:** Ejecución de órdenes, cards de posiciones y valor total cartera.
+- **Dónde se usa:** `useHoldingsWithPrices`, `useCurrentQuotePrice` (reserva en modal).
+
+## Valor actual en "Tu posición" (modal)
+
+- **Prioridad:** 1) Cierre de la **última vela de 6h** (`GET /api/market/candles?timeframe=6h`), 2) quote, 3) overview.
+- **Motivo:** El usuario quiere el valor más actualizado posible; las velas de 6h dan mayor granularidad que las de 1D. La línea de precio del gráfico en el modal usa ese mismo valor (6h → quote) para coherencia visual.
 
 ## Velas (gráfico)
 
 - **API:** `GET /api/market/candles?symbol=...&timeframe=...&range=...`
-- **Uso:** Solo para dibujar velas y rango histórico. La línea horizontal de “precio actual” en el gráfico viene de quotes (`currentPrice`), no del cierre de la última vela.
+- **Uso:** Dibujar velas y rango histórico. En el modal, la línea horizontal de precio usa el mismo valor que "Valor actual" (6h si hay datos, si no quote).
 
 ## Overview (modal)
 

@@ -41,8 +41,8 @@ export const getPortfolioController = async (req: Request, res: Response): Promi
 
 /**
  * POST /api/investments/orders/buy
- * Body: { symbol: string, shares: number, clientPrice?: number }
- * Ejecuta una compra usando el precio actual del servidor. Retorna cartera actualizada y transacción.
+ * Body: { symbol: string, shares: number, price?: number }
+ * Ejecuta una compra. Si se envía price (mismo que "Valor actual" en el modal: 6h → quote), se usa para la transacción y precio medio compra; si no, el servidor usa el quote. Así el precio de compra registrado coincide con lo que ve el usuario.
  */
 export const postBuyOrderController = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -50,6 +50,10 @@ export const postBuyOrderController = async (req: Request, res: Response): Promi
     const body = req.body ?? {};
     const symbol = typeof body.symbol === 'string' ? body.symbol.trim() : '';
     const shares = typeof body.shares === 'number' ? body.shares : Number(body.shares);
+    const priceFromClient =
+      typeof body.price === 'number' && Number.isFinite(body.price) && body.price > 0
+        ? body.price
+        : undefined;
 
     if (!symbol) {
       res.status(400).json({ message: 'symbol es obligatorio' });
@@ -69,6 +73,7 @@ export const postBuyOrderController = async (req: Request, res: Response): Promi
       symbol.toUpperCase(),
       shares,
       requestId,
+      priceFromClient,
     );
 
     res.status(200).json({
@@ -118,8 +123,8 @@ export const postBuyOrderController = async (req: Request, res: Response): Promi
 
 /**
  * POST /api/investments/orders/sell
- * Body: { symbol: string, shares: number }
- * Ejecuta una venta usando el precio actual del servidor. Retorna cartera actualizada y transacción.
+ * Body: { symbol: string, shares: number, price?: number }
+ * Ejecuta una venta. Si se envía price (mismo criterio que "Valor actual" en el modal: 6h → quote), se usa para la transacción; si no, el servidor usa el quote. Retorna cartera actualizada y transacción.
  */
 export const postSellOrderController = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -127,6 +132,10 @@ export const postSellOrderController = async (req: Request, res: Response): Prom
     const body = req.body ?? {};
     const symbol = typeof body.symbol === 'string' ? body.symbol.trim() : '';
     const shares = typeof body.shares === 'number' ? body.shares : Number(body.shares);
+    const priceFromClient =
+      typeof body.price === 'number' && Number.isFinite(body.price) && body.price > 0
+        ? body.price
+        : undefined;
 
     if (!symbol) {
       res.status(400).json({ message: 'symbol es obligatorio' });
@@ -146,6 +155,7 @@ export const postSellOrderController = async (req: Request, res: Response): Prom
       symbol.toUpperCase(),
       shares,
       requestId,
+      priceFromClient,
     );
 
     res.status(200).json({
