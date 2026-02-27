@@ -87,7 +87,12 @@ export function InvertirSheet({
       contentNoPaddingTop
     >
       <View style={{ flex: 1, minHeight: 0 }}>
-        <ModalHeader title="Invertir" onClose={onClose} />
+        <ModalHeader
+          title="Invertir"
+          onBack={onClose}
+          onClose={onClose}
+          backAccessibilityLabel="Volver atrás"
+        />
         <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 24 }}>
         <Pressable
           style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}
@@ -98,7 +103,7 @@ export function InvertirSheet({
             variant="muted"
             style={[Hierarchy.bodySmall, { color: palette.icon ?? palette.text }]}
           >
-            {formattedAvailable} € disponible
+            {formattedAvailable} $ disponible
           </Text>
           <ChevronRight size={18} color={palette.icon ?? palette.text} style={{ marginLeft: 4 }} />
         </Pressable>
@@ -110,13 +115,13 @@ export function InvertirSheet({
               { color: palette.text, fontSize: 32 },
             ]}
           >
-            {amountStr} €
+            {amountStr} $
           </Text>
           <Text
             variant="muted"
             style={[Hierarchy.bodySmall, { marginTop: 8, color: palette.icon }]}
           >
-            Precio: {formattedPrice} €{symbol ? ` · ${symbol}` : ''}
+            Precio: {formattedPrice} ${symbol ? ` · ${symbol}` : ''}
           </Text>
         </View>
 

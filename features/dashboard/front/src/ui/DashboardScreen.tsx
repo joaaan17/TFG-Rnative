@@ -54,7 +54,7 @@ export function DashboardScreen() {
 
   const segments = activeChart === 'sector' ? SECTOR_DATA : GEO_DATA;
   const centerLabel =
-    activeChart === 'sector' ? '1.769 €' : '1.769 €';
+    activeChart === 'sector' ? '1.769 $' : '1.769 $';
   const centerSublabel =
     activeChart === 'sector'
       ? 'Valor por sector'
@@ -140,7 +140,7 @@ export function DashboardScreen() {
                         { color: palette.text },
                       ]}
                     >
-                      +324,50 €
+                      +324,50 $
                     </Text>
                   </View>
                 </View>

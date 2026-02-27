@@ -49,7 +49,7 @@ export function VenderSheet({
       <View style={{ flex: 1, minHeight: 0 }}>
         <ModalHeader
           title="Vender"
-          subtitle={`Tienes ${formattedAmount} €${symbol ? ` (${symbol})` : ''}`}
+          subtitle={`Tienes ${formattedAmount} $${symbol ? ` (${symbol})` : ''}`}
           onClose={onClose}
         />
         <View style={{ paddingHorizontal: 20, paddingBottom: 24 }}>

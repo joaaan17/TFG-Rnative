@@ -37,7 +37,7 @@ export function FriendCard({ name, capital, onPress }: FriendCardProps) {
     return 150 + (n % 9850);
   }, [capital, name]);
 
-  const capitalText = `${resolvedCapital.toLocaleString('es-ES')} €`;
+  const capitalText = `${resolvedCapital.toLocaleString('es-ES')} $`;
 
   return (
     <Pressable

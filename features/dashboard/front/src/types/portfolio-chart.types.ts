@@ -19,7 +19,7 @@ export type PortfolioDonutChartProps = {
   size?: number;
   /** Grosor del anillo. */
   strokeWidth?: number;
-  /** Texto central principal (ej. "1.769 €"). */
+  /** Texto central principal (ej. "1.769 $"). */
   centerLabel?: string;
   /** Texto central secundario (ej. "Valor por sector"). */
   centerSublabel?: string;

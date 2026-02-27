@@ -12,7 +12,7 @@ export type AssetLabelTrend = 'up' | 'down';
 export type AssetLabelProps = {
   name: string;
   price: string;
-  change: string; // p.ej. "58,36 €"
+  change: string; // p.ej. "58,36 $"
   trend: AssetLabelTrend;
   /**
    * Icono opcional (SVG/ReactNode). Si no se pasa, se muestra una inicial.
