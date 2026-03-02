@@ -327,26 +327,6 @@ export function MarketCandlesModal({
           }}
         >
           <Pressable
-            onPress={() => setOperarStep('actions')}
-            style={({ pressed }) => ({
-              flex: 1,
-              height: 48,
-              borderRadius: 12,
-              backgroundColor: palette.primary,
-              justifyContent: 'center',
-              alignItems: 'center',
-              opacity: pressed ? 0.85 : 1,
-            })}
-            accessibilityRole="button"
-            accessibilityLabel="Operar"
-          >
-            <Text
-              style={[Hierarchy.action, { color: palette.primaryText ?? '#FFF', fontWeight: '600' }]}
-            >
-              Operar
-            </Text>
-          </Pressable>
-          <Pressable
             onPress={onOrdenes}
             style={({ pressed }) => ({
               flex: 1,
@@ -366,6 +346,26 @@ export function MarketCandlesModal({
               style={[Hierarchy.action, { color: palette.primary }]}
             >
               Órdenes
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setOperarStep('actions')}
+            style={({ pressed }) => ({
+              flex: 1,
+              height: 48,
+              borderRadius: 12,
+              backgroundColor: palette.primary,
+              justifyContent: 'center',
+              alignItems: 'center',
+              opacity: pressed ? 0.85 : 1,
+            })}
+            accessibilityRole="button"
+            accessibilityLabel="Operar"
+          >
+            <Text
+              style={[Hierarchy.action, { color: palette.primaryText ?? '#FFF', fontWeight: '600' }]}
+            >
+              Operar
             </Text>
           </Pressable>
         </View>

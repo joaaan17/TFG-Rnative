@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useRef } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   useWindowDimensions,
@@ -20,16 +21,25 @@ import { usePalette } from '@/shared/hooks/use-palette';
 import { Hierarchy } from '@/design-system/typography';
 
 import {
+  CashCalendar,
+  CashHeader,
+  DayTransactionsSheet,
+  TransactionDetailModal,
+} from '../components/cash';
+import {
   MarketCandlesModal,
   type MarketCandlesModalAsset,
 } from '../components/MarketCandlesModal';
 import { PortfolioPerformanceChart } from '../components/PortfolioPerformanceChart';
 import { StockSearchModal } from '../components/StockSearchModal';
 import { TransactionsHistoryModal } from '../components/TransactionsHistoryModal';
+import { useCashOverview } from '../hooks/useCashOverview';
 import { useHoldingsSparklines } from '../hooks/useHoldingsSparklines';
 import { useHoldingsWithPrices } from '../hooks/useHoldingsWithPrices';
 import { usePortfolio } from '../hooks/usePortfolio';
+import type { CashTransactionView } from '../types/cash.types';
 import { getLogoUrlForSymbol } from '../utils/logoForSymbol';
+import { createCashStyles } from './Cash.styles';
 import { createInvestmentsStyles } from './Investments.styles';
 
 /**
@@ -44,6 +54,7 @@ export function InvestmentsScreen() {
     () => createInvestmentsStyles(palette, screenWidth),
     [palette, screenWidth],
   );
+  const cashStyles = useMemo(() => createCashStyles(palette), [palette]);
 
   const { session } = useAuthSession();
   const { data: portfolioData, refetch: refetchPortfolio } = usePortfolio(
@@ -64,6 +75,32 @@ export function InvestmentsScreen() {
   const [selectedAsset, setSelectedAsset] = React.useState<MarketCandlesModalAsset | null>(null);
   /** true si el modal de velas se abrió desde el buscador (atrás → volver al buscador). */
   const [candlesOpenedFromSearch, setCandlesOpenedFromSearch] = React.useState(false);
+  const [selectedCashTransaction, setSelectedCashTransaction] = React.useState<CashTransactionView | null>(null);
+  const [selectedCalendarDate, setSelectedCalendarDate] = React.useState(() => new Date());
+  const [calendarMonth, setCalendarMonth] = React.useState(() => new Date());
+
+  const {
+    balance: cashOverviewBalance,
+    currency: cashCurrency,
+    monthly: cashMonthly,
+    flatTransactions: cashFlatTransactions,
+    loading: cashLoading,
+  } = useCashOverview(session?.token ?? null, tab === 1);
+
+  const cashDaysWithActivity = useMemo(() => {
+    const set = new Set<string>();
+    for (const tx of cashFlatTransactions) {
+      set.add(tx.createdAt.slice(0, 10));
+    }
+    return set;
+  }, [cashFlatTransactions]);
+
+  const selectedDayTransactions = useMemo(() => {
+    const dayKey = selectedCalendarDate.getFullYear() +
+      '-' + String(selectedCalendarDate.getMonth() + 1).padStart(2, '0') +
+      '-' + String(selectedCalendarDate.getDate()).padStart(2, '0');
+    return cashFlatTransactions.filter((tx) => tx.createdAt.slice(0, 10) === dayKey);
+  }, [cashFlatTransactions, selectedCalendarDate]);
 
   // Valor de efectivo desde la cartera en BD (portfolio/me); actualiza con compras/ventas
   const cashBalance = portfolioData?.cashBalance ?? 0;
@@ -138,6 +175,61 @@ export function InvestmentsScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {tab === 1 ? (
+            <>
+              <CashHeader
+                balance={cashOverviewBalance}
+                currency={cashCurrency}
+                monthly={cashMonthly}
+                styles={cashStyles}
+              />
+              {cashLoading ? (
+                <View style={{ paddingVertical: 32, alignItems: 'center' }}>
+                  <ActivityIndicator size="small" color={palette.primary} />
+                </View>
+              ) : (
+                <>
+                  <View style={cashStyles.calendarTitleWrap}>
+                    <View style={[cashStyles.calendarTitleAccent]} />
+                    <Text
+                      style={[
+                        Hierarchy.titleSection,
+                        cashStyles.calendarTitleText,
+                        { color: palette.icon ?? palette.text },
+                      ]}
+                    >
+                      Transacciones
+                    </Text>
+                  </View>
+                  <CashCalendar
+                    monthDate={calendarMonth}
+                    selectedDate={selectedCalendarDate}
+                    onSelectDay={(d) => {
+                      setSelectedCalendarDate(d);
+                      setCalendarMonth(new Date(d.getFullYear(), d.getMonth(), 1));
+                    }}
+                    onMonthChange={setCalendarMonth}
+                    daysWithActivity={cashDaysWithActivity}
+                    styles={cashStyles}
+                  />
+                  <View
+                    style={{
+                      height: 30,
+                      marginHorizontal: -20,
+                      backgroundColor: palette.primary,
+                    }}
+                  />
+                  <DayTransactionsSheet
+                    selectedDate={selectedCalendarDate}
+                    transactions={selectedDayTransactions}
+                    onSelectTransaction={setSelectedCashTransaction}
+                    styles={cashStyles}
+                  />
+                </>
+              )}
+            </>
+          ) : (
+          <>
           <View style={styles.chartSection}>
             <View style={styles.chartLabel}>
               <View style={styles.chartLabelAccent} />
@@ -253,6 +345,8 @@ export function InvestmentsScreen() {
               </View>
             )}
           </View>
+          </>
+          )}
         </ScrollView>
 
         <View style={styles.bottomActions}>
@@ -326,6 +420,11 @@ export function InvestmentsScreen() {
             setCandlesModalOpen(false);
             setSelectedAsset(null);
           }}
+        />
+        <TransactionDetailModal
+          open={selectedCashTransaction != null}
+          onClose={() => setSelectedCashTransaction(null)}
+          transaction={selectedCashTransaction}
         />
       </View>
   );

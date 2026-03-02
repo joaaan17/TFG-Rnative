@@ -300,6 +300,61 @@ export const getTransactionsController = async (req: Request, res: Response): Pr
 };
 
 /**
+ * GET /api/investments/cash/overview
+ * Resumen de efectivo: balance, entradas/salidas del mes y últimas transacciones.
+ * Pensado para la pantalla "Efectivo" (neobanco). Opcional: el front puede usar portfolio/me + transactions/me.
+ */
+export const getCashOverviewController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = getUserId(req);
+    const [portfolio, rawTransactions] = await Promise.all([
+      getOrCreatePortfolioUseCase.execute(userId),
+      getTransactionsUseCase.execute(userId, 100),
+    ]);
+    const transactions = enrichSellsWithEstimatedAvgBuyPrice(rawTransactions);
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    let monthlyIn = 0;
+    let monthlyOut = 0;
+    for (const t of transactions) {
+      if (t.executedAt < startOfMonth) continue;
+      if (t.type === 'SELL') monthlyIn += t.total;
+      else if (t.type === 'BUY') monthlyOut += t.total;
+    }
+
+    res.status(200).json({
+      balance: portfolio.cashBalance,
+      currency: portfolio.currency,
+      monthlyIn,
+      monthlyOut,
+      monthlyFees: 0,
+      transactions: transactions.map((t) => ({
+        id: t._id,
+        type: t.type,
+        amount: t.type === 'BUY' ? -t.total : t.total,
+        currency: portfolio.currency,
+        createdAt: t.executedAt.toISOString(),
+        status: 'completed',
+        symbol: t.symbol,
+        quantity: t.shares,
+        price: t.price,
+        fee: undefined,
+        ...(t.avgBuyPrice != null && { avgBuyPrice: t.avgBuyPrice }),
+      })),
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Error al obtener efectivo';
+    if (message.includes('required') || message.includes('autenticado')) {
+      res.status(401).json({ message });
+      return;
+    }
+    console.error('[investments] getCashOverview error:', err);
+    res.status(500).json({ message: 'Error al obtener efectivo' });
+  }
+};
+
+/**
  * GET /api/investments/portfolio/performance?range=1M|3M|6M|1Y
  * Equity curve: valor total cartera (cash + posiciones) en el tiempo.
  */
