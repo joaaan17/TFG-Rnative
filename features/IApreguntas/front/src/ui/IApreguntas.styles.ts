@@ -1,73 +1,94 @@
 import { StyleSheet } from 'react-native';
-import AppColors from '@/design-system/colors';
+import { Spacing } from '@/design-system/spacing';
+import type { Palette } from '@/shared/hooks/use-palette';
 
-export const iaPreguntasStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  welcomeArea: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-  },
-  helloText: {
-    textAlign: 'center',
-    color: AppColors.light.primary,
-    marginBottom: 8,
-  },
-  welcomeText: {
-    color: AppColors.light.icon,
-    textAlign: 'center',
-  },
-  chatAreaWrapper: {
-    flex: 1,
-    position: 'relative',
-  },
-  chatArea: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
-  chatContent: {
-    paddingBottom: 16,
-  },
-  inputArea: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    paddingTop: 12,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  inputFlex: {
-    flex: 1,
-  },
-  sendButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: AppColors.light.surfaceMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sendButtonActive: {
-    backgroundColor: AppColors.light.primary,
-  },
-  sendButtonText: {
-    color: AppColors.light.primaryText,
-    fontSize: 16,
-  },
-  errorText: {
-    color: AppColors.light.primary,
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
-});
+/**
+ * Estilos del Consultorio alineados con la estética de Cartera/Efectivo:
+ * sección con barra azul, paleta unificada, espaciado y bordes redondeados.
+ */
+export function createIApreguntasStyles(palette: Palette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    // Cabecera tipo "I EVOLUCIÓN DE LA CARTERA": barra azul + título en mayúsculas
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingHorizontal: 20,
+      paddingTop: 14,
+      paddingBottom: Spacing.sm,
+    },
+    headerAccent: {
+      width: 3,
+      height: 14,
+      borderRadius: 999,
+      backgroundColor: palette.primary,
+    },
+    welcomeArea: {
+      alignItems: 'flex-start',
+      paddingHorizontal: 20,
+      paddingBottom: Spacing.md,
+    },
+    helloText: {
+      color: palette.text,
+      marginBottom: 6,
+    },
+    welcomeText: {
+      color: palette.icon ?? palette.text,
+      maxWidth: '100%',
+    },
+    chatAreaWrapper: {
+      flex: 1,
+      position: 'relative',
+    },
+    chatArea: {
+      flex: 1,
+      paddingHorizontal: 20,
+      paddingBottom: Spacing.sm,
+    },
+    chatContent: {
+      paddingBottom: Spacing.md,
+    },
+    inputArea: {
+      paddingHorizontal: 20,
+      paddingBottom: 20,
+      paddingTop: Spacing.sm,
+    },
+    inputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    inputFlex: {
+      flex: 1,
+    },
+    sendButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      backgroundColor: palette.surfaceMuted ?? palette.background,
+      borderWidth: 1,
+      borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    sendButtonActive: {
+      backgroundColor: palette.primary,
+      borderColor: palette.primary,
+    },
+    sendButtonText: {
+      color: palette.primaryText ?? '#FFF',
+      fontSize: 16,
+    },
+    errorText: {
+      color: palette.destructive,
+      paddingHorizontal: 20,
+      paddingTop: Spacing.sm,
+      fontSize: 14,
+    },
+  });
+}
+
+export type IApreguntasStyles = ReturnType<typeof createIApreguntasStyles>;

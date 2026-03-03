@@ -1,32 +1,26 @@
 import { StyleSheet } from 'react-native';
+import { Spacing } from '@/design-system/spacing';
 
+/**
+ * Input del Consultorio: mismo lenguaje visual que Cartera/Efectivo.
+ * Bordes redondeados, borde completo, fondo de superficie.
+ */
 export const consultorioComposerStyles = StyleSheet.create({
   container: {
     paddingTop: 0,
     paddingBottom: 0,
   },
   inputWrapper: {
-    position: 'relative',
-    backgroundColor: 'transparent',
+    minHeight: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
   },
-  inputTransparent: {
-    backgroundColor: 'transparent',
-    borderBottomWidth: 1,
-    borderLeftWidth: 0,
-    borderRightWidth: 0,
-    borderTopWidth: 0,
-    shadowColor: 'transparent',
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  placeholderOverlay: {
-    position: 'absolute',
-    left: 12,
-    right: 12,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-    opacity: 1,
+  input: {
+    flex: 1,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 12,
+    minHeight: 44,
+    borderRadius: 12,
   },
 });

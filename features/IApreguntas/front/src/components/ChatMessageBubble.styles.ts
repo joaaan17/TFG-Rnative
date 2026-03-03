@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
-import AppColors from '@/design-system/colors';
 
+/** Layout de burbujas; colores inyectados por ChatMessageBubble con usePalette. */
 export const chatMessageBubbleStyles = StyleSheet.create({
   bubble: {
     maxWidth: '85%',
@@ -11,21 +11,13 @@ export const chatMessageBubbleStyles = StyleSheet.create({
   },
   bubbleUser: {
     alignSelf: 'flex-end',
-    backgroundColor: AppColors.light.primary,
   },
   bubbleAssistant: {
     alignSelf: 'flex-start',
-    backgroundColor: AppColors.light.cardBackground,
     borderWidth: 1,
-    borderColor: AppColors.light.surfaceBorder,
   },
   textUser: {
-    color: '#FFFFFF',
-    fontSize: 15,
     fontWeight: '500',
   },
-  textAssistant: {
-    color: AppColors.light.text,
-    fontSize: 15,
-  },
+  textAssistant: {},
 });
