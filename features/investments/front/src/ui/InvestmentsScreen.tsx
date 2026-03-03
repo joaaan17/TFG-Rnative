@@ -102,6 +102,30 @@ export function InvestmentsScreen() {
     return cashFlatTransactions.filter((tx) => tx.createdAt.slice(0, 10) === dayKey);
   }, [cashFlatTransactions, selectedCalendarDate]);
 
+  /** Último día con transacciones: para seleccionarlo al abrir Efectivo. */
+  const lastTransactionDate = useMemo(() => {
+    if (!cashFlatTransactions.length) return null;
+    let latest = new Date(cashFlatTransactions[0].createdAt);
+    for (let i = 1; i < cashFlatTransactions.length; i++) {
+      const d = new Date(cashFlatTransactions[i].createdAt);
+      if (d > latest) latest = d;
+    }
+    return new Date(latest.getFullYear(), latest.getMonth(), latest.getDate());
+  }, [cashFlatTransactions]);
+
+  const hasAutoSelectedLastDayRef = useRef(false);
+  useEffect(() => {
+    if (tab !== 1) {
+      hasAutoSelectedLastDayRef.current = false;
+      return;
+    }
+    if (lastTransactionDate && !hasAutoSelectedLastDayRef.current) {
+      hasAutoSelectedLastDayRef.current = true;
+      setSelectedCalendarDate(lastTransactionDate);
+      setCalendarMonth(new Date(lastTransactionDate.getFullYear(), lastTransactionDate.getMonth(), 1));
+    }
+  }, [tab, lastTransactionDate]);
+
   // Valor de efectivo desde la cartera en BD (portfolio/me); actualiza con compras/ventas
   const cashBalance = portfolioData?.cashBalance ?? 0;
   // Valor total cartera = efectivo + valor actual de las posiciones (precios de mercado)
@@ -190,16 +214,33 @@ export function InvestmentsScreen() {
               ) : (
                 <>
                   <View style={cashStyles.calendarTitleWrap}>
-                    <View style={[cashStyles.calendarTitleAccent]} />
-                    <Text
-                      style={[
-                        Hierarchy.titleSection,
-                        cashStyles.calendarTitleText,
-                        { color: palette.icon ?? palette.text },
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <View style={[cashStyles.calendarTitleAccent]} />
+                      <Text
+                        style={[
+                          Hierarchy.titleSection,
+                          cashStyles.calendarTitleText,
+                          { color: palette.icon ?? palette.text },
+                        ]}
+                      >
+                        Transacciones
+                      </Text>
+                    </View>
+                    <Pressable
+                      onPress={handleOrdersPress}
+                      style={({ pressed }) => [
+                        cashStyles.calendarTitleIcon,
+                        { opacity: pressed ? 0.7 : 1 },
                       ]}
+                      accessibilityRole="button"
+                      accessibilityLabel="Historial de transacciones"
                     >
-                      Transacciones
-                    </Text>
+                      <ClipboardList
+                        size={18}
+                        color={palette.primary}
+                        strokeWidth={2}
+                      />
+                    </Pressable>
                   </View>
                   <CashCalendar
                     monthDate={calendarMonth}
@@ -350,33 +391,37 @@ export function InvestmentsScreen() {
         </ScrollView>
 
         <View style={styles.bottomActions}>
-          <Pressable
-            style={[styles.iconButton, { backgroundColor: palette.primary }]}
-            onPress={handleSearchPress}
-            accessibilityRole="button"
-            accessibilityLabel="Buscar"
-          >
-            <Search
-              size={20}
-              color={palette.primaryText ?? '#FFF'}
-              strokeWidth={2}
-            />
-          </Pressable>
-          <Pressable
-            style={[
-              styles.iconButton,
-              {
-                backgroundColor: palette.surfaceMuted,
-                borderWidth: 1,
-                borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
-              },
-            ]}
-            onPress={handleOrdersPress}
-            accessibilityRole="button"
-            accessibilityLabel="Órdenes"
-          >
-            <ClipboardList size={20} color={palette.primary} strokeWidth={2} />
-          </Pressable>
+          {tab === 0 && (
+            <Pressable
+              style={[styles.iconButton, { backgroundColor: palette.primary }]}
+              onPress={handleSearchPress}
+              accessibilityRole="button"
+              accessibilityLabel="Buscar"
+            >
+              <Search
+                size={20}
+                color={palette.primaryText ?? '#FFF'}
+                strokeWidth={2}
+              />
+            </Pressable>
+          )}
+          {tab === 0 && (
+            <Pressable
+              style={[
+                styles.iconButton,
+                {
+                  backgroundColor: palette.surfaceMuted,
+                  borderWidth: 1,
+                  borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
+                },
+              ]}
+              onPress={handleOrdersPress}
+              accessibilityRole="button"
+              accessibilityLabel="Órdenes"
+            >
+              <ClipboardList size={20} color={palette.primary} strokeWidth={2} />
+            </Pressable>
+          )}
         </View>
 
         <StockSearchModal

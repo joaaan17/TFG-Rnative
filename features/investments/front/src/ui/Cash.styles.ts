@@ -15,13 +15,29 @@ export function createCashStyles(palette: Palette) {
       alignItems: 'center',
       justifyContent: 'space-between',
     },
+    headerTitleWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      flex: 1,
+      minWidth: 0,
+    },
+    headerTitleAccent: {
+      width: 3,
+      height: 14,
+      borderRadius: 999,
+      backgroundColor: palette.primary,
+    },
     headerLabelWrap: {
       flex: 1,
       minWidth: 0,
       justifyContent: 'center',
     },
     headerTitle: {
-      marginBottom: 4,
+      marginBottom: 0,
+      fontSize: 11,
+      letterSpacing: 1.4,
+      textTransform: 'uppercase',
     },
     headerSubtitle: {
       marginBottom: 0,
@@ -30,6 +46,7 @@ export function createCashStyles(palette: Palette) {
     headerBalanceWrap: {
       flexShrink: 0,
       marginLeft: Spacing.sm,
+      alignItems: 'flex-end',
     },
     headerBalance: {
       letterSpacing: -0.5,
@@ -103,8 +120,17 @@ export function createCashStyles(palette: Palette) {
     calendarTitleWrap: {
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'space-between',
       gap: 10,
       marginBottom: Spacing.sm,
+      alignSelf: 'stretch',
+    },
+    calendarTitleIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     calendarTitleAccent: {
       width: 3,
@@ -194,11 +220,11 @@ export function createCashStyles(palette: Palette) {
       height: 4,
       borderRadius: 2,
     },
-    // Panel tipo modal de fondo: ancho completo y hasta abajo (sin márgenes laterales ni inferior)
+    // Panel tipo modal de fondo: ancho completo hasta el menú inferior de navegación
     daySheetWrap: {
       marginTop: -30,
       marginHorizontal: -20,
-      marginBottom: -90,
+      marginBottom: -160,
       paddingTop: Spacing.md,
       paddingHorizontal: Spacing.md,
       paddingBottom: 48,

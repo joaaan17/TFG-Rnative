@@ -37,6 +37,45 @@ function getTitle(item: CashTransactionView): string {
   return 'Movimiento';
 }
 
+/** Impacto económico neto: para ventas = beneficio/pérdida; para compras = coste. */
+function getNetImpact(tx: CashTransactionView): {
+  label: string;
+  value: string;
+  isLoss: boolean;
+  isGain: boolean;
+} {
+  const r = tx.raw;
+  if (tx.type === 'BUY') {
+    const abs = Math.abs(tx.amount);
+    const str = abs.toLocaleString('es-ES', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    return {
+      label: 'Coste',
+      value: `${str} ${tx.currency === 'USD' ? '$' : ''}`,
+      isLoss: false,
+      isGain: false,
+    };
+  }
+  if (tx.type === 'SELL' && r.avgBuyPrice != null && Number.isFinite(r.avgBuyPrice)) {
+    const pnl = (r.price - r.avgBuyPrice) * r.shares;
+    const isLoss = pnl < 0;
+    return {
+      label: isLoss ? 'Pérdida' : 'Ganancia',
+      value: formatAmount(pnl, tx.currency),
+      isLoss,
+      isGain: pnl > 0,
+    };
+  }
+  return {
+    label: '',
+    value: formatAmount(tx.amount, tx.currency),
+    isLoss: false,
+    isGain: tx.amount > 0,
+  };
+}
+
 export type DayTransactionsSheetProps = {
   selectedDate: Date;
   transactions: CashTransactionView[];
@@ -80,7 +119,7 @@ export function DayTransactionsSheet({
       style={[
         s.daySheetWrap,
         { backgroundColor: sheetBg },
-        { paddingBottom: 48 + insets.bottom },
+        { paddingBottom: 48 + insets.bottom + 64 },
       ]}
     >
       <View style={[s.daySheetHandle, { backgroundColor: palette.primary }]} />
@@ -110,14 +149,19 @@ export function DayTransactionsSheet({
           showsVerticalScrollIndicator={false}
         >
           {transactions.map((tx) => {
-            const isEntry = tx.amount > 0;
-            const amountColor = isEntry
-              ? ENTRY_GREEN
-              : tx.amount < 0
-                ? palette.destructive
-                : palette.text;
-            const accentColor =
-              tx.type === 'BUY' ? palette.primary : ENTRY_GREEN;
+            const impact = getNetImpact(tx);
+            const amountColor = impact.isLoss
+              ? palette.destructive
+              : impact.isGain
+                ? ENTRY_GREEN
+                : tx.type === 'BUY'
+                  ? palette.text
+                  : ENTRY_GREEN;
+            const accentColor = impact.isLoss
+              ? palette.destructive
+              : impact.isGain
+                ? ENTRY_GREEN
+                : palette.primary;
 
             return (
               <Pressable
@@ -155,12 +199,32 @@ export function DayTransactionsSheet({
                   </Text>
                 </View>
                 <View style={s.daySheetCardAmount}>
-                  <Text
-                    style={[Hierarchy.bodySmallSemibold, { color: amountColor }]}
-                    numberOfLines={1}
-                  >
-                    {formatAmount(tx.amount, tx.currency)}
-                  </Text>
+                  {impact.label ? (
+                    <>
+                      <Text
+                        style={[Hierarchy.caption, { color: palette.icon }]}
+                        numberOfLines={1}
+                      >
+                        {impact.label}
+                      </Text>
+                      <Text
+                        style={[
+                          Hierarchy.bodySmallSemibold,
+                          { color: amountColor, marginTop: 2 },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {impact.value}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text
+                      style={[Hierarchy.bodySmallSemibold, { color: amountColor }]}
+                      numberOfLines={1}
+                    >
+                      {impact.value}
+                    </Text>
+                  )}
                 </View>
               </Pressable>
             );

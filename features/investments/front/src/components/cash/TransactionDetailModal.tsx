@@ -45,6 +45,52 @@ function getTypeTitle(tx: CashTransactionView): string {
   return 'Movimiento';
 }
 
+/** Resultado para el badge: P&L en ventas, coste en compras. */
+function getResultBadge(tx: CashTransactionView): {
+  title: string;
+  amount: string;
+  percent?: string;
+  isLoss: boolean;
+  isGain: boolean;
+  isNeutral: boolean;
+} {
+  const t = tx.raw;
+  if (tx.type === 'BUY') {
+    return {
+      title: 'Coste',
+      amount: `${formatMoney(Math.abs(tx.amount))} $`,
+      isLoss: false,
+      isGain: false,
+      isNeutral: true,
+    };
+  }
+  if (
+    tx.type === 'SELL' &&
+    t.avgBuyPrice != null &&
+    Number.isFinite(t.avgBuyPrice) &&
+    t.avgBuyPrice > 0
+  ) {
+    const pnl = (t.price - t.avgBuyPrice) * t.shares;
+    const pct = ((t.price - t.avgBuyPrice) / t.avgBuyPrice) * 100;
+    const isLoss = pnl < 0;
+    return {
+      title: isLoss ? 'PÉRDIDA' : 'GANANCIA',
+      amount: `${pnl >= 0 ? '+' : ''}${formatMoney(pnl)} $`,
+      percent: `(${pct >= 0 ? '+' : ''}${formatMoney(pct)}%)`,
+      isLoss,
+      isGain: pnl > 0,
+      isNeutral: false,
+    };
+  }
+  return {
+    title: tx.amount >= 0 ? 'Total recibido' : 'Total',
+    amount: `${tx.amount >= 0 ? '+' : '−'}${formatMoney(Math.abs(tx.amount))} $`,
+    isLoss: false,
+    isGain: tx.amount > 0,
+    isNeutral: true,
+  };
+}
+
 function DetailRow({
   label,
   value,
@@ -93,6 +139,18 @@ export function TransactionDetailModal({
   const t = transaction.raw;
   const isBuy = transaction.type === 'BUY';
   const amountColor = transaction.amount >= 0 ? ENTRY_GREEN : palette.destructive;
+  const badge = getResultBadge(transaction);
+  const badgeBg =
+    badge.isLoss
+      ? 'rgba(220, 38, 38, 0.12)'
+      : badge.isGain
+        ? 'rgba(22, 163, 74, 0.12)'
+        : palette.surfaceMuted ?? 'rgba(0,0,0,0.04)';
+  const badgeTitleColor = badge.isLoss
+    ? palette.destructive
+    : badge.isGain
+      ? ENTRY_GREEN
+      : palette.text;
 
   return (
     <CardModal
@@ -117,6 +175,58 @@ export function TransactionDetailModal({
             gap: Spacing.lg,
           }}
         >
+          {/* Badge grande de resultado (PÉRDIDA / GANANCIA / Coste) */}
+          <View
+            style={{
+              paddingVertical: Spacing.lg,
+              paddingHorizontal: Spacing.lg,
+              borderRadius: 16,
+              backgroundColor: badgeBg,
+              borderWidth: 1,
+              borderColor: badge.isNeutral ? borderColor : 'transparent',
+              alignItems: 'center',
+            }}
+          >
+            <Text
+              style={[
+                Hierarchy.titleSection,
+                {
+                  color: badgeTitleColor,
+                  fontSize: 13,
+                  letterSpacing: 0.5,
+                  marginBottom: 4,
+                },
+              ]}
+            >
+              {badge.title}
+            </Text>
+            <Text
+              style={[
+                Hierarchy.titleModal,
+                {
+                  color: badgeTitleColor,
+                  fontSize: 28,
+                },
+              ]}
+            >
+              {badge.amount}
+            </Text>
+            {badge.percent != null ? (
+              <Text
+                style={[
+                  Hierarchy.caption,
+                  {
+                    color: palette.icon,
+                    marginTop: 4,
+                    fontSize: 13,
+                  },
+                ]}
+              >
+                {badge.percent}
+              </Text>
+            ) : null}
+          </View>
+
           <View
             style={{
               paddingVertical: Spacing.md,

@@ -16,6 +16,8 @@ export type CashHeaderProps = {
   styles: {
     header: ViewStyle;
     headerRow: ViewStyle;
+    headerTitleWrap: ViewStyle;
+    headerTitleAccent: ViewStyle;
     headerLabelWrap: ViewStyle;
     headerTitle: ViewStyle;
     headerSubtitle: ViewStyle;
@@ -47,17 +49,12 @@ export function CashHeader({
   return (
     <View style={s.header}>
       <View style={s.headerRow}>
-        <View style={s.headerLabelWrap}>
+        <View style={s.headerTitleWrap}>
+          <View style={s.headerTitleAccent} />
           <Text
             style={[Hierarchy.titleSection, s.headerTitle, { color: palette.icon ?? palette.text }]}
           >
             Efectivo
-          </Text>
-          <Text
-            variant="muted"
-            style={[Hierarchy.bodySmall, s.headerSubtitle, { color: palette.icon }]}
-          >
-            Disponible
           </Text>
         </View>
         <View style={s.headerBalanceWrap}>
@@ -70,6 +67,12 @@ export function CashHeader({
             numberOfLines={1}
           >
             {formatMoney(balance, currency)}
+          </Text>
+          <Text
+            variant="muted"
+            style={[Hierarchy.caption, s.headerSubtitle, { color: palette.icon, marginTop: 2 }]}
+          >
+            Disponible
           </Text>
         </View>
       </View>

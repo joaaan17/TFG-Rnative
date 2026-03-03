@@ -38,7 +38,7 @@ export function createInvestmentsStyles(
     scrollContent: {
       paddingHorizontal: 20,
       paddingTop: 10,
-      paddingBottom: 90,
+      paddingBottom: 160,
     },
     tabsWrap: {
       flexDirection: 'row',
