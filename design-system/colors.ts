@@ -17,6 +17,7 @@ export const Colors = {
     // Colores adicionales para la app
     primary: '#1D4ED8', // Azul principal
     primaryText: '#FFFFFF',
+    positive: '#16A34A', // Verde éxito/acierto
     destructive: '#E5484D',
     destructiveText: '#FFFFFF',
     inputBackground: '#FFFFFF',
@@ -39,6 +40,7 @@ export const Colors = {
     // Colores adicionales para modo oscuro
     primary: '#60A5FA',
     primaryText: '#081226',
+    positive: '#4ADE80',
     destructive: '#FB7185',
     destructiveText: '#0B1220',
     inputBackground: '#0B1220',

@@ -2,9 +2,10 @@ import { Platform, StyleSheet } from 'react-native';
 import type { Palette } from '@/shared/hooks/use-palette';
 import { Spacing } from '@/design-system/spacing';
 
-/** Misma sombra que las cards inferiores (CardWithBlueBar / asset-card). */
+/** Misma sombra que las cards inferiores. En web usar boxShadow (shadow* deprecado). */
 const cardShadow = Platform.select({
   android: { elevation: 2 },
+  web: { boxShadow: '0 1px 2px rgba(11, 18, 32, 0.05)' },
   default: {
     shadowColor: '#0B0A09',
     shadowOpacity: 0.05,
@@ -126,6 +127,35 @@ export function createDashboardStyles(palette: Palette, screenWidth: number) {
     },
     contextCard: {
       width: cardWidthThree,
+    },
+    /** Activo dominante: ocupa toda la fila debajo del grid */
+    contextCardDominant: {
+      width: '100%' as const,
+    },
+    /** Última operación: ocupa todo el ancho del panel */
+    contextCardLastOperation: {
+      width: '100%' as const,
+    },
+    /** Layout dos columnas: título/headline izq, detalles operación der (vertical) */
+    contextLastOpRow: {
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between' as const,
+      alignItems: 'flex-start' as const,
+      gap: 16,
+    },
+    contextLastOpLeft: {
+      flexShrink: 0,
+    },
+    contextLastOpRight: {
+      flex: 1,
+      alignItems: 'flex-end' as const,
+    },
+    contextLastOpDetail: {
+      fontSize: 12,
+      opacity: 0.88,
+    },
+    contextLastOpDetailSpaced: {
+      marginBottom: 2,
     },
     contextLabel: {
       marginBottom: 4,

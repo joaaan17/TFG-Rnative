@@ -120,4 +120,5 @@ export const getDashboardSummaryUseCase = new GetDashboardSummaryUseCase(
       .getPerformance(userId, '1D')
       .then((r) => ({ points: r.points })),
   getProfileBySymbol,
+  getQuotesAdapter,
 );

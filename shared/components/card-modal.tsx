@@ -248,11 +248,8 @@ export function CardModal({
           <Animated.View
             style={[
               StyleSheet.absoluteFill,
-              {
-                opacity: blurOpacity,
-              },
+              { opacity: blurOpacity, pointerEvents: 'none' },
             ]}
-            pointerEvents="none"
           >
             <BlurViewComponent
               intensity={maxBlurIntensity}
@@ -314,9 +311,9 @@ export function CardModal({
                       ? 'rgba(10,14,24,0.26)'
                       : 'rgba(10,14,24,0.36)',
                 opacity: blurOpacity,
+                pointerEvents: 'none',
               },
             ]}
-            pointerEvents="none"
           />
         )}
         {Platform.OS === 'android' ? (
@@ -331,8 +328,8 @@ export function CardModal({
               style={[
                 StyleSheet.absoluteFill,
                 closeOnBackdropPress && styles.backdropTouchable,
+                { pointerEvents: closeOnBackdropPress ? 'auto' : 'none' },
               ]}
-              pointerEvents={closeOnBackdropPress ? 'auto' : 'none'}
             />
           </TouchableWithoutFeedback>
         ) : (
@@ -354,9 +351,9 @@ export function CardModal({
                   translateY: Animated.add(translateY, dragY),
                 },
               ],
+              pointerEvents: 'box-none',
             },
           ]}
-          pointerEvents="box-none"
         >
           <View
             style={[
@@ -383,11 +380,13 @@ export function CardModal({
               ]}
             >
               <View
-                style={styles.dragHandleContainer}
+                style={[
+                  styles.dragHandleContainer,
+                  { pointerEvents: closeOnBackdropPress ? 'auto' : 'none' },
+                ]}
                 {...(closeOnBackdropPress ? panResponder.panHandlers : {})}
-                pointerEvents={closeOnBackdropPress ? 'auto' : 'none'}
               >
-                <View style={styles.dragHandle} pointerEvents="none" />
+                <View style={[styles.dragHandle, { pointerEvents: 'none' }]} />
               </View>
               <View
                 style={

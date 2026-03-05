@@ -145,8 +145,8 @@ export function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Card style={styles.topCard}>
-          <View style={styles.topCardDecorA} pointerEvents="none" />
-          <View style={styles.topCardDecorB} pointerEvents="none" />
+          <View style={[styles.topCardDecorA, { pointerEvents: 'none' }]} />
+          <View style={[styles.topCardDecorB, { pointerEvents: 'none' }]} />
 
           <CardHeader style={styles.topCardHeader}>
             <TypewriterTextComponent
@@ -159,7 +159,7 @@ export function ProfileScreen() {
             />
           </CardHeader>
 
-          <View style={styles.topCardCenter} pointerEvents="none">
+          <View style={[styles.topCardCenter, { pointerEvents: 'none' }]}>
             <ProfileAvatar
               size={108}
               innerSize={82}

@@ -76,8 +76,8 @@ export function LoadingMessagesOverlay({
       style={[
         loadingOverlayStyles.container,
         inline && loadingOverlayStyles.containerInline,
+        { pointerEvents: 'none' },
       ]}
-      pointerEvents="none"
     >
       <Animated.View style={bubbleStyles}>
         <TypewriterTextComponent

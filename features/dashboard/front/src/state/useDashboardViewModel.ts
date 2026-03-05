@@ -1,6 +1,9 @@
 import React from 'react';
 import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
-import { getPortfolioSummary } from '@/features/investments/front/src/api/investmentsClient';
+import {
+  getPortfolioSummary,
+  getTransactions,
+} from '@/features/investments/front/src/api/investmentsClient';
 import {
   mapSummaryToPortfolioSummary,
   mapContextToContextCards,
@@ -103,22 +106,32 @@ function getMockSummary(): PortfolioSummary {
   };
 }
 
-/** Cards de contexto (debajo del gráfico): 6 cards en 2 filas x 3. Mock. */
+/** Cards de contexto (debajo del gráfico): 6 cards + activo dominante. Mock. */
 function getMockContextCards(): ContextCard[] {
   return [
-    { id: 'best', label: 'Mejor activo', assetName: 'Nvidia', percent: '+42%' },
-    { id: 'worst', label: 'Peor activo', assetName: 'Intel', percent: '-12%' },
+    { id: 'best', label: 'Mejor activo', assetName: 'NVDA', percent: '+42%' },
+    { id: 'worst', label: 'Peor activo', assetName: 'GOOGL', percent: '-12%' },
     { id: 'assets', label: 'Activos en cartera', value: '5' },
     { id: 'operations', label: 'Operaciones', value: '12' },
     {
-      id: 'lastOperation',
-      label: 'Última operación',
-      operationType: 'compra',
-      assetName: 'Apple',
-      quantity: '3 acciones',
-      timeAgo: 'hace 2 días',
+      id: 'dominant',
+      label: 'Activo dominante',
+      assetName: 'NVDA',
+      weightPercent: '28%',
     },
     { id: 'volatility', label: 'Volatilidad', value: 'Media' },
+    {
+      id: 'lastOperation',
+      label: 'Última operación',
+      operationType: 'venta',
+      assetName: 'NVDA',
+      quantity: '2 acciones',
+      timeAgo: 'hace 2 días',
+      priceFormatted: '142,50 €',
+      totalFormatted: '285 €',
+      avgBuyPriceFormatted: '138,20 €',
+      profitLossFormatted: '+8,60 €',
+    },
   ];
 }
 
@@ -231,14 +244,22 @@ export function useDashboardViewModel(): UseDashboardViewModelResult {
     setLoadingSummary(true);
     setSummaryError(null);
     try {
-      const data = await getPortfolioSummary(token);
+      const [data, transactionsResult] = await Promise.all([
+        getPortfolioSummary(token),
+        getTransactions(token, 10),
+      ]);
       setAllocationStocks(data.allocationStocks ?? []);
       setAllocationSectors(data.allocationSectors ?? []);
       setAllocationGeography(data.allocationGeography ?? []);
+      const currency = data.summary?.currency ?? 'EUR';
       setStats((prev) => ({
         ...prev,
         portfolioSummary: mapSummaryToPortfolioSummary(data.summary),
-        contextCards: mapContextToContextCards(data.context),
+        contextCards: mapContextToContextCards(
+          data.context,
+          currency,
+          transactionsResult?.transactions ?? [],
+        ),
       }));
     } catch (err) {
       const message =

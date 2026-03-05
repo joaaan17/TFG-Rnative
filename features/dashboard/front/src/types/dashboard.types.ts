@@ -59,19 +59,27 @@ export type ContextCardMetric = {
   value: string;
 };
 
-/** Última operación: tipo, activo, cantidad y tiempo. */
+/** Última operación: tipo, activo, cantidad, precios y resultado. */
 export type ContextCardLastOperation = {
   id: 'lastOperation';
   /** Ej. "Última operación". */
   label: string;
   /** "Compra" | "Venta". */
   operationType: 'compra' | 'venta';
-  /** Ej. "Apple". */
+  /** Ej. "NVDA". */
   assetName: string;
   /** Ej. "3 acciones". */
   quantity: string;
   /** Ej. "hace 2 días". */
   timeAgo: string;
+  /** Precio por acción (ej. "142,50 €"). */
+  priceFormatted: string;
+  /** Importe total (ej. "427,50 €"). */
+  totalFormatted: string;
+  /** Precio medio de compra (solo ventas; ej. "138,20 €"). */
+  avgBuyPriceFormatted?: string;
+  /** Resultado ganancia/pérdida (solo ventas; ej. "+8,60 €" o "-12,40 €"). */
+  profitLossFormatted?: string;
 };
 
 /** Volatilidad de la cartera. */
@@ -83,11 +91,23 @@ export type ContextCardVolatility = {
   value: string;
 };
 
+/** Activo dominante: el de mayor peso en la cartera. */
+export type ContextCardDominantAsset = {
+  id: 'dominant';
+  /** Ej. "Activo dominante". */
+  label: string;
+  /** Símbolo del activo (ej. "NVDA"). */
+  assetName: string;
+  /** Porcentaje que representa en la cartera (ej. "42%" o "35,5%"). */
+  weightPercent: string;
+};
+
 export type ContextCard =
   | ContextCardBestWorst
   | ContextCardMetric
   | ContextCardLastOperation
-  | ContextCardVolatility;
+  | ContextCardVolatility
+  | ContextCardDominantAsset;
 
 /** Estado de datos del dashboard (origen: mock ahora; API después). */
 export type DashboardStats = {

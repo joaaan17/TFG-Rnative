@@ -9,9 +9,12 @@ import { usePalette } from '@/shared/hooks/use-palette';
 const CARD_BG = '#FFFFFF';
 const BORDER_RADIUS = 20;
 
-// Misma sombra que la card de cartera (asset-card.tsx)
+// Misma sombra que la card de cartera. En web usar boxShadow (shadow* deprecado)
 const inputLikeShadow = Platform.select({
   android: { elevation: 2 },
+  web: {
+    boxShadow: '0 1px 2px rgba(11, 18, 32, 0.05)',
+  },
   default: {
     shadowColor: '#0B0A09',
     shadowOpacity: 0.05,

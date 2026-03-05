@@ -1,6 +1,7 @@
 import type {
   PortfolioRepository,
   TransactionRepository,
+  GetQuotesPort,
 } from '../../domain/ports';
 import type {
   DashboardSummaryResponse,
@@ -8,6 +9,7 @@ import type {
   DashboardContextDTO,
   DashboardSummaryProfitability,
   DashboardContextBestWorstDTO,
+  DashboardContextDominantAssetDTO,
   DashboardContextLastOperationDTO,
   AllocationItem,
   SectorAllocationItem,
@@ -46,6 +48,7 @@ export class GetDashboardSummaryUseCase {
       userId: string,
     ) => Promise<{ points: PerformancePoint[] }>,
     private readonly getProfileBySymbol: GetProfileBySymbolFn,
+    private readonly getQuotes?: GetQuotesPort,
   ) {}
 
   async execute(userId: string): Promise<DashboardSummaryResponse> {
@@ -94,7 +97,7 @@ export class GetDashboardSummaryUseCase {
       currency: portfolio.currency,
     };
 
-    const context = this.buildContext(
+    const context = await this.buildContext(
       portfolio.holdings,
       overview.allocation,
       transactions,
@@ -116,7 +119,11 @@ export class GetDashboardSummaryUseCase {
       profileMap,
     );
 
-    if (allocationGeography.length === 0 && portfolio.holdings.length > 0 && totalInvested > 0) {
+    if (
+      allocationGeography.length === 0 &&
+      portfolio.holdings.length > 0 &&
+      totalInvested > 0
+    ) {
       console.warn(
         `${LOG} allocationGeography vacío con holdings existentes (${portfolio.holdings.length}, totalInvested=${totalInvested})`,
       );
@@ -329,6 +336,7 @@ export class GetDashboardSummaryUseCase {
       context: {
         bestAsset: null,
         worstAsset: null,
+        dominantAsset: null,
         assetsCount: 0,
         operationsCount: 0,
         lastOperation: null,
@@ -364,7 +372,7 @@ export class GetDashboardSummaryUseCase {
     return { amount, percent };
   }
 
-  private buildContext(
+  private async buildContext(
     holdings: Holding[],
     allocation: AllocationItem[],
     transactions: {
@@ -372,8 +380,11 @@ export class GetDashboardSummaryUseCase {
       symbol: string;
       shares: number;
       executedAt: Date;
+      price?: number;
+      total?: number;
+      avgBuyPrice?: number;
     }[],
-  ): DashboardContextDTO {
+  ): Promise<DashboardContextDTO> {
     const holdingsWithShares = holdings.filter((h) => h.shares > 0);
     const assetsCount = holdingsWithShares.length;
     const operationsCount = transactions.length;
@@ -410,22 +421,117 @@ export class GetDashboardSummaryUseCase {
           ? { symbol: returns[0].symbol, percent: returns[0].percent }
           : null;
 
-    const lastTx = transactions[0];
-    const lastOperation: DashboardContextLastOperationDTO | null = lastTx
-      ? {
-          type: lastTx.type,
-          symbol: lastTx.symbol,
-          shares: lastTx.shares,
-          executedAt:
-            lastTx.executedAt instanceof Date
-              ? lastTx.executedAt.toISOString()
-              : String(lastTx.executedAt),
+    const dominantAsset: DashboardContextDominantAssetDTO | null = (() => {
+      const stocks = allocation.filter(
+        (a) =>
+          a.symbol?.trim() &&
+          a.symbol.toUpperCase() !== 'CASH' &&
+          a.symbol.toUpperCase() !== 'OTHERS',
+      );
+      if (stocks.length > 0) {
+        const max = stocks.reduce((prev, curr) =>
+          curr.weight > prev.weight ? curr : prev,
+        );
+        return {
+          symbol: max.symbol.trim().toUpperCase(),
+          weightPercent: Math.round(max.weight * 10000) / 100,
+        };
+      }
+      // Fallback: si allocation no tiene stocks (p. ej. getQuotes falló),
+      // calcular el dominante por coste (holdings) para que la card no desaparezca
+      const totalInvested = holdingsWithShares.reduce(
+        (s, h) => s + h.shares * h.avgBuyPrice,
+        0,
+      );
+      if (totalInvested <= 0 || holdingsWithShares.length === 0) return null;
+      let maxSym = '';
+      let maxWeight = 0;
+      for (const h of holdingsWithShares) {
+        const cost = h.shares * h.avgBuyPrice;
+        const w = cost / totalInvested;
+        if (w > maxWeight) {
+          maxWeight = w;
+          maxSym = h.symbol.trim().toUpperCase();
         }
-      : null;
+      }
+      if (!maxSym) return null;
+      return {
+        symbol: maxSym,
+        weightPercent: Math.round(maxWeight * 10000) / 100,
+      };
+    })();
+
+    const lastTx = transactions[0];
+    let lastOperation: DashboardContextLastOperationDTO | null = null;
+
+    if (lastTx) {
+      let price = Number(lastTx.price) || 0;
+      let total = Number(lastTx.total) || 0;
+      const shares = Number(lastTx.shares) || 0;
+      const avgBuyPrice =
+        lastTx.type === 'SELL' && lastTx.avgBuyPrice != null
+          ? Number(lastTx.avgBuyPrice)
+          : undefined;
+
+      // Fallback 1: inferir desde el otro campo cuando uno es 0
+      if (total <= 0 && price > 0 && shares > 0) {
+        total = Math.round(price * shares * 100) / 100;
+      }
+      if (price <= 0 && total > 0 && shares > 0) {
+        price = Math.round((total / shares) * 10000) / 100;
+      }
+      // Fallback 2: SELL con avgBuyPrice — usar como estimación
+      if (
+        (price <= 0 || total <= 0) &&
+        lastTx.type === 'SELL' &&
+        avgBuyPrice != null &&
+        avgBuyPrice > 0 &&
+        shares > 0
+      ) {
+        if (price <= 0) price = avgBuyPrice;
+        if (total <= 0) total = Math.round(avgBuyPrice * shares * 100) / 100;
+      }
+      // Fallback 3: ambos 0 — obtener cotización actual
+      if ((price <= 0 || total <= 0) && this.getQuotes && shares > 0) {
+        try {
+          const quotes = await this.getQuotes.getQuotes([
+            lastTx.symbol.trim().toUpperCase(),
+          ]);
+          const q = quotes[0];
+          if (q?.price != null && Number.isFinite(q.price) && q.price > 0) {
+            if (price <= 0) price = Math.round(q.price * 10000) / 100;
+            if (total <= 0) total = Math.round(price * shares * 100) / 100;
+          }
+        } catch {
+          // ignorar; mantener 0 si falla
+        }
+      }
+
+      const costBasis =
+        lastTx.type === 'SELL' && avgBuyPrice != null && shares > 0
+          ? avgBuyPrice * shares
+          : undefined;
+      const profitLoss = costBasis != null ? total - costBasis : undefined;
+
+      lastOperation = {
+        type: lastTx.type,
+        symbol: lastTx.symbol,
+        shares,
+        executedAt:
+          lastTx.executedAt instanceof Date
+            ? lastTx.executedAt.toISOString()
+            : String(lastTx.executedAt),
+        price,
+        total,
+        avgBuyPrice,
+        profitLoss,
+      };
+    }
 
     return {
       bestAsset,
       worstAsset,
+      dominantAsset,
       assetsCount,
       operationsCount,
       lastOperation,

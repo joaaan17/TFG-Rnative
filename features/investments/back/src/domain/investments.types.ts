@@ -123,16 +123,31 @@ export interface DashboardContextBestWorstDTO {
   percent: number;
 }
 
+/** Activo con mayor peso en la cartera (porcentaje del total). */
+export interface DashboardContextDominantAssetDTO {
+  symbol: string;
+  weightPercent: number;
+}
+
 export interface DashboardContextLastOperationDTO {
   type: 'BUY' | 'SELL';
   symbol: string;
   shares: number;
   executedAt: string;
+  /** Precio por acción de la operación (compra o venta). */
+  price: number;
+  /** Importe total de la operación (price × shares). */
+  total: number;
+  /** Precio medio de compra (solo para SELL; para calcular beneficio/pérdida). */
+  avgBuyPrice?: number;
+  /** Resultado en € (solo para SELL: total - coste; positivo = ganancia, negativo = pérdida). */
+  profitLoss?: number;
 }
 
 export interface DashboardContextDTO {
   bestAsset: DashboardContextBestWorstDTO | null;
   worstAsset: DashboardContextBestWorstDTO | null;
+  dominantAsset: DashboardContextDominantAssetDTO | null;
   assetsCount: number;
   operationsCount: number;
   lastOperation: DashboardContextLastOperationDTO | null;

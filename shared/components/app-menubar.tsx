@@ -266,7 +266,7 @@ export function AppMenubar({
   const isBlurAvailable = Platform.OS !== 'web' && BlurViewComponent !== null;
 
   return (
-    <View style={styles.outer} pointerEvents="box-none">
+    <View style={[styles.outer, { pointerEvents: 'box-none' }]}>
       <View style={styles.root}>
         {isBlurAvailable && BlurViewComponent ? (
           <BlurViewComponent
@@ -281,15 +281,13 @@ export function AppMenubar({
         ) : null}
         {/* Scrim integrado (sin “cápsula”): solo material + borde superior */}
         <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: barBg }]}
+          style={[StyleSheet.absoluteFill, { backgroundColor: barBg, pointerEvents: 'none' }]}
         />
 
         <View style={styles.row} onLayout={onRowLayout}>
           {rowWidth > 0 && indicatorReady ? (
             <Animated.View
-              style={[styles.dotWrap, dotWrapAnimatedStyle]}
-              pointerEvents="none"
+              style={[styles.dotWrap, dotWrapAnimatedStyle, { pointerEvents: 'none' }]}
             >
               <View
                 style={[
@@ -337,6 +335,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...Platform.select({
       android: { elevation: 12 },
+      web: { boxShadow: '0 -4px 12px rgba(11, 18, 32, 0.05)' },
       default: {
         shadowColor: '#0B1220',
         shadowOpacity: 0.05,

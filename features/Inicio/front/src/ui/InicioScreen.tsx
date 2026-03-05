@@ -242,8 +242,7 @@ function NewsModalContent({
       </ScrollView>
       {/* Botones del hero (atrás, test) en overlay para que siempre reciban toques por encima del scroll */}
       <View
-        style={modalStyles.newsHeroActionsOverlay}
-        pointerEvents="box-none"
+        style={[modalStyles.newsHeroActionsOverlay, { pointerEvents: 'box-none' }]}
         collapsable={false}
       >
         <Pressable
@@ -306,7 +305,7 @@ export function InicioScreen() {
 
   const handleOpenQuizFromNews = useCallback(() => {
     openQuiz();
-    setTimeout(() => closeNewsModal(), 100);
+    setTimeout(() => closeNewsModal({ preserveQuiz: true }), 100);
   }, [openQuiz, closeNewsModal]);
 
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();

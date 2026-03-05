@@ -1,5 +1,6 @@
 /**
- * URL del logo/favicon por símbolo (Google Favicon API, sin API key).
+ * URL del logo/favicon por símbolo. Usa DuckDuckGo Icons (más fiable que Google,
+ * evita 404 de t3.gstatic.com/faviconV2).
  * Usado en buscador y en la lista de posiciones.
  */
 const SYMBOL_DOMAINS: Record<string, string> = {
@@ -18,5 +19,5 @@ export function getLogoUrlForSymbol(symbol: string): string | undefined {
   const key = (symbol || '').trim().toUpperCase();
   const domain = SYMBOL_DOMAINS[key];
   if (!domain) return undefined;
-  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+  return `https://icons.duckduckgo.com/ip3/${domain}.ico`;
 }

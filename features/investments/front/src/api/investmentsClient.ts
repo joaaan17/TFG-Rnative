@@ -257,11 +257,21 @@ export interface DashboardContextLastOperationResponse {
   symbol: string;
   shares: number;
   executedAt: string;
+  price: number;
+  total: number;
+  avgBuyPrice?: number;
+  profitLoss?: number;
+}
+
+export interface DashboardContextDominantAssetResponse {
+  symbol: string;
+  weightPercent: number;
 }
 
 export interface DashboardContextResponse {
   bestAsset: DashboardContextBestWorstResponse | null;
   worstAsset: DashboardContextBestWorstResponse | null;
+  dominantAsset: DashboardContextDominantAssetResponse | null;
   assetsCount: number;
   operationsCount: number;
   lastOperation: DashboardContextLastOperationResponse | null;

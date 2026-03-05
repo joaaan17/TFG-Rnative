@@ -7,25 +7,31 @@ function mapDocToTransaction(doc: {
   userId: string;
   symbol: string;
   type: 'BUY' | 'SELL';
-  shares: number;
-  price: number;
-  total: number;
+  shares?: number;
+  price?: number;
+  total?: number;
   executedAt: Date;
   avgBuyPrice?: number;
 }): Transaction {
+  const price = Number(doc.price);
+  const total = Number(doc.total);
+  const shares = Number(doc.shares) || 0;
   return {
     _id: String(doc._id),
     userId: doc.userId,
     symbol: doc.symbol,
     type: doc.type,
-    shares: doc.shares,
-    price: doc.price,
-    total: doc.total,
+    shares,
+    price: Number.isFinite(price) ? price : 0,
+    total: Number.isFinite(total) ? total : 0,
     executedAt:
       doc.executedAt instanceof Date
         ? doc.executedAt
         : new Date(doc.executedAt),
-    avgBuyPrice: doc.avgBuyPrice,
+    avgBuyPrice:
+      doc.avgBuyPrice != null && Number.isFinite(Number(doc.avgBuyPrice))
+        ? Number(doc.avgBuyPrice)
+        : undefined,
   };
 }
 

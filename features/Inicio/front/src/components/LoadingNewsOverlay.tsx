@@ -66,7 +66,7 @@ export function LoadingNewsOverlay({
   if (!visible) return null;
 
   return (
-    <View style={loadingNewsOverlayStyles.container} pointerEvents="none">
+    <View style={[loadingNewsOverlayStyles.container, { pointerEvents: 'none' }]}>
       <Animated.View
         style={[
           loadingNewsOverlayStyles.bubble,

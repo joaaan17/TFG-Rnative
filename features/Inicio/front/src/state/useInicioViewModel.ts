@@ -25,7 +25,7 @@ export type UseInicioViewModelResult = {
   loadingQuiz: boolean;
   error: string | null;
   openNews: (item: NewsPreview) => Promise<void>;
-  closeNewsModal: () => void;
+  closeNewsModal: (opts?: { preserveQuiz?: boolean }) => void;
   openQuiz: () => Promise<void>;
   closeQuizModal: () => void;
   refreshHeadlines: () => Promise<void>;
@@ -125,13 +125,17 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     [token],
   );
 
-  const closeNewsModal = React.useCallback(() => {
-    setIsNewsModalOpen(false);
-    setSelectedNews(null);
-    setQuiz(null);
-    setQuizAnswers({});
-    // No limpiamos quizStoreRef/answersStoreRef: persisten al salir de la noticia
-  }, []);
+  const closeNewsModal = React.useCallback(
+    (opts?: { preserveQuiz?: boolean }) => {
+      setIsNewsModalOpen(false);
+      setSelectedNews(null);
+      if (!opts?.preserveQuiz) {
+        setQuiz(null);
+        setQuizAnswers({});
+      }
+    },
+    [],
+  );
 
   const openQuiz = React.useCallback(async () => {
     if (!token || !selectedNews) return;

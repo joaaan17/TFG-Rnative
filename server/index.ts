@@ -7,6 +7,7 @@ import profileRoutes from '../features/profile/back/src/api/api.routes';
 import relationshipsRoutes from '../features/relationships/back/src/api/api.routes';
 import iapreguntasRoutes from '../features/IApreguntas/back/src/api/api.routes';
 import iaNoticiasRoutes from '../features/iaNoticiasEducativas/back/src/api/api.routes';
+import { startQuizScheduler } from '../features/iaNoticiasEducativas/back/src/config/quiz-scheduler';
 import investmentsRoutes from '../features/investments/back/src/api/api.routes';
 import marketChartRoutes from '../features/market-chart/back/src/api/api.routes';
 import {
@@ -35,6 +36,7 @@ const startServer = async () => {
     console.log('✅ MongoDB Conectado exitosamente');
 
     startPriceCacheWarmup();
+    startQuizScheduler();
 
     // B) Levantar Servidor Express
     const PORT = process.env.PORT || 3000;
@@ -44,7 +46,7 @@ const startServer = async () => {
         `📡 Endpoint de Auth listo en http://localhost:${PORT}/api/auth/login`,
       );
       console.log(
-        `📋 Noticias/quiz (sin scheduler automático): POST http://localhost:${PORT}/api/ia-noticias/quiz`,
+        `📋 Noticias/quiz: POST http://localhost:${PORT}/api/ia-noticias/quiz`,
       );
       console.log(
         `💰 Inversiones: POST http://localhost:${PORT}/api/investments/orders/buy | POST http://localhost:${PORT}/api/investments/orders/sell`,

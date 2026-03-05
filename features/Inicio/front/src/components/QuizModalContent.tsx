@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
+import Animated, { SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import { Hierarchy } from '@/design-system/typography';
 import { Text } from '@/shared/components/ui/text';
 import { Button } from '@/shared/components/ui/button';
@@ -7,6 +8,11 @@ import { usePalette } from '@/shared/hooks/use-palette';
 import type { NewsQuiz, QuizQuestion } from '../types/inicio.types';
 import { QUIZ_LOADING_MESSAGES } from '../types/inicio.types';
 import { LoadingNewsOverlay } from './LoadingNewsOverlay';
+import { createQuizStyles } from './QuizModalContent.styles';
+
+// Transición tipo CircularGallery: slide horizontal suave con spring (scrollEase ≈ 0.05)
+const QUIZ_ENTERING = SlideInRight.springify().damping(24).stiffness(160);
+const QUIZ_EXITING = SlideOutLeft.springify().damping(24).stiffness(160);
 
 export type QuizModalContentProps = {
   quiz: NewsQuiz | null;
@@ -30,6 +36,7 @@ export function QuizModalContent({
   onContentSizeChange,
 }: QuizModalContentProps) {
   const palette = usePalette();
+  const styles = useMemo(() => createQuizStyles(palette), [palette]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [reviewingIndex, setReviewingIndex] = useState<number | null>(null);
 
@@ -49,15 +56,15 @@ export function QuizModalContent({
     }
   };
 
+  const reportLayout = (w: number, h: number) =>
+    onContentSizeChange?.(w, h);
+
   if (loading) {
     return (
       <View
         style={[styles.container, styles.loadingContainer]}
         onLayout={(e) =>
-          onContentSizeChange?.(
-            e.nativeEvent.layout.width,
-            e.nativeEvent.layout.height,
-          )
+          reportLayout(e.nativeEvent.layout.width, e.nativeEvent.layout.height)
         }
       >
         <LoadingNewsOverlay visible messages={QUIZ_LOADING_MESSAGES} />
@@ -70,15 +77,16 @@ export function QuizModalContent({
       <View
         style={[styles.container, styles.errorContainer]}
         onLayout={(e) =>
-          onContentSizeChange?.(
-            e.nativeEvent.layout.width,
-            e.nativeEvent.layout.height,
-          )
+          reportLayout(e.nativeEvent.layout.width, e.nativeEvent.layout.height)
         }
       >
-        <Text style={[Hierarchy.body, { color: palette.icon ?? palette.text }]}>
-          {error}
-        </Text>
+        <View style={styles.errorCard}>
+          <Text
+            style={[Hierarchy.body, { color: palette.icon ?? palette.text }]}
+          >
+            {error}
+          </Text>
+        </View>
       </View>
     );
   }
@@ -88,15 +96,16 @@ export function QuizModalContent({
       <View
         style={[styles.container, styles.errorContainer]}
         onLayout={(e) =>
-          onContentSizeChange?.(
-            e.nativeEvent.layout.width,
-            e.nativeEvent.layout.height,
-          )
+          reportLayout(e.nativeEvent.layout.width, e.nativeEvent.layout.height)
         }
       >
-        <Text style={[Hierarchy.body, { color: palette.icon ?? palette.text }]}>
-          No se pudo generar el quiz.
-        </Text>
+        <View style={styles.errorCard}>
+          <Text
+            style={[Hierarchy.body, { color: palette.icon ?? palette.text }]}
+          >
+            No se pudo generar el quiz.
+          </Text>
+        </View>
       </View>
     );
   }
@@ -119,29 +128,47 @@ export function QuizModalContent({
         style={styles.scroll}
         contentContainerStyle={[styles.content, styles.contentWithButtonSpace]}
         showsVerticalScrollIndicator={false}
-        onContentSizeChange={(w, h) => onContentSizeChange?.(w, h)}
+        onContentSizeChange={(w, h) => reportLayout(w, h)}
       >
-        <Text
-          style={[Hierarchy.titleModal, styles.title, { color: palette.text }]}
-        >
-          Repasar pregunta {displayIndex + 1}
-        </Text>
+        <View style={styles.sectionWrap}>
+          <View style={styles.sectionAccent} />
+          <Text
+            style={[
+              Hierarchy.titleSection,
+              styles.sectionTitle,
+              { color: palette.icon ?? palette.text },
+            ]}
+          >
+            Repasar pregunta {displayIndex + 1}
+          </Text>
+        </View>
         <Text
           style={[
             Hierarchy.caption,
-            styles.subtitle,
+            styles.sectionSubtitle,
             { color: palette.icon ?? palette.text },
           ]}
         >
           {displayIndex + 1} de {total}
         </Text>
 
-        <QuestionBlock
-          question={currentQuestion}
-          index={displayIndex}
-          selectedIndex={answers[displayIndex] ?? null}
-          onSelect={() => {}}
-        />
+        <View style={styles.questionTransitionWrap} collapsable={false}>
+          <Animated.View
+            key={displayIndex}
+            entering={QUIZ_ENTERING}
+            exiting={QUIZ_EXITING}
+            style={styles.questionTransitionInner}
+          >
+            <QuestionBlock
+              question={currentQuestion}
+              index={displayIndex}
+              selectedIndex={answers[displayIndex] ?? null}
+              onSelect={() => {}}
+              styles={styles}
+              palette={palette}
+            />
+          </Animated.View>
+        </View>
 
         <View style={styles.nextContainer}>
           <Button
@@ -166,43 +193,47 @@ export function QuizModalContent({
         style={styles.scroll}
         contentContainerStyle={styles.resultsContent}
         showsVerticalScrollIndicator={false}
-        onContentSizeChange={(w, h) => onContentSizeChange?.(w, h)}
+        onContentSizeChange={(w, h) => reportLayout(w, h)}
       >
-        <Text
-          style={[
-            Hierarchy.titleModal,
-            styles.resultsTitle,
-            { color: palette.text },
-          ]}
-        >
-          Resultados del test
-        </Text>
+        <View style={styles.resultsSectionWrap}>
+          <View style={styles.sectionAccent} />
+          <Text
+            style={[
+              Hierarchy.titleSection,
+              styles.sectionTitle,
+              { color: palette.icon ?? palette.text },
+            ]}
+          >
+            Resultados del test
+          </Text>
+        </View>
+
         <View style={styles.resultsQuestionsRow}>
           {quiz.questions.map((_, qIdx) => {
             const selected = answers[qIdx];
             const isCorrect =
               selected !== undefined &&
               selected === quiz.questions[qIdx].correctAnswerIndex;
-            const bgColor = isCorrect ? '#22c55e' : '#ef4444';
-            const isLast = qIdx === quiz.questions.length - 1;
             return (
               <Pressable
                 key={qIdx}
                 onPress={() => setReviewingIndex(qIdx)}
                 style={[
                   styles.resultsQuestionBadge,
-                  {
-                    backgroundColor: bgColor + '22',
-                    borderRightWidth: isLast ? 0 : 1,
-                    borderRightColor: 'rgba(0,0,0,0.15)',
-                  },
+                  isCorrect
+                    ? styles.resultsQuestionBadgeCorrect
+                    : styles.resultsQuestionBadgeIncorrect,
                 ]}
               >
                 <Text
                   style={[
                     Hierarchy.bodySmallSemibold,
                     styles.resultsQuestionBadgeText,
-                    { color: bgColor },
+                    {
+                      color: isCorrect
+                        ? palette.positive ?? '#16A34A'
+                        : palette.destructive ?? '#E5484D',
+                    },
                   ]}
                 >
                   {qIdx + 1}
@@ -211,28 +242,33 @@ export function QuizModalContent({
             );
           })}
         </View>
-        <View style={styles.resultsScoreWrapper}>
+
+        <View style={styles.resultsScoreCard}>
           <Text
             style={[
               Hierarchy.value,
-              styles.resultsScore,
               { color: palette.text },
             ]}
           >
             {correctCount}/{total} ({Math.round((correctCount / total) * 100)}%)
           </Text>
         </View>
+
         <View
           style={[
             styles.resultsVerdict,
-            { backgroundColor: passed ? '#22c55e22' : '#ef444422' },
+            passed ? styles.resultsVerdictPassed : styles.resultsVerdictFailed,
           ]}
         >
           <Text
             style={[
               Hierarchy.titleModal,
               styles.resultsVerdictText,
-              { color: passed ? '#22c55e' : '#ef4444' },
+              {
+                color: passed
+                  ? palette.positive ?? '#16A34A'
+                  : palette.destructive ?? '#E5484D',
+              },
             ]}
           >
             {passed ? '¡Has aprobado!' : 'No has aprobado'}
@@ -253,35 +289,64 @@ export function QuizModalContent({
     );
   }
 
-  // Pregunta actual
+  // Pregunta actual — estilo NVDA con sección, progreso y cards
+  const progressPct = total > 0 ? (currentIndex + 1) / total : 0;
+
   return (
     <ScrollView
       style={styles.scroll}
       contentContainerStyle={[styles.content, styles.contentWithButtonSpace]}
       showsVerticalScrollIndicator={false}
-      onContentSizeChange={(w, h) => onContentSizeChange?.(w, h)}
+      onContentSizeChange={(w, h) => reportLayout(w, h)}
     >
-      <Text
-        style={[Hierarchy.titleModal, styles.title, { color: palette.text }]}
-      >
-        Test de comprensión
-      </Text>
+      <View style={styles.sectionWrap}>
+        <View style={styles.sectionAccent} />
+        <Text
+          style={[
+            Hierarchy.titleSection,
+            styles.sectionTitle,
+            { color: palette.icon ?? palette.text },
+          ]}
+        >
+          Test de comprensión
+        </Text>
+      </View>
       <Text
         style={[
           Hierarchy.caption,
-          styles.subtitle,
+          styles.progressSubtitle,
           { color: palette.icon ?? palette.text },
         ]}
       >
         Pregunta {currentIndex + 1} de {total}
       </Text>
 
-      <QuestionBlock
-        question={currentQuestion}
-        index={currentIndex}
-        selectedIndex={answers[currentIndex] ?? null}
-        onSelect={(opt) => handleSelectOption(currentIndex, opt)}
-      />
+      <View style={styles.progressBarWrap}>
+        <View
+          style={[
+            styles.progressBarFill,
+            { width: `${progressPct * 100}%` },
+          ]}
+        />
+      </View>
+
+      <View style={styles.questionTransitionWrap} collapsable={false}>
+        <Animated.View
+          key={currentIndex}
+          entering={QUIZ_ENTERING}
+          exiting={QUIZ_EXITING}
+          style={styles.questionTransitionInner}
+        >
+          <QuestionBlock
+            question={currentQuestion}
+            index={currentIndex}
+            selectedIndex={answers[currentIndex] ?? null}
+            onSelect={(opt) => handleSelectOption(currentIndex, opt)}
+            styles={styles}
+            palette={palette}
+          />
+        </Animated.View>
+      </View>
 
       <View style={styles.nextContainer}>
         <Button
@@ -292,7 +357,9 @@ export function QuizModalContent({
           style={styles.nextButton}
         >
           <Text style={Hierarchy.action}>
-            {currentIndex < total - 1 ? 'Siguiente pregunta' : 'Ver resultados'}
+            {currentIndex < total - 1
+              ? 'Siguiente pregunta'
+              : 'Ver resultados'}
           </Text>
         </Button>
       </View>
@@ -305,6 +372,8 @@ type QuestionBlockProps = {
   index: number;
   selectedIndex: number | null;
   onSelect: (optionIndex: number) => void;
+  styles: ReturnType<typeof createQuizStyles>;
+  palette: ReturnType<typeof usePalette>;
 };
 
 function QuestionBlock({
@@ -312,15 +381,16 @@ function QuestionBlock({
   index,
   selectedIndex,
   onSelect,
+  styles,
+  palette,
 }: QuestionBlockProps) {
-  const palette = usePalette();
   const isAnswered = selectedIndex !== null;
 
   return (
-    <View style={styles.questionBlock}>
+    <View style={styles.questionCard}>
       <Text
         style={[
-          Hierarchy.bodySmallSemibold,
+          Hierarchy.body,
           styles.questionText,
           { color: palette.text },
         ]}
@@ -328,13 +398,14 @@ function QuestionBlock({
         {index + 1}. {question.question}
       </Text>
       {question.options.map((opt, optIndex) => {
-        let bgColor: string | undefined;
-        if (!isAnswered) {
-          bgColor = undefined;
-        } else if (optIndex === question.correctAnswerIndex) {
-          bgColor = '#22c55e';
-        } else if (optIndex === selectedIndex) {
-          bgColor = palette.destructive ?? '#ef4444';
+        let isCorrect = false;
+        let isIncorrect = false;
+        if (isAnswered) {
+          if (optIndex === question.correctAnswerIndex) {
+            isCorrect = true;
+          } else if (optIndex === selectedIndex) {
+            isIncorrect = true;
+          }
         }
 
         return (
@@ -344,17 +415,17 @@ function QuestionBlock({
             disabled={isAnswered}
             style={[
               styles.option,
-              bgColor && {
-                backgroundColor: bgColor + '30',
-                borderColor: bgColor,
-              },
+              isCorrect && styles.optionCorrect,
+              isIncorrect && styles.optionIncorrect,
             ]}
           >
             <Text
               style={[
                 Hierarchy.body,
-                styles.optionText,
-                { color: bgColor ?? palette.text },
+                (isCorrect || isIncorrect)
+                  ? styles.optionTextFeedback
+                  : styles.optionTextNeutral,
+                !isCorrect && !isIncorrect && { color: palette.text },
               ]}
             >
               {opt}
@@ -365,94 +436,3 @@ function QuestionBlock({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: 16,
-  },
-  loadingContainer: {
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-  },
-  scroll: { flex: 1 },
-  content: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
-  contentWithButtonSpace: {
-    paddingBottom: 20,
-  },
-  title: {
-    marginBottom: 4,
-  },
-  subtitle: {
-    marginBottom: 16,
-  },
-  questionBlock: {
-    marginBottom: 24,
-  },
-  questionText: {
-    marginBottom: 12,
-  },
-  option: {
-    padding: 14,
-    borderRadius: 16,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(128,128,128,0.4)',
-  },
-  optionText: {},
-  nextContainer: {
-    marginTop: 8,
-    width: '100%',
-  },
-  nextButton: {
-    width: '100%',
-  },
-  errorContainer: {
-    padding: 24,
-    alignItems: 'center',
-  },
-  resultsContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
-  resultsTitle: {
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  resultsQuestionsRow: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.12)',
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  resultsQuestionBadge: {
-    flex: 1,
-    minWidth: 24,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  resultsQuestionBadgeText: {},
-  resultsScoreWrapper: {
-    minHeight: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 8,
-  },
-  resultsScore: {},
-  resultsVerdict: {
-    padding: 20,
-    borderRadius: 18,
-    alignItems: 'center',
-  },
-  resultsVerdictText: {
-    marginBottom: 8,
-  },
-  resultsVerdictSub: {
-    textAlign: 'center',
-  },
-});

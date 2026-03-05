@@ -2,8 +2,9 @@ import type { Request, Response } from 'express';
 import {
   getHeadlines,
   explainNews,
+  generateNewsQuiz,
 } from '../config/iaNoticiasEducativas.wiring';
-import { getQuiz } from '../config/quiz-store';
+import { getQuiz, setQuiz } from '../config/quiz-store';
 import { getExplainCached, setExplainCached } from '../config/explain-cache';
 
 export async function getHeadlinesController(_req: Request, res: Response) {
@@ -76,19 +77,31 @@ export async function generateNewsQuizController(
 
   const trimmedId = newsId.trim();
 
-  // Solo devolver quizzes pre-generados (scheduler). No llamar a ChatGPT.
-  const quiz = getQuiz(trimmedId);
-  if (quiz) {
+  // 1) Intentar desde store (cache o pre-generados por scheduler)
+  const cachedQuiz = getQuiz(trimmedId);
+  if (cachedQuiz) {
     console.log(
       '[iaNoticias] Controller: quiz desde store, preguntas=',
-      quiz.questions?.length ?? 0,
+      cachedQuiz.questions?.length ?? 0,
     );
-    res.json(quiz);
+    res.json(cachedQuiz);
     return;
   }
 
-  console.log('[iaNoticias] Controller: quiz no disponible para newsId');
-  res.status(404).json({
-    error: 'Quiz no disponible. El quiz se genera automáticamente cada hora.',
-  });
+  // 2) Fallback: generar con ChatGPT en tiempo real y guardar en store
+  try {
+    console.log('[iaNoticias] Controller: generando quiz con ChatGPT para newsId');
+    const quiz = await generateNewsQuiz.execute(trimmedId);
+    setQuiz(trimmedId, quiz);
+    console.log(
+      '[iaNoticias] Controller: quiz generado OK, preguntas=',
+      quiz.questions?.length ?? 0,
+    );
+    res.json(quiz);
+  } catch (err) {
+    console.error('[iaNoticias] Controller: quiz ERROR generando con ChatGPT:', err);
+    res.status(500).json({
+      error: 'Error al generar el quiz. Comprueba OPENAI_API_KEY y vuelve a intentar.',
+    });
+  }
 }
