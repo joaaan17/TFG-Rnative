@@ -11,6 +11,7 @@ import type {
   DashboardContextLastOperationDTO,
   AllocationItem,
   SectorAllocationItem,
+  GeographyAllocationItem,
   Holding,
   PerformancePoint,
   PortfolioOverview,
@@ -18,8 +19,11 @@ import type {
 
 const LOG = '[GetDashboardSummaryUseCase]';
 
-/** Obtiene el sector de un símbolo (ej. "Technology", "Healthcare"). Null si no disponible. */
-export type GetSectorBySymbolFn = (symbol: string) => Promise<string | null>;
+/** Perfil de activo desde Yahoo (sector y país para donuts Sector/Geográfica). */
+export type AssetProfile = { sector: string | null; country: string | null };
+
+/** Obtiene sector y país de un símbolo (una sola llamada a overview por símbolo). */
+export type GetProfileBySymbolFn = (symbol: string) => Promise<AssetProfile>;
 
 /** Función para obtener overview (totalValue + allocation). */
 export type GetPortfolioOverviewFn = (
@@ -41,7 +45,7 @@ export class GetDashboardSummaryUseCase {
     private readonly getPerformance1D: (
       userId: string,
     ) => Promise<{ points: PerformancePoint[] }>,
-    private readonly getSectorBySymbol: GetSectorBySymbolFn,
+    private readonly getProfileBySymbol: GetProfileBySymbolFn,
   ) {}
 
   async execute(userId: string): Promise<DashboardSummaryResponse> {
@@ -100,12 +104,120 @@ export class GetDashboardSummaryUseCase {
       portfolio.holdings,
       totalInvested,
     );
-    const allocationSectors = await this.buildAllocationSectors(
+    const profileMap = await this.fetchProfileMap(portfolio.holdings);
+    const allocationSectors = this.buildAllocationSectors(
       portfolio.holdings,
       totalInvested,
+      profileMap,
+    );
+    const allocationGeography = this.buildAllocationGeography(
+      portfolio.holdings,
+      totalInvested,
+      profileMap,
     );
 
-    return { summary, context, allocationStocks, allocationSectors };
+    if (allocationGeography.length === 0 && portfolio.holdings.length > 0 && totalInvested > 0) {
+      console.warn(
+        `${LOG} allocationGeography vacío con holdings existentes (${portfolio.holdings.length}, totalInvested=${totalInvested})`,
+      );
+    }
+
+    return {
+      summary,
+      context,
+      allocationStocks,
+      allocationSectors,
+      allocationGeography,
+    };
+  }
+
+  /** Mapa país Yahoo -> región para donut Geográfica. */
+  private countryToRegion(country: string | null): string {
+    if (!country || !country.trim()) return 'Otros';
+    const c = country.trim().toLowerCase();
+    const EEUU = [
+      'united states',
+      'usa',
+      'u.s.',
+      'u.s.a.',
+      'united states of america',
+      'canada',
+    ];
+    const EUROPA = [
+      'united kingdom',
+      'uk',
+      'germany',
+      'france',
+      'switzerland',
+      'netherlands',
+      'ireland',
+      'spain',
+      'italy',
+      'sweden',
+      'finland',
+      'norway',
+      'denmark',
+      'belgium',
+      'austria',
+      'luxembourg',
+    ];
+    const ASIA = [
+      'china',
+      'japan',
+      'south korea',
+      'taiwan',
+      'hong kong',
+      'singapore',
+      'india',
+      'israel',
+    ];
+    const EMERGENTES = [
+      'brazil',
+      'mexico',
+      'chile',
+      'argentina',
+      'colombia',
+      'peru',
+      'indonesia',
+      'malaysia',
+      'thailand',
+      'philippines',
+      'south africa',
+      'russia',
+    ];
+    if (EEUU.some((x) => c.includes(x))) return 'EEUU';
+    if (EUROPA.some((x) => c.includes(x))) return 'Europa';
+    if (ASIA.some((x) => c.includes(x))) return 'Asia';
+    if (EMERGENTES.some((x) => c.includes(x))) return 'Emergentes';
+    return 'Otros';
+  }
+
+  private async fetchProfileMap(
+    holdings: Holding[],
+  ): Promise<Map<string, AssetProfile>> {
+    const safeHoldings = (holdings ?? [])
+      .map((h) => ({
+        ...h,
+        shares: Number(h.shares) || 0,
+      }))
+      .filter((h) => h.shares > 0);
+    if (safeHoldings.length === 0) return new Map();
+
+    const symbols = [
+      ...new Set(safeHoldings.map((h) => h.symbol.trim().toUpperCase())),
+    ];
+    const map = new Map<string, AssetProfile>();
+    await Promise.all(
+      symbols.map(async (sym) => {
+        try {
+          const profile = await this.getProfileBySymbol(sym);
+          map.set(sym, profile);
+        } catch {
+          map.set(sym, { sector: null, country: null });
+        }
+      }),
+    );
+    return map;
   }
 
   private buildAllocationStocks(
@@ -138,10 +250,11 @@ export class GetDashboardSummaryUseCase {
     return items;
   }
 
-  private async buildAllocationSectors(
+  private buildAllocationSectors(
     holdings: Holding[],
     totalInvested: number,
-  ): Promise<SectorAllocationItem[]> {
+    profileMap: Map<string, AssetProfile>,
+  ): SectorAllocationItem[] {
     const safeHoldings = (holdings ?? [])
       .map((h) => ({
         ...h,
@@ -152,32 +265,52 @@ export class GetDashboardSummaryUseCase {
 
     if (safeHoldings.length === 0 || totalInvested <= 0) return [];
 
-    const symbols = [
-      ...new Set(safeHoldings.map((h) => h.symbol.trim().toUpperCase())),
-    ];
-    const sectorBySymbol = new Map<string, string>();
-
-    await Promise.all(
-      symbols.map(async (sym) => {
-        try {
-          const sector = await this.getSectorBySymbol(sym);
-          sectorBySymbol.set(sym, sector?.trim() || 'Otros');
-        } catch {
-          sectorBySymbol.set(sym, 'Otros');
-        }
-      }),
-    );
-
     const valueBySector = new Map<string, number>();
     for (const h of safeHoldings) {
-      const sector =
-        sectorBySymbol.get(h.symbol.trim().toUpperCase()) ?? 'Otros';
+      const profile = profileMap.get(h.symbol.trim().toUpperCase()) ?? {
+        sector: null,
+        country: null,
+      };
+      const sector = profile.sector?.trim() || 'Otros';
       const value = Math.round(h.shares * h.avgBuyPrice * 100) / 100;
       valueBySector.set(sector, (valueBySector.get(sector) ?? 0) + value);
     }
 
     return [...valueBySector.entries()].map(([sector, value]) => ({
       sector,
+      value,
+      weight: Math.round((value / totalInvested) * 10000) / 10000,
+    }));
+  }
+
+  private buildAllocationGeography(
+    holdings: Holding[],
+    totalInvested: number,
+    profileMap: Map<string, AssetProfile>,
+  ): GeographyAllocationItem[] {
+    const safeHoldings = (holdings ?? [])
+      .map((h) => ({
+        ...h,
+        shares: Number(h.shares) || 0,
+        avgBuyPrice: Number(h.avgBuyPrice) || 0,
+      }))
+      .filter((h) => h.shares > 0);
+
+    if (safeHoldings.length === 0 || totalInvested <= 0) return [];
+
+    const valueByRegion = new Map<string, number>();
+    for (const h of safeHoldings) {
+      const profile = profileMap.get(h.symbol.trim().toUpperCase()) ?? {
+        sector: null,
+        country: null,
+      };
+      const region = this.countryToRegion(profile.country);
+      const value = Math.round(h.shares * h.avgBuyPrice * 100) / 100;
+      valueByRegion.set(region, (valueByRegion.get(region) ?? 0) + value);
+    }
+
+    return [...valueByRegion.entries()].map(([region, value]) => ({
+      region,
       value,
       weight: Math.round((value / totalInvested) * 10000) / 10000,
     }));
@@ -202,6 +335,7 @@ export class GetDashboardSummaryUseCase {
       },
       allocationStocks: [],
       allocationSectors: [],
+      allocationGeography: [],
     };
   }
 

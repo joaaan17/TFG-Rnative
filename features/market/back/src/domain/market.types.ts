@@ -100,6 +100,7 @@ export interface FundamentalsSnapshot {
   marketCap: number | null;
   sector: string | null;
   industry: string | null;
+  country: string | null;
 }
 
 /** Overview completo: quote del día + fundamentales. */

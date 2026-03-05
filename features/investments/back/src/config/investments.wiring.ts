@@ -96,12 +96,18 @@ export const portfolioAnalyticsService = new PortfolioAnalyticsService(
   initialCash,
 );
 
-async function getSectorBySymbol(symbol: string): Promise<string | null> {
+async function getProfileBySymbol(symbol: string): Promise<{
+  sector: string | null;
+  country: string | null;
+}> {
   try {
     const overview = await getMarketOverviewUseCase.execute({ symbol });
-    return overview?.fundamentals?.sector ?? null;
+    return {
+      sector: overview?.fundamentals?.sector ?? null,
+      country: overview?.fundamentals?.country ?? null,
+    };
   } catch {
-    return null;
+    return { sector: null, country: null };
   }
 }
 
@@ -113,5 +119,5 @@ export const getDashboardSummaryUseCase = new GetDashboardSummaryUseCase(
     portfolioAnalyticsService
       .getPerformance(userId, '1D')
       .then((r) => ({ points: r.points })),
-  getSectorBySymbol,
+  getProfileBySymbol,
 );

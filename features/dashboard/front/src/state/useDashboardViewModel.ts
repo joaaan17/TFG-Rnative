@@ -41,16 +41,14 @@ function segmentsWithBlueScale(
   }));
 }
 
-/** Fallback cuando no hay datos de sector (cartera vacía o sin respuesta). */
-const SECTOR_SEGMENTS_FALLBACK: Omit<DonutSegment, 'color'>[] = [
+/** Fallback cuando no hay datos (cartera vacía o sin respuesta). */
+const FALLBACK_SINGLE: Omit<DonutSegment, 'color'>[] = [
   { label: 'Sin datos', value: 100 },
 ];
 
-const GEO_SEGMENTS_RAW: Omit<DonutSegment, 'color'>[] = [
-  { label: 'EEUU', value: 60 },
-  { label: 'Europa', value: 20 },
-  { label: 'Asia', value: 10 },
-  { label: 'Emergentes', value: 10 },
+/** Fallback mock geográfica (solo si API no devuelve datos). */
+const GEO_SEGMENTS_FALLBACK: Omit<DonutSegment, 'color'>[] = [
+  { label: 'Sin datos', value: 100 },
 ];
 
 /** Distribución por acciones/activos (mock). */
@@ -68,9 +66,9 @@ const STOCKS_SEGMENTS_RAW: Omit<DonutSegment, 'color'>[] = [
   { label: 'Intel', value: 10 },
 ];
 
-const GEO_SEGMENTS: DonutSegment[] = segmentsWithBlueScale(GEO_SEGMENTS_RAW);
-const SECTOR_FALLBACK: DonutSegment[] = segmentsWithBlueScale(
-  SECTOR_SEGMENTS_FALLBACK,
+const SECTOR_FALLBACK: DonutSegment[] = segmentsWithBlueScale(FALLBACK_SINGLE);
+const GEO_FALLBACK: DonutSegment[] = segmentsWithBlueScale(
+  GEO_SEGMENTS_FALLBACK,
 );
 const STOCKS_SEGMENTS: DonutSegment[] =
   segmentsWithBlueScale(STOCKS_SEGMENTS_RAW);
@@ -220,6 +218,9 @@ export function useDashboardViewModel(): UseDashboardViewModelResult {
   const [allocationSectors, setAllocationSectors] = React.useState<
     { sector: string; value: number; weight: number }[]
   >([]);
+  const [allocationGeography, setAllocationGeography] = React.useState<
+    { region: string; value: number; weight: number }[]
+  >([]);
 
   const fetchSummary = React.useCallback(async () => {
     if (!token) {
@@ -233,6 +234,7 @@ export function useDashboardViewModel(): UseDashboardViewModelResult {
       const data = await getPortfolioSummary(token);
       setAllocationStocks(data.allocationStocks ?? []);
       setAllocationSectors(data.allocationSectors ?? []);
+      setAllocationGeography(data.allocationGeography ?? []);
       setStats((prev) => ({
         ...prev,
         portfolioSummary: mapSummaryToPortfolioSummary(data.summary),
@@ -280,6 +282,40 @@ export function useDashboardViewModel(): UseDashboardViewModelResult {
     return segmentsWithBlueScale(raw);
   }, [allocationSectors]);
 
+  const geographyDonutSegmentsFromApi = React.useMemo(() => {
+    const hasGeo = Array.isArray(allocationGeography) && allocationGeography.length > 0;
+    if (!hasGeo) {
+      // Fallback: si hay datos de acciones pero no geográficos, mostrar "Otros" con el total
+      if (Array.isArray(allocationStocks) && allocationStocks.length > 0) {
+        const total = allocationStocks.reduce(
+          (s, a) => s + (typeof a.value === 'number' ? a.value : Number(a.value) || 0),
+          0,
+        );
+        if (total > 0) {
+          return segmentsWithBlueScale([
+            { label: 'Otros', value: 100 },
+          ]);
+        }
+      }
+      return GEO_FALLBACK;
+    }
+    const total = allocationGeography.reduce(
+      (s, a) =>
+        s + (typeof a.value === 'number' ? a.value : Number(a.value) || 0),
+      0,
+    );
+    if (total <= 0) return GEO_FALLBACK;
+    const raw: Omit<DonutSegment, 'color'>[] = allocationGeography.map((a) => {
+      const val = typeof a.value === 'number' ? a.value : Number(a.value) || 0;
+      const pct = Math.round((val / total) * 1000) / 10;
+      return {
+        label: String(a.region ?? '').trim() || 'Otros',
+        value: pct,
+      };
+    });
+    return segmentsWithBlueScale(raw);
+  }, [allocationGeography, allocationStocks]);
+
   const stocksDonutSegmentsFromApi = React.useMemo(() => {
     if (!Array.isArray(allocationStocks) || allocationStocks.length === 0) {
       return STOCKS_SEGMENTS;
@@ -305,7 +341,7 @@ export function useDashboardViewModel(): UseDashboardViewModelResult {
     activeChart === 'sector'
       ? sectorDonutSegmentsFromApi
       : activeChart === 'geo'
-        ? GEO_SEGMENTS
+        ? geographyDonutSegmentsFromApi
         : stocksDonutSegmentsFromApi;
 
   return {

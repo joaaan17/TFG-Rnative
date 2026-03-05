@@ -145,11 +145,20 @@ export interface SectorAllocationItem {
   weight: number;
 }
 
+/** Distribución por región geográfica para el donut "Geográfica". */
+export interface GeographyAllocationItem {
+  region: string;
+  value: number;
+  weight: number;
+}
+
 export interface DashboardSummaryResponse {
   summary: DashboardSummaryDTO;
   context: DashboardContextDTO;
-  /** Distribución por acciones (sin CASH ni OTHERS) para el donut "Acciones". */
+  /** Distribución por acciones para el donut "Acciones". */
   allocationStocks: AllocationItem[];
-  /** Distribución por sector (valor invertido según sector de cada activo) para el donut "Sector". */
+  /** Distribución por sector para el donut "Sector". */
   allocationSectors: SectorAllocationItem[];
+  /** Distribución por región (EEUU, Europa, Asia, Emergentes) para el donut "Geográfica". */
+  allocationGeography: GeographyAllocationItem[];
 }

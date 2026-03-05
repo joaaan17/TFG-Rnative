@@ -273,13 +273,18 @@ export interface SectorAllocationItemResponse {
   weight: number;
 }
 
+export interface GeographyAllocationItemResponse {
+  region: string;
+  value: number;
+  weight: number;
+}
+
 export interface DashboardSummaryApiResponse {
   summary: DashboardSummaryResponse;
   context: DashboardContextResponse;
-  /** Distribución por acciones para el donut "Acciones". */
   allocationStocks: AllocationItemResponse[];
-  /** Distribución por sector para el donut "Sector". */
   allocationSectors: SectorAllocationItemResponse[];
+  allocationGeography: GeographyAllocationItemResponse[];
 }
 
 export async function getPortfolioSummary(

@@ -125,7 +125,7 @@ export class YahooFinanceMarketOverviewAdapter implements MarketOverviewPort {
         };
         defaultKeyStatistics?: { trailingEps?: number };
         financialData?: { quickRatio?: number };
-        assetProfile?: { sector?: string; industry?: string };
+        assetProfile?: { sector?: string; industry?: string; country?: string };
       } | null;
 
       const summaryDetail = summary?.summaryDetail;
@@ -146,6 +146,7 @@ export class YahooFinanceMarketOverviewAdapter implements MarketOverviewPort {
         marketCap: marketCapFund,
         sector: toStr(assetProfile?.sector),
         industry: toStr(assetProfile?.industry),
+        country: toStr(assetProfile?.country),
       };
 
       if (quote.marketCap == null && fundamentals.marketCap != null) {
