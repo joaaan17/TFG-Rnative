@@ -138,9 +138,18 @@ export interface DashboardContextDTO {
   lastOperation: DashboardContextLastOperationDTO | null;
 }
 
+/** Distribución por sector para el donut "Sector". */
+export interface SectorAllocationItem {
+  sector: string;
+  value: number;
+  weight: number;
+}
+
 export interface DashboardSummaryResponse {
   summary: DashboardSummaryDTO;
   context: DashboardContextDTO;
   /** Distribución por acciones (sin CASH ni OTHERS) para el donut "Acciones". */
   allocationStocks: AllocationItem[];
+  /** Distribución por sector (valor invertido según sector de cada activo) para el donut "Sector". */
+  allocationSectors: SectorAllocationItem[];
 }

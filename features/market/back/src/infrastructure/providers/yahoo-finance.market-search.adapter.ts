@@ -81,17 +81,35 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
+/** Extrae quotes del resultado (normal o desde error de validación). */
+function extractQuotes(
+  raw: unknown,
+): YahooSearchQuote[] {
+  if (!raw || typeof raw !== 'object') return [];
+  const quotes = (raw as { quotes?: unknown }).quotes;
+  if (!Array.isArray(quotes)) return [];
+  return quotes.filter(
+    (q): q is YahooSearchQuote => q != null && typeof q === 'object',
+  );
+}
+
 export class YahooFinanceMarketSearchAdapter implements MarketSearchPort {
   async search(query: string, limit: number): Promise<MarketSearchResult[]> {
     const client = getYahooFinanceClient();
-    const raw = await withTimeout(client.search(query), NETWORK_TIMEOUT_MS);
+    let quotes: YahooSearchQuote[] = [];
 
-    const quotes: YahooSearchQuote[] =
-      raw &&
-      typeof raw === 'object' &&
-      Array.isArray((raw as { quotes: YahooSearchQuote[] }).quotes)
-        ? (raw as { quotes: YahooSearchQuote[] }).quotes
-        : [];
+    try {
+      const raw = await withTimeout(client.search(query), NETWORK_TIMEOUT_MS);
+      quotes = extractQuotes(raw);
+    } catch (err) {
+      // yahoo-finance2 lanza FailedYahooValidationError cuando Yahoo devuelve datos
+      // que no cumplen el schema estricto, pero el result suele contener quotes útiles
+      const errResult = err && typeof err === 'object' && (err as { result?: unknown }).result;
+      if (errResult) {
+        quotes = extractQuotes(errResult);
+      }
+      if (quotes.length === 0) throw err;
+    }
 
     const results: MarketSearchResult[] = [];
 

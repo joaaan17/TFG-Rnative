@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, type ViewStyle } from 'react-native';
+import { View, type ViewStyle, type TextStyle } from 'react-native';
 
 import { Text } from '@/shared/components/ui/text';
 import { usePalette } from '@/shared/hooks/use-palette';
@@ -19,11 +19,11 @@ export type CashHeaderProps = {
     headerTitleWrap: ViewStyle;
     headerTitleAccent: ViewStyle;
     headerLabelWrap: ViewStyle;
-    headerTitle: ViewStyle;
-    headerSubtitle: ViewStyle;
+    headerTitle: TextStyle;
+    headerSubtitle: TextStyle;
     headerBalanceWrap: ViewStyle;
-    headerBalance: ViewStyle;
-    headerVariation: ViewStyle;
+    headerBalance: TextStyle;
+    headerVariation: TextStyle;
   };
 };
 

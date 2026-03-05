@@ -267,11 +267,19 @@ export interface DashboardContextResponse {
   lastOperation: DashboardContextLastOperationResponse | null;
 }
 
+export interface SectorAllocationItemResponse {
+  sector: string;
+  value: number;
+  weight: number;
+}
+
 export interface DashboardSummaryApiResponse {
   summary: DashboardSummaryResponse;
   context: DashboardContextResponse;
-  /** Distribución por acciones (sin CASH ni OTHERS) para el donut "Acciones". */
+  /** Distribución por acciones para el donut "Acciones". */
   allocationStocks: AllocationItemResponse[];
+  /** Distribución por sector para el donut "Sector". */
+  allocationSectors: SectorAllocationItemResponse[];
 }
 
 export async function getPortfolioSummary(
@@ -287,17 +295,5 @@ export async function getPortfolioSummary(
   if (!response.ok) {
     throw new Error(getMessage(data, 'Error al obtener resumen del dashboard'));
   }
-  // DEBUG: verificar estructura de la respuesta
-  const typed = data as DashboardSummaryApiResponse;
-  const rawAllocation = typed?.allocationStocks;
-  if (!Array.isArray(rawAllocation)) {
-    console.warn(
-      '[investmentsClient] portfolio/summary: allocationStocks no es array',
-      {
-        type: typeof rawAllocation,
-        keys: data != null && typeof data === 'object' ? Object.keys(data) : [],
-      },
-    );
-  }
-  return typed;
+  return data as DashboardSummaryApiResponse;
 }

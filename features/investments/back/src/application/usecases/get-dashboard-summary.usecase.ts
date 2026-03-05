@@ -10,12 +10,16 @@ import type {
   DashboardContextBestWorstDTO,
   DashboardContextLastOperationDTO,
   AllocationItem,
+  SectorAllocationItem,
   Holding,
   PerformancePoint,
   PortfolioOverview,
 } from '../../domain/investments.types';
 
 const LOG = '[GetDashboardSummaryUseCase]';
+
+/** Obtiene el sector de un símbolo (ej. "Technology", "Healthcare"). Null si no disponible. */
+export type GetSectorBySymbolFn = (symbol: string) => Promise<string | null>;
 
 /** Función para obtener overview (totalValue + allocation). */
 export type GetPortfolioOverviewFn = (
@@ -37,36 +41,25 @@ export class GetDashboardSummaryUseCase {
     private readonly getPerformance1D: (
       userId: string,
     ) => Promise<{ points: PerformancePoint[] }>,
-  ) {
-    const isFn = typeof this.getPortfolioOverview === 'function';
-    console.log(
-      `${LOG} constructor: getPortfolioOverview typeof=${typeof this.getPortfolioOverview} isFunction=${isFn} hasExecute=${typeof (this.getPortfolioOverview as { execute?: unknown })?.execute === 'function'}`,
-    );
-  }
+    private readonly getSectorBySymbol: GetSectorBySymbolFn,
+  ) {}
 
   async execute(userId: string): Promise<DashboardSummaryResponse> {
     const uid = typeof userId === 'string' ? userId.trim() : '';
-    console.log(`${LOG} execute start userId=${uid}`);
     if (!uid) {
       return this.emptyResponse();
     }
 
-    const overviewFn = this.getPortfolioOverview;
-    const overviewType = typeof overviewFn;
-    const isCallable = typeof overviewFn === 'function';
-    console.log(
-      `${LOG} getPortfolioOverview: typeof=${overviewType} isCallable=${isCallable}`,
-    );
-    if (!isCallable) {
+    if (typeof this.getPortfolioOverview !== 'function') {
       throw new Error(
-        `${LOG} getPortfolioOverview is not callable (typeof=${overviewType}). Debe ser una función. Reinicia el servidor (Ctrl+C y npx tsx server/index).`,
+        `${LOG} getPortfolioOverview debe ser una función. Reinicia el servidor.`,
       );
     }
 
     const [portfolio, overview, transactions, performance1D] =
       await Promise.all([
         this.portfolioRepository.findByUserId(uid),
-        overviewFn(uid, '1d', '6mo'),
+        this.getPortfolioOverview(uid, '1d', '6mo'),
         this.transactionRepository.findByUserId(uid, 500),
         this.getPerformance1D(uid).catch(() => ({ points: [] })),
       ]);
@@ -107,24 +100,12 @@ export class GetDashboardSummaryUseCase {
       portfolio.holdings,
       totalInvested,
     );
-
-    // DEBUG: logs para diagnosticar por qué allocationStocks podría estar vacío
-    console.log(
-      `${LOG} holdings count=${portfolio.holdings?.length ?? 0}`,
-      JSON.stringify(
-        portfolio.holdings?.map((h) => ({
-          symbol: h.symbol,
-          shares: h.shares,
-          avgBuyPrice: h.avgBuyPrice,
-        })),
-      ),
-    );
-    console.log(
-      `${LOG} totalInvested=${totalInvested} allocationStocks.length=${allocationStocks.length}`,
-      JSON.stringify(allocationStocks),
+    const allocationSectors = await this.buildAllocationSectors(
+      portfolio.holdings,
+      totalInvested,
     );
 
-    return { summary, context, allocationStocks };
+    return { summary, context, allocationStocks, allocationSectors };
   }
 
   private buildAllocationStocks(
@@ -139,18 +120,7 @@ export class GetDashboardSummaryUseCase {
     }));
     const withShares = safeHoldings.filter((h) => h.shares > 0);
 
-    if (withShares.length === 0) {
-      console.log(
-        `${LOG} buildAllocationStocks: sin holdings con shares>0 (total=${holdings?.length ?? 0})`,
-      );
-      return [];
-    }
-    if (totalInvested <= 0) {
-      console.log(
-        `${LOG} buildAllocationStocks: totalInvested<=0 (${totalInvested}), retorno vacío`,
-      );
-      return [];
-    }
+    if (withShares.length === 0 || totalInvested <= 0) return [];
 
     const items = withShares.map((h) => {
       const value = Math.round(h.shares * h.avgBuyPrice * 100) / 100;
@@ -166,6 +136,51 @@ export class GetDashboardSummaryUseCase {
       };
     });
     return items;
+  }
+
+  private async buildAllocationSectors(
+    holdings: Holding[],
+    totalInvested: number,
+  ): Promise<SectorAllocationItem[]> {
+    const safeHoldings = (holdings ?? [])
+      .map((h) => ({
+        ...h,
+        shares: Number(h.shares) || 0,
+        avgBuyPrice: Number(h.avgBuyPrice) || 0,
+      }))
+      .filter((h) => h.shares > 0);
+
+    if (safeHoldings.length === 0 || totalInvested <= 0) return [];
+
+    const symbols = [
+      ...new Set(safeHoldings.map((h) => h.symbol.trim().toUpperCase())),
+    ];
+    const sectorBySymbol = new Map<string, string>();
+
+    await Promise.all(
+      symbols.map(async (sym) => {
+        try {
+          const sector = await this.getSectorBySymbol(sym);
+          sectorBySymbol.set(sym, sector?.trim() || 'Otros');
+        } catch {
+          sectorBySymbol.set(sym, 'Otros');
+        }
+      }),
+    );
+
+    const valueBySector = new Map<string, number>();
+    for (const h of safeHoldings) {
+      const sector =
+        sectorBySymbol.get(h.symbol.trim().toUpperCase()) ?? 'Otros';
+      const value = Math.round(h.shares * h.avgBuyPrice * 100) / 100;
+      valueBySector.set(sector, (valueBySector.get(sector) ?? 0) + value);
+    }
+
+    return [...valueBySector.entries()].map(([sector, value]) => ({
+      sector,
+      value,
+      weight: Math.round((value / totalInvested) * 10000) / 10000,
+    }));
   }
 
   private emptyResponse(): DashboardSummaryResponse {
@@ -186,6 +201,7 @@ export class GetDashboardSummaryUseCase {
         lastOperation: null,
       },
       allocationStocks: [],
+      allocationSectors: [],
     };
   }
 

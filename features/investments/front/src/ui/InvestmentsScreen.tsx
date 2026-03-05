@@ -174,11 +174,12 @@ export function InvestmentsScreen() {
       if (intervalRef.current) clearInterval(intervalRef.current);
       intervalRef.current = null;
     };
-  }, [session?.token, refetchPortfolio, refetchHoldingsQuotes]);
-
-  const handleAssetPress = (symbol: string) => {
-    router.push({ pathname: '/stock', params: { symbol } });
-  };
+  }, [
+    session?.token,
+    refetchPortfolio,
+    refetchHoldingsQuotes,
+    REFRESH_INTERVAL_MS,
+  ]);
 
   const handleSearchPress = () => {
     setStockSearchModalOpen(true);

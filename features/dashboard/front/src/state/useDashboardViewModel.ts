@@ -41,12 +41,9 @@ function segmentsWithBlueScale(
   }));
 }
 
-const SECTOR_SEGMENTS_RAW: Omit<DonutSegment, 'color'>[] = [
-  { label: 'Tecnología', value: 35 },
-  { label: 'Salud', value: 20 },
-  { label: 'Cripto', value: 20 },
-  { label: 'Consumo defensivo', value: 15 },
-  { label: 'Energía', value: 10 },
+/** Fallback cuando no hay datos de sector (cartera vacía o sin respuesta). */
+const SECTOR_SEGMENTS_FALLBACK: Omit<DonutSegment, 'color'>[] = [
+  { label: 'Sin datos', value: 100 },
 ];
 
 const GEO_SEGMENTS_RAW: Omit<DonutSegment, 'color'>[] = [
@@ -71,11 +68,31 @@ const STOCKS_SEGMENTS_RAW: Omit<DonutSegment, 'color'>[] = [
   { label: 'Intel', value: 10 },
 ];
 
-const SECTOR_SEGMENTS: DonutSegment[] =
-  segmentsWithBlueScale(SECTOR_SEGMENTS_RAW);
 const GEO_SEGMENTS: DonutSegment[] = segmentsWithBlueScale(GEO_SEGMENTS_RAW);
+const SECTOR_FALLBACK: DonutSegment[] = segmentsWithBlueScale(
+  SECTOR_SEGMENTS_FALLBACK,
+);
 const STOCKS_SEGMENTS: DonutSegment[] =
   segmentsWithBlueScale(STOCKS_SEGMENTS_RAW);
+
+/** Traduce sector de Yahoo (en inglés) a español para UI limpia. */
+const SECTOR_LABELS: Record<string, string> = {
+  Technology: 'Tecnología',
+  Healthcare: 'Salud',
+  Financial: 'Finanzas',
+  'Consumer Cyclical': 'Consumo cíclico',
+  'Consumer Defensive': 'Consumo defensivo',
+  Energy: 'Energía',
+  Industrials: 'Industrial',
+  'Communication Services': 'Comunicación',
+  'Real Estate': 'Inmobiliario',
+  'Basic Materials': 'Materiales básicos',
+  Utilities: 'Servicios públicos',
+};
+
+function sectorLabel(sector: string): string {
+  return SECTOR_LABELS[sector] ?? sector;
+}
 
 /** Datos mock; reemplazar por llamadas a API cuando exista backend. */
 function getMockSummary(): PortfolioSummary {
@@ -200,10 +217,12 @@ export function useDashboardViewModel(): UseDashboardViewModelResult {
   const [allocationStocks, setAllocationStocks] = React.useState<
     { symbol: string; name: string; value: number; weight: number }[]
   >([]);
+  const [allocationSectors, setAllocationSectors] = React.useState<
+    { sector: string; value: number; weight: number }[]
+  >([]);
 
   const fetchSummary = React.useCallback(async () => {
     if (!token) {
-      console.log('[Dashboard] fetchSummary: sin token, omitiendo fetch');
       setLoadingSummary(false);
       setSummaryError(null);
       return;
@@ -212,23 +231,8 @@ export function useDashboardViewModel(): UseDashboardViewModelResult {
     setSummaryError(null);
     try {
       const data = await getPortfolioSummary(token);
-      const stocks = data.allocationStocks ?? [];
-      // DEBUG: verificar qué devuelve la API para el donut de Acciones
-      const hasStocks = Array.isArray(stocks) && stocks.length > 0;
-      console.log(
-        '[Dashboard] getPortfolioSummary response: allocationStocks',
-        hasStocks ? `OK (${stocks.length} items)` : 'EMPTY or invalid',
-        hasStocks
-          ? JSON.stringify(
-              stocks.map((s) => ({
-                symbol: s.symbol,
-                value: s.value,
-                weight: s.weight,
-              })),
-            )
-          : JSON.stringify(data),
-      );
-      setAllocationStocks(stocks);
+      setAllocationStocks(data.allocationStocks ?? []);
+      setAllocationSectors(data.allocationSectors ?? []);
       setStats((prev) => ({
         ...prev,
         portfolioSummary: mapSummaryToPortfolioSummary(data.summary),
@@ -255,11 +259,29 @@ export function useDashboardViewModel(): UseDashboardViewModelResult {
     fetchSummary();
   }, [fetchSummary]);
 
+  const sectorDonutSegmentsFromApi = React.useMemo(() => {
+    if (!Array.isArray(allocationSectors) || allocationSectors.length === 0) {
+      return SECTOR_FALLBACK;
+    }
+    const total = allocationSectors.reduce(
+      (s, a) =>
+        s + (typeof a.value === 'number' ? a.value : Number(a.value) || 0),
+      0,
+    );
+    if (total <= 0) return SECTOR_FALLBACK;
+    const raw: Omit<DonutSegment, 'color'>[] = allocationSectors.map((a) => {
+      const val = typeof a.value === 'number' ? a.value : Number(a.value) || 0;
+      const pct = Math.round((val / total) * 1000) / 10;
+      return {
+        label: sectorLabel(String(a.sector ?? '').trim()) || 'Otros',
+        value: pct,
+      };
+    });
+    return segmentsWithBlueScale(raw);
+  }, [allocationSectors]);
+
   const stocksDonutSegmentsFromApi = React.useMemo(() => {
     if (!Array.isArray(allocationStocks) || allocationStocks.length === 0) {
-      console.log(
-        '[Dashboard] donut Acciones: usando mock (allocationStocks vacío)',
-      );
       return STOCKS_SEGMENTS;
     }
     const totalStocksValue = allocationStocks.reduce(
@@ -267,12 +289,7 @@ export function useDashboardViewModel(): UseDashboardViewModelResult {
         s + (typeof a.value === 'number' ? a.value : Number(a.value) || 0),
       0,
     );
-    if (totalStocksValue <= 0) {
-      console.log(
-        '[Dashboard] donut Acciones: totalStocksValue<=0, usando mock',
-      );
-      return STOCKS_SEGMENTS;
-    }
+    if (totalStocksValue <= 0) return STOCKS_SEGMENTS;
     const raw: Omit<DonutSegment, 'color'>[] = allocationStocks.map((a) => {
       const val = typeof a.value === 'number' ? a.value : Number(a.value) || 0;
       const pct = Math.round((val / totalStocksValue) * 1000) / 10;
@@ -281,16 +298,12 @@ export function useDashboardViewModel(): UseDashboardViewModelResult {
         value: pct,
       };
     });
-    console.log(
-      '[Dashboard] donut Acciones: segmentos reales',
-      JSON.stringify(raw),
-    );
     return segmentsWithBlueScale(raw);
   }, [allocationStocks]);
 
   const donutSegments =
     activeChart === 'sector'
-      ? SECTOR_SEGMENTS
+      ? sectorDonutSegmentsFromApi
       : activeChart === 'geo'
         ? GEO_SEGMENTS
         : stocksDonutSegmentsFromApi;

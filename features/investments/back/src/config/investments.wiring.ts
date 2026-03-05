@@ -4,6 +4,7 @@
  */
 import {
   getQuotesUseCase,
+  getMarketOverviewUseCase,
   priceCacheService,
 } from '../../../../market/back/src/config/market.wiring';
 import { GetOrCreatePortfolioUseCase } from '../application/usecases/get-or-create-portfolio.usecase';
@@ -63,24 +64,12 @@ function getPortfolioOverviewFn(
   timeframe: string,
   range: string,
 ): ReturnType<GetPortfolioOverviewUseCase['execute']> {
-  console.log('[wiring] getPortfolioOverviewFn called', {
-    userId,
-    timeframe,
-    range,
-  });
   return getPortfolioOverviewUseCase.execute(
     userId,
     timeframe as Parameters<GetPortfolioOverviewUseCase['execute']>[1],
     range as Parameters<GetPortfolioOverviewUseCase['execute']>[2],
   );
 }
-
-console.log(
-  '[wiring] getPortfolioOverviewFn typeof=',
-  typeof getPortfolioOverviewFn,
-  'isFunction=',
-  typeof getPortfolioOverviewFn === 'function',
-);
 
 const getHistorical = (
   symbol: string,
@@ -107,9 +96,15 @@ export const portfolioAnalyticsService = new PortfolioAnalyticsService(
   initialCash,
 );
 
-console.log(
-  '[wiring] Creating getDashboardSummaryUseCase with getPortfolioOverviewFn',
-);
+async function getSectorBySymbol(symbol: string): Promise<string | null> {
+  try {
+    const overview = await getMarketOverviewUseCase.execute({ symbol });
+    return overview?.fundamentals?.sector ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export const getDashboardSummaryUseCase = new GetDashboardSummaryUseCase(
   portfolioRepository,
   getPortfolioOverviewFn,
@@ -118,5 +113,5 @@ export const getDashboardSummaryUseCase = new GetDashboardSummaryUseCase(
     portfolioAnalyticsService
       .getPerformance(userId, '1D')
       .then((r) => ({ points: r.points })),
+  getSectorBySymbol,
 );
-console.log('[wiring] getDashboardSummaryUseCase created');
