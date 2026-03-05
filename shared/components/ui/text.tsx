@@ -77,11 +77,15 @@ function Text({
   className,
   asChild = false,
   variant = 'default',
+  style,
+  /** Si true, no se aplican typographyStyle ni color por variante; solo se usa `style`. Útil para títulos que deben coincidir exactamente con otras secciones. */
+  suppressVariant = false,
   ...props
 }: React.ComponentProps<typeof RNText> &
   TextVariantProps &
   React.RefAttributes<RNText> & {
     asChild?: boolean;
+    suppressVariant?: boolean;
   }) {
   const palette = usePalette();
   const textClass = React.useContext(TextClassContext);
@@ -110,12 +114,15 @@ function Text({
         ? (palette.icon ?? palette.text)
         : palette.text;
 
+  const resolvedStyle = suppressVariant ? style : [typographyStyle, { color }, style];
+  const resolvedClassName = suppressVariant ? className : cn(textVariants({ variant }), textClass, className);
+
   return (
     <Component
-      className={cn(textVariants({ variant }), textClass, className)}
-      style={[typographyStyle, { color }, props.style]}
-      role={variant ? ROLE[variant] : undefined}
-      aria-level={variant ? ARIA_LEVEL[variant] : undefined}
+      className={resolvedClassName}
+      style={resolvedStyle}
+      role={variant && !suppressVariant ? ROLE[variant] : undefined}
+      aria-level={variant && !suppressVariant ? ARIA_LEVEL[variant] : undefined}
       {...props}
     />
   );

@@ -316,7 +316,11 @@ export function TransactionDetailModal({
                 />
                 <DetailRow
                   label="Beneficio / Pérdida"
-                  value={`${(transaction.amount >= 0 ? '+' : '')}${formatMoney((t.price - t.avgBuyPrice) * t.shares)} $`}
+                  value={(() => {
+                    const pnl = (t.price - t.avgBuyPrice) * t.shares;
+                    const sign = pnl >= 0 ? '+' : '−';
+                    return `${sign}${formatMoney(Math.abs(pnl))} $`;
+                  })()}
                   valueColor={
                     t.price >= t.avgBuyPrice ? ENTRY_GREEN : palette.destructive
                   }

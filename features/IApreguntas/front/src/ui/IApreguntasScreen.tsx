@@ -60,10 +60,14 @@ export function IApreguntasScreen() {
           text="CONSULTORIO"
           speed={40}
           useDefaultFontFamily={false}
-          variant={undefined}
+          suppressVariant
           style={[
             Hierarchy.titleSection,
-            { color: palette.icon ?? palette.text },
+            {
+              fontSize: 11,
+              letterSpacing: 1.4,
+              color: palette.icon ?? palette.text,
+            },
           ]}
         />
       </View>
