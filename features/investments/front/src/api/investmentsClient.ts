@@ -224,3 +224,60 @@ export async function getPerformance(
   }
   return data as PerformanceResponse;
 }
+
+// --- Dashboard summary (resumen + contexto para Dashboard MVVM) ---
+
+export interface DashboardSummaryProfitabilityResponse {
+  amount: number;
+  percent: number;
+}
+
+export interface DashboardSummaryResponse {
+  totalValue: number;
+  totalProfitability: DashboardSummaryProfitabilityResponse;
+  dailyProfitability: DashboardSummaryProfitabilityResponse;
+  availableCash: number;
+  totalInvested: number;
+  currency: string;
+}
+
+export interface DashboardContextBestWorstResponse {
+  symbol: string;
+  percent: number;
+}
+
+export interface DashboardContextLastOperationResponse {
+  type: 'BUY' | 'SELL';
+  symbol: string;
+  shares: number;
+  executedAt: string;
+}
+
+export interface DashboardContextResponse {
+  bestAsset: DashboardContextBestWorstResponse | null;
+  worstAsset: DashboardContextBestWorstResponse | null;
+  assetsCount: number;
+  operationsCount: number;
+  lastOperation: DashboardContextLastOperationResponse | null;
+}
+
+export interface DashboardSummaryApiResponse {
+  summary: DashboardSummaryResponse;
+  context: DashboardContextResponse;
+}
+
+export async function getPortfolioSummary(
+  token: string,
+  signal?: AbortSignal,
+): Promise<DashboardSummaryApiResponse> {
+  const response = await fetch(`${getBaseUrl()}/portfolio/summary`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+    signal,
+  });
+  const data = await parseJsonSafe(response);
+  if (!response.ok) {
+    throw new Error(getMessage(data, 'Error al obtener resumen del dashboard'));
+  }
+  return data as DashboardSummaryApiResponse;
+}

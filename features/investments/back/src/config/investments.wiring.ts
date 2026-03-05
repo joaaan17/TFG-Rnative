@@ -11,6 +11,7 @@ import { ExecuteBuyOrderUseCase } from '../application/usecases/execute-buy-orde
 import { ExecuteSellOrderUseCase } from '../application/usecases/execute-sell-order.usecase';
 import { GetTransactionsUseCase } from '../application/usecases/get-transactions.usecase';
 import { GetPortfolioOverviewUseCase } from '../application/usecases/get-portfolio-overview.usecase';
+import { GetDashboardSummaryUseCase } from '../application/usecases/get-dashboard-summary.usecase';
 import { PortfolioAnalyticsService } from '../application/services/portfolio-analytics.service';
 import { MarketQuoteAdapter } from '../infrastructure/adapters/market-quote.adapter';
 import { MarketQuotesAdapter } from '../infrastructure/adapters/market-quotes.adapter';
@@ -55,6 +56,26 @@ export const getPortfolioOverviewUseCase = new GetPortfolioOverviewUseCase(
   transactionRepository,
 );
 
+function getPortfolioOverviewFn(
+  userId: string,
+  timeframe: string,
+  range: string,
+): ReturnType<GetPortfolioOverviewUseCase['execute']> {
+  console.log('[wiring] getPortfolioOverviewFn called', { userId, timeframe, range });
+  return getPortfolioOverviewUseCase.execute(
+    userId,
+    timeframe as Parameters<GetPortfolioOverviewUseCase['execute']>[1],
+    range as Parameters<GetPortfolioOverviewUseCase['execute']>[2],
+  );
+}
+
+console.log(
+  '[wiring] getPortfolioOverviewFn typeof=',
+  typeof getPortfolioOverviewFn,
+  'isFunction=',
+  typeof getPortfolioOverviewFn === 'function',
+);
+
 const getHistorical = (
   symbol: string,
   interval: string,
@@ -72,3 +93,13 @@ export const portfolioAnalyticsService = new PortfolioAnalyticsService(
   historicalHourlyAdapter,
   initialCash,
 );
+
+console.log('[wiring] Creating getDashboardSummaryUseCase with getPortfolioOverviewFn');
+export const getDashboardSummaryUseCase = new GetDashboardSummaryUseCase(
+  portfolioRepository,
+  getPortfolioOverviewFn,
+  transactionRepository,
+  (userId: string) =>
+    portfolioAnalyticsService.getPerformance(userId, '1D').then((r) => ({ points: r.points })),
+);
+console.log('[wiring] getDashboardSummaryUseCase created');

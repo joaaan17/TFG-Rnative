@@ -68,12 +68,8 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="register" />
-            <Stack.Screen name="main" />
-            <Stack.Screen name="ia-preguntas" />
-            <Stack.Screen name="profile" />
-            <Stack.Screen name="investments" />
+            <Stack.Screen name="(app)" />
             <Stack.Screen name="stock" />
-            <Stack.Screen name="dashboard" />
             <Stack.Screen
               name="modal"
               options={{ presentation: 'modal', title: 'Modal' }}

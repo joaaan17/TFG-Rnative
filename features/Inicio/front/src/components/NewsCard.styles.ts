@@ -36,11 +36,13 @@ export function createNewsCardStyles(palette: Palette) {
 
   return StyleSheet.create({
     card: {
-      borderRadius: 24,
+      borderRadius: 20,
       overflow: 'hidden',
       backgroundColor: cardBg,
       borderWidth: 1,
       borderColor,
+      borderLeftWidth: 3,
+      borderLeftColor: palette.primary,
       ...cardShadow(),
     },
     imageWrap: {

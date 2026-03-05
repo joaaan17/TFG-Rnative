@@ -101,3 +101,44 @@ export interface PerformanceResponse {
     symbolsUsed: string[];
   };
 }
+
+// --- Dashboard summary (resumen + contexto para la vista Dashboard) ---
+
+export interface DashboardSummaryProfitability {
+  amount: number;
+  percent: number;
+}
+
+export interface DashboardSummaryDTO {
+  totalValue: number;
+  totalProfitability: DashboardSummaryProfitability;
+  dailyProfitability: DashboardSummaryProfitability;
+  availableCash: number;
+  totalInvested: number;
+  currency: string;
+}
+
+export interface DashboardContextBestWorstDTO {
+  symbol: string;
+  percent: number;
+}
+
+export interface DashboardContextLastOperationDTO {
+  type: 'BUY' | 'SELL';
+  symbol: string;
+  shares: number;
+  executedAt: string;
+}
+
+export interface DashboardContextDTO {
+  bestAsset: DashboardContextBestWorstDTO | null;
+  worstAsset: DashboardContextBestWorstDTO | null;
+  assetsCount: number;
+  operationsCount: number;
+  lastOperation: DashboardContextLastOperationDTO | null;
+}
+
+export interface DashboardSummaryResponse {
+  summary: DashboardSummaryDTO;
+  context: DashboardContextDTO;
+}

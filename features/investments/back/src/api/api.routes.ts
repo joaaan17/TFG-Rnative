@@ -3,6 +3,7 @@ import { requireAuth } from '../../../../auth/back/src/api/auth.middleware';
 import {
   getPortfolioController,
   getPortfolioOverviewController,
+  getDashboardSummaryController,
   getPerformanceController,
   getCashOverviewController,
   postBuyOrderController,
@@ -14,6 +15,7 @@ const router = Router();
 
 router.get('/portfolio/me', requireAuth, getPortfolioController);
 router.get('/portfolio/overview', requireAuth, getPortfolioOverviewController);
+router.get('/portfolio/summary', requireAuth, getDashboardSummaryController);
 router.get('/portfolio/performance', requireAuth, getPerformanceController);
 router.get('/cash/overview', requireAuth, getCashOverviewController);
 router.post('/orders/buy', requireAuth, postBuyOrderController);

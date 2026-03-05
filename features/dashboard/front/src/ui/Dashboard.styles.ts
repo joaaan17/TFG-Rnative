@@ -1,172 +1,50 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import type { Palette } from '@/shared/hooks/use-palette';
-import { FontFamilies } from '@/design-system/typography';
+import { Spacing } from '@/design-system/spacing';
 
+/** Misma sombra que las cards inferiores (CardWithBlueBar / asset-card). */
+const cardShadow = Platform.select({
+  android: { elevation: 2 },
+  default: {
+    shadowColor: '#0B0A09',
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+  },
+});
+
+/**
+ * Estilos del Dashboard. Mismo fondo y cards que el resto de la app (palette).
+ */
 export function createDashboardStyles(palette: Palette, screenWidth: number) {
-  const cardWidth = (screenWidth - 48 - 12) / 2; // 2 cols, padding 24*2, gap 12
+  const paddingH = 20;
+  const gap = 12;
+  const cardWidth = (screenWidth - paddingH * 2 - gap) / 2;
+  /** Ancho para 3 cards por fila (2 gaps entre ellas). */
+  const cardWidthThree = (screenWidth - paddingH * 2 - gap * 2) / 3;
+
+  const cardBg = palette.surfaceMuted ?? palette.background;
+  const cardBorder = palette.surfaceBorder ?? palette.surfaceMuted;
 
   return StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: palette.mainBackground ?? palette.background,
     },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 20,
-      paddingTop: 12,
-      paddingBottom: 16,
-    },
-    welcomeBlock: {
-      flex: 1,
-    },
-    welcomeLine1: {
-      fontFamily: FontFamilies.body.regular,
-      fontSize: 15,
-      lineHeight: 20,
-      letterSpacing: 0.1,
-    },
-    welcomeLine2: {
-      fontFamily: FontFamilies.primary.bold,
-      fontSize: 28,
-      lineHeight: 34,
-      letterSpacing: -0.3,
-      marginTop: 4,
-    },
-    headerIcons: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-    },
-    headerIconButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: palette.surfaceMuted,
-    },
     scroll: {
       flex: 1,
     },
     scrollContent: {
-      paddingHorizontal: 20,
-      paddingTop: 20,
+      paddingHorizontal: paddingH,
+      paddingTop: Spacing.md,
       paddingBottom: 100,
     },
-    profitabilityWrap: {
-      marginBottom: 20,
-    },
-    profitabilityCard: {
-      borderRadius: 16,
-      overflow: 'hidden',
-      alignSelf: 'stretch',
-      borderWidth: 1,
-      borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
-      shadowColor: '#0B1220',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 8,
-      elevation: 3,
-    },
-    profitabilityCardInner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: 16,
-      paddingHorizontal: 20,
-      gap: 16,
-    },
-    profitabilityIconWrap: {
-      width: 48,
-      height: 48,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: `${palette.primary}18`,
-    },
-    profitabilityTextBlock: {
-      flex: 1,
-    },
-    profitabilityLabel: {
-      marginBottom: 4,
-      opacity: 0.9,
-    },
-    profitabilityValue: {
-      fontSize: 26,
-      letterSpacing: -0.5,
-    },
-    chartSection: {
-      marginBottom: 28,
-      alignItems: 'center',
-    },
-    chartCard: {
-      borderRadius: 20,
-      overflow: 'hidden',
-      alignSelf: 'stretch',
-      borderWidth: 1,
-      borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
-      shadowColor: '#0B1220',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.06,
-      shadowRadius: 12,
-      elevation: 4,
-    },
-    chartCardInner: {
-      alignItems: 'center',
-      paddingVertical: 20,
-      paddingHorizontal: 16,
-    },
-    chartTabs: {
-      flexDirection: 'row',
-      marginBottom: 16,
-      padding: 4,
-      borderRadius: 14,
-      backgroundColor: `${palette.primary}15`,
-      borderWidth: 1,
-      borderColor: `${palette.primary}25`,
-      alignSelf: 'stretch',
-    },
-    chartTab: {
-      flex: 1,
-      paddingVertical: 10,
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    chartTabActive: {
-      backgroundColor: palette.primary,
-    },
-    chartTabInactive: {
-      backgroundColor: 'transparent',
-    },
-    donutWrap: {
-      marginVertical: 8,
-    },
-    legendWrap: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      gap: 12,
-      marginTop: 16,
-      paddingHorizontal: 8,
-    },
-    legendItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    legendDot: {
-      width: 10,
-      height: 10,
-      borderRadius: 5,
-    },
+    // Título principal "Estadísticas"
     sectionTitleWrap: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-      marginBottom: 16,
-      marginTop: 8,
+      marginBottom: Spacing.md,
     },
     sectionTitleAccent: {
       width: 3,
@@ -179,44 +57,171 @@ export function createDashboardStyles(palette: Palette, screenWidth: number) {
       letterSpacing: 1.4,
       textTransform: 'uppercase',
     },
-    metricsRow: {
+    // Resumen global: mismo estilo que las cards inferiores (blanco + barra lateral azul)
+    summaryCard: {
+      borderRadius: 20,
+      padding: Spacing.md,
+      marginBottom: Spacing.lg,
+      backgroundColor: '#FFFFFF',
+      borderWidth: 1,
+      borderColor: cardBorder,
+      borderLeftWidth: 3,
+      borderLeftColor: palette.primary,
+      ...(cardShadow as object),
+    },
+    summaryRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: Spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: cardBorder,
+    },
+    summaryRowLast: {
+      borderBottomWidth: 0,
+    },
+    summaryLabel: {
+      opacity: 0.9,
+    },
+    summaryValue: {
+      fontSize: 16,
+      letterSpacing: -0.2,
+    },
+    // Donut (diversificación): sin card, fondo igual que la pantalla
+    donutCard: {
+      padding: Spacing.md,
+      marginBottom: Spacing.lg,
+      backgroundColor: palette.mainBackground ?? palette.background,
+    },
+    /** Selector sector / geográfica / acciones: pill deslizante detrás de la pestaña activa. */
+    donutTabsWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: Spacing.md,
+      position: 'relative',
+    },
+    /** Pill animada que se desliza entre pestañas (posición y ancho vía Reanimated). */
+    donutTabPill: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 12,
+    },
+    donutTab: {
+      paddingVertical: 10,
+      paddingHorizontal: 24,
+    },
+    donutWrap: {
+      alignItems: 'center',
+      marginVertical: 8,
+    },
+    // Context cards (debajo del gráfico): mejor/peor inversión, activos, operaciones
+    contextGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 12,
+      gap,
+      marginBottom: Spacing.lg,
     },
-    metricCard: {
-      width: cardWidth,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
-      overflow: 'hidden',
-      minHeight: 100,
+    contextCard: {
+      width: cardWidthThree,
     },
-    metricCardGradient: {
-      flex: 1,
-      borderRadius: 16,
-      padding: 16,
-    },
-    metricCardHighlight: {
-      borderColor: `${palette.primary}35`,
-    },
-    metricIconWrap: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 10,
-    },
-    metricLabel: {
+    contextLabel: {
       marginBottom: 4,
-      opacity: 0.85,
+      opacity: 0.9,
     },
-    metricValue: {
+    contextValue: {
       fontSize: 18,
       letterSpacing: -0.2,
+      marginBottom: 2,
+    },
+    contextPercent: {
+      fontSize: 16,
+      letterSpacing: -0.2,
+    },
+    // Grid 2x2 de métricas
+    statGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap,
+      marginBottom: Spacing.lg,
+    },
+    statCard: {
+      width: cardWidth,
+      borderRadius: 16,
+      padding: Spacing.md,
+      minHeight: 120,
+      backgroundColor: cardBg,
+      borderWidth: 1,
+      borderColor: cardBorder,
+    },
+    statCardHighlighted: {
+      backgroundColor: palette.primary,
+      borderColor: palette.primary,
+    },
+    statValue: {
+      fontSize: 28,
+      letterSpacing: -0.5,
+      marginBottom: 4,
+    },
+    statLabel: {
+      marginBottom: Spacing.sm,
+      opacity: 0.95,
+    },
+    progressTrack: {
+      height: 6,
+      borderRadius: 3,
+      overflow: 'hidden',
+      alignSelf: 'stretch',
+    },
+    progressFill: {
+      height: '100%',
+      borderRadius: 3,
+    },
+    // Sección Ingresos: título + tabs
+    incomeHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: Spacing.sm,
+      flexWrap: 'wrap',
+      gap: Spacing.sm,
+    },
+    incomeTitleWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    periodTabs: {
+      flexDirection: 'row',
+      padding: 4,
+      borderRadius: 12,
+      backgroundColor: cardBg,
+      borderWidth: 1,
+      borderColor: cardBorder,
+    },
+    periodTab: {
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 8,
+    },
+    periodTabActive: {
+      backgroundColor: palette.primary,
+    },
+    periodTabInactive: {
+      backgroundColor: 'transparent',
+    },
+    // Contenedor del gráfico
+    chartCard: {
+      borderRadius: 16,
+      padding: Spacing.md,
+      backgroundColor: cardBg,
+      borderWidth: 1,
+      borderColor: cardBorder,
+      marginTop: Spacing.sm,
     },
   });
 }
 
-export default createDashboardStyles;
+export type DashboardStyles = ReturnType<typeof createDashboardStyles>;

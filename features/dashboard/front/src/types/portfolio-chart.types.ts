@@ -27,4 +27,6 @@ export type PortfolioDonutChartProps = {
   showLegend?: boolean;
   /** Máximo de ítems en leyenda (resto se puede agrupar como "Otros" si se implementa). */
   maxLegendItems?: number;
+  /** Animar el donut por zonas al montar (cada segmento se pinta en secuencia). */
+  animateOnMount?: boolean;
 };

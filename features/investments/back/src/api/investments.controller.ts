@@ -5,6 +5,7 @@ import {
   executeSellOrderUseCase,
   getTransactionsUseCase,
   getPortfolioOverviewUseCase,
+  getDashboardSummaryUseCase,
 } from '../config/investments.wiring';
 import type { TimeframeParam, RangeParam } from '../application/usecases/get-portfolio-overview.usecase';
 import { InsufficientCashError } from '../application/usecases/execute-buy-order.usecase';
@@ -351,6 +352,29 @@ export const getCashOverviewController = async (req: Request, res: Response): Pr
     }
     console.error('[investments] getCashOverview error:', err);
     res.status(500).json({ message: 'Error al obtener efectivo' });
+  }
+};
+
+/**
+ * GET /api/investments/portfolio/summary
+ * Resumen y contexto para el Dashboard: valor total, rentabilidad, cash, invertido,
+ * mejor/peor activo, activos en cartera, número de operaciones, última operación.
+ */
+export const getDashboardSummaryController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = getUserId(req);
+    console.log('[investments] getDashboardSummaryController: calling useCase.execute for userId=', userId);
+    const result = await getDashboardSummaryUseCase.execute(userId);
+    console.log('[investments] getDashboardSummaryController: success');
+    res.status(200).json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Error al obtener resumen del dashboard';
+    if (message.includes('autenticado')) {
+      res.status(401).json({ message });
+      return;
+    }
+    console.error('[investments] getDashboardSummary error:', err);
+    res.status(500).json({ message });
   }
 };
 

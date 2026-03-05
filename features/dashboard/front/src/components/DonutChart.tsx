@@ -99,8 +99,8 @@ export function DonutChart({
             justifyContent: 'center',
             width: size,
             height: size,
+            pointerEvents: 'none',
           }}
-          pointerEvents="none"
         >
           {centerLabel && (
             <Text

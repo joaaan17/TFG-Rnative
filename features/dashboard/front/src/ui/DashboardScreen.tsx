@@ -1,50 +1,55 @@
 /**
- * Dashboard de cartera — rentabilidad, distribución sectorial/geográfica,
- * mejor activo y diversificación. Estilo minimalista y moderno.
+ * Dashboard — Resumen global de la cartera, diversificación (donut) y estadísticas.
+ * Arquitectura MVVM: View + useDashboardViewModel + tipos/dashboard.types.
  */
-import React, { useMemo } from 'react';
-import { ScrollView, useWindowDimensions, View, Pressable, Text as RNText } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { TrendingUp, BarChart3, Shield, Search, Bell } from 'lucide-react-native';
-
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import {
+  ActivityIndicator,
+  LayoutAnimation,
+  Platform,
+  Pressable,
+  ScrollView,
+  UIManager,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { Hierarchy } from '@/design-system/typography';
 import { Text } from '@/shared/components/ui/text';
 import { usePalette } from '@/shared/hooks/use-palette';
-import { Hierarchy } from '@/design-system/typography';
-import { PortfolioDonutChart } from '../components/PortfolioDonutChart';
-import type { DonutSegment } from '../types/portfolio-chart.types';
 
 import { useDashboardViewModel } from '../state/useDashboardViewModel';
+import { ContextCard } from '../components/ContextCard';
+import { PortfolioDonutChart } from '../components/PortfolioDonutChart';
 import { createDashboardStyles } from './Dashboard.styles';
 
-// Paleta del gráfico — multi-hue para distinguir bien cada activo/sector (fintech, profesional)
-const CHART_COLORS = {
-  blue: '#1D4ED8',
-  teal: '#0D9488',
-  amber: '#D97706',
-  emerald: '#059669',
-  violet: '#7C3AED',
-  cyan: '#0891B2',
-  orange: '#EA580C',
-  indigo: '#4F46E5',
-} as const;
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
-const SECTOR_DATA: DonutSegment[] = [
-  { label: 'Tecnología', value: 35, color: CHART_COLORS.blue },
-  { label: 'Salud', value: 20, color: CHART_COLORS.teal },
-  { label: 'Cripto', value: 20, color: CHART_COLORS.amber },
-  { label: 'Consumo defensivo', value: 15, color: CHART_COLORS.emerald },
-  { label: 'Energía', value: 10, color: CHART_COLORS.violet },
-];
+const ENTRY_GREEN = '#16A34A';
 
-const GEO_DATA: DonutSegment[] = [
-  { label: 'EEUU', value: 60, color: CHART_COLORS.blue },
-  { label: 'Europa', value: 20, color: CHART_COLORS.teal },
-  { label: 'Asia', value: 10, color: CHART_COLORS.amber },
-  { label: 'Emergentes', value: 10, color: CHART_COLORS.violet },
-];
+/** Animación al cambiar de opción en el selector del gráfico (sector/geográfica/acciones). */
+const CHART_TAB_ANIMATION = LayoutAnimation.create(
+  220,
+  LayoutAnimation.Types.easeInEaseOut,
+  LayoutAnimation.Properties.opacity,
+);
 
 export function DashboardScreen() {
-  const { activeChart, setActiveChart } = useDashboardViewModel();
   const palette = usePalette();
   const { width: screenWidth } = useWindowDimensions();
   const styles = useMemo(
@@ -52,305 +57,342 @@ export function DashboardScreen() {
     [palette, screenWidth],
   );
 
-  const segments = activeChart === 'sector' ? SECTOR_DATA : GEO_DATA;
-  const centerLabel =
-    activeChart === 'sector' ? '1.769 $' : '1.769 $';
-  const centerSublabel =
-    activeChart === 'sector'
-      ? 'Valor por sector'
-      : 'Valor por región';
+  const {
+    portfolioSummary,
+    activeChart,
+    setActiveChart,
+    donutSegments,
+    contextCards,
+    refetch,
+    loadingSummary,
+    summaryError,
+  } = useDashboardViewModel();
 
-  const chartCardGradient = useMemo(() => {
-    const primary = palette.primary ?? '#1D4ED8';
-    const isLight = (palette.background ?? palette.mainBackground) === '#F7F9FC';
-    if (isLight) {
-      return ['#FFFFFF', '#F0F4FF', primary] as const;
+  /** Pill deslizante: posición y ancho animados para que se vea el movimiento entre pestañas. */
+  const pillLeft = useSharedValue(0);
+  const pillWidth = useSharedValue(80);
+  const [tabLayouts, setTabLayouts] = useState<
+    Record<string, { x: number; width: number }>
+  >({});
+  const pillAnimatedOnce = useRef(false);
+
+  const measureTab = useCallback(
+    (key: string) =>
+      (event: { nativeEvent: { layout: { x: number; width: number } } }) => {
+        const { x, width } = event.nativeEvent.layout;
+        setTabLayouts((prev) => ({ ...prev, [key]: { x, width } }));
+      },
+    [],
+  );
+
+  useEffect(() => {
+    const layout = tabLayouts[activeChart];
+    if (!layout) return;
+    if (!pillAnimatedOnce.current) {
+      pillLeft.value = layout.x;
+      pillWidth.value = layout.width;
+      pillAnimatedOnce.current = true;
+    } else {
+      pillLeft.value = withTiming(layout.x, {
+        duration: 280,
+      });
+      pillWidth.value = withTiming(layout.width, {
+        duration: 280,
+      });
     }
-    return ['#0F172A', '#1E293B', primary] as const;
-  }, [palette.background, palette.mainBackground, palette.primary]);
+  }, [activeChart, tabLayouts, pillLeft, pillWidth]);
+
+  const pillAnimatedStyle = useAnimatedStyle(() => ({
+    left: pillLeft.value,
+    width: pillWidth.value,
+  }));
+
+  /** Animación del contenido del gráfico al cambiar de pestaña (web y nativo). */
+  const chartOpacity = useSharedValue(1);
+  const isFirstChartMount = useRef(true);
+  useEffect(() => {
+    if (isFirstChartMount.current) {
+      isFirstChartMount.current = false;
+      return;
+    }
+    chartOpacity.value = 0.82;
+    chartOpacity.value = withTiming(1, { duration: 220 });
+  }, [activeChart, chartOpacity]);
+  const donutAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: chartOpacity.value,
+  }));
+
+  const summary = portfolioSummary;
+  const totalProfitPositive = summary.totalProfitability.amount.startsWith('+');
+  const dailyProfitPositive = summary.dailyProfitability.amount.startsWith('+');
 
   return (
     <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.welcomeBlock}>
-            <RNText
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {summaryError ? (
+          <Pressable
+            style={[
+              styles.summaryCard,
+              {
+                backgroundColor: palette.destructive + '18',
+                borderLeftColor: palette.destructive,
+                marginBottom: 12,
+              },
+            ]}
+            onPress={refetch}
+          >
+            <Text style={[Hierarchy.caption, { color: palette.destructive }]}>
+              {summaryError}
+            </Text>
+            <Text
               style={[
-                styles.welcomeLine1,
+                Hierarchy.captionSmall,
+                { color: palette.primary, marginTop: 4 },
+              ]}
+            >
+              Pulsa para reintentar
+            </Text>
+          </Pressable>
+        ) : null}
+        {/* 1. Resumen global de la cartera (lo primero que ve el usuario) */}
+        <View style={styles.sectionTitleWrap}>
+          <View style={styles.sectionTitleAccent} />
+          <Text
+            style={[
+              Hierarchy.titleSection,
+              styles.sectionTitle,
+              { color: palette.icon ?? palette.text },
+            ]}
+          >
+            Resumen global de la cartera
+          </Text>
+          {loadingSummary ? (
+            <ActivityIndicator
+              size="small"
+              color={palette.primary}
+              style={{ marginLeft: 8 }}
+            />
+          ) : null}
+        </View>
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryRow}>
+            <Text
+              style={[
+                Hierarchy.bodySmall,
+                styles.summaryLabel,
                 { color: palette.icon ?? palette.text },
               ]}
             >
-              Bienvenido a tu
-            </RNText>
-            <RNText
+              Valor total de la cartera
+            </Text>
+            <Text
               style={[
-                styles.welcomeLine2,
+                Hierarchy.bodySmallSemibold,
+                styles.summaryValue,
                 { color: palette.text },
               ]}
             >
-              Dashboard
-            </RNText>
+              {summary.totalValue}
+            </Text>
           </View>
-          <View style={styles.headerIcons}>
-            <Pressable
-              style={styles.headerIconButton}
-              onPress={() => {}}
-              accessibilityLabel="Buscar"
+          <View style={styles.summaryRow}>
+            <Text
+              style={[
+                Hierarchy.bodySmall,
+                styles.summaryLabel,
+                { color: palette.icon ?? palette.text },
+              ]}
             >
-              <Search size={20} color={palette.icon ?? palette.text} />
-            </Pressable>
-            <Pressable
-              style={styles.headerIconButton}
-              onPress={() => {}}
-              accessibilityLabel="Notificaciones"
+              Rentabilidad total
+            </Text>
+            <Text
+              style={[
+                Hierarchy.bodySmallSemibold,
+                styles.summaryValue,
+                {
+                  color: totalProfitPositive
+                    ? ENTRY_GREEN
+                    : palette.destructive,
+                },
+              ]}
             >
-              <Bell size={20} color={palette.icon ?? palette.text} />
-            </Pressable>
+              {summary.totalProfitability.amount} (
+              {summary.totalProfitability.percent})
+            </Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text
+              style={[
+                Hierarchy.bodySmall,
+                styles.summaryLabel,
+                { color: palette.icon ?? palette.text },
+              ]}
+            >
+              Rentabilidad del día
+            </Text>
+            <Text
+              style={[
+                Hierarchy.bodySmallSemibold,
+                styles.summaryValue,
+                {
+                  color: dailyProfitPositive
+                    ? ENTRY_GREEN
+                    : palette.destructive,
+                },
+              ]}
+            >
+              {summary.dailyProfitability.amount} (
+              {summary.dailyProfitability.percent})
+            </Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text
+              style={[
+                Hierarchy.bodySmall,
+                styles.summaryLabel,
+                { color: palette.icon ?? palette.text },
+              ]}
+            >
+              Cash disponible
+            </Text>
+            <Text
+              style={[
+                Hierarchy.bodySmallSemibold,
+                styles.summaryValue,
+                { color: palette.text },
+              ]}
+            >
+              {summary.availableCash}
+            </Text>
+          </View>
+          <View style={[styles.summaryRow, styles.summaryRowLast]}>
+            <Text
+              style={[
+                Hierarchy.bodySmall,
+                styles.summaryLabel,
+                { color: palette.icon ?? palette.text },
+              ]}
+            >
+              Total invertido
+            </Text>
+            <Text
+              style={[
+                Hierarchy.bodySmallSemibold,
+                styles.summaryValue,
+                { color: palette.text },
+              ]}
+            >
+              {summary.totalInvested}
+            </Text>
           </View>
         </View>
 
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Rentabilidad total — card coherente con CARTERA y RESUMEN */}
-          <View style={styles.profitabilityWrap}>
-            <View style={styles.profitabilityCard}>
-              <LinearGradient
-                colors={[...chartCardGradient]}
-                style={{ flex: 1, borderRadius: 16 }}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <View style={styles.profitabilityCardInner}>
-                  <View style={styles.profitabilityIconWrap}>
-                    <TrendingUp size={24} color={palette.primary} strokeWidth={2.5} />
-                  </View>
-                  <View style={styles.profitabilityTextBlock}>
-                    <Text
-                      variant="muted"
-                      style={[Hierarchy.caption, styles.profitabilityLabel, { color: palette.icon }]}
-                    >
-                      Rentabilidad total
-                    </Text>
-                    <Text
-                      style={[
-                        Hierarchy.value,
-                        styles.profitabilityValue,
-                        { color: palette.text },
-                      ]}
-                    >
-                      +324,50 $
-                    </Text>
-                  </View>
-                </View>
-              </LinearGradient>
-            </View>
-          </View>
-
-          {/* Título CARTERA — mismo estilo que RESUMEN */}
-          <View style={styles.sectionTitleWrap}>
-            <View style={styles.sectionTitleAccent} />
-            <Text
+        {/* 2. Diversificación: gráfico circular por sector / geográfica */}
+        <View style={styles.sectionTitleWrap}>
+          <View style={styles.sectionTitleAccent} />
+          <Text
+            style={[
+              Hierarchy.titleSection,
+              styles.sectionTitle,
+              { color: palette.icon ?? palette.text },
+            ]}
+          >
+            Cartera
+          </Text>
+        </View>
+        <View style={styles.donutCard}>
+          <View style={styles.donutTabsWrap}>
+            <Animated.View
               style={[
-                Hierarchy.titleSection,
-                styles.sectionTitle,
-                { color: palette.icon ?? palette.text },
+                styles.donutTabPill,
+                pillAnimatedStyle,
+                { pointerEvents: 'none' },
               ]}
-            >
-              Cartera
-            </Text>
+            />
+            {(
+              [
+                { key: 'sector' as const, label: 'Sector' },
+                { key: 'geo' as const, label: 'Geográfica' },
+                { key: 'stocks' as const, label: 'Acciones' },
+              ] as const
+            ).map(({ key, label }) => {
+              const isActive = activeChart === key;
+              return (
+                <Pressable
+                  key={key}
+                  accessibilityRole="button"
+                  accessibilityLabel={label}
+                  style={styles.donutTab}
+                  onLayout={measureTab(key)}
+                  onPress={() => {
+                    if (activeChart !== key) {
+                      if (Platform.OS !== 'web') {
+                        LayoutAnimation.configureNext(CHART_TAB_ANIMATION);
+                      }
+                      setActiveChart(key);
+                    }
+                  }}
+                >
+                  <Text
+                    style={[
+                      Hierarchy.bodySmallSemibold,
+                      {
+                        color: palette.primary,
+                        fontSize: isActive ? 17 : 15,
+                        letterSpacing: -0.2,
+                        fontWeight: isActive ? '700' : '500',
+                      },
+                    ]}
+                  >
+                    {label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
+          <Animated.View style={[styles.donutWrap, donutAnimatedStyle]}>
+            <PortfolioDonutChart
+              segments={donutSegments}
+              size={220}
+              strokeWidth={42}
+              centerLabel={summary.totalValue}
+              centerSublabel={
+                activeChart === 'sector'
+                  ? 'Valor por sector'
+                  : activeChart === 'geo'
+                    ? 'Valor por región'
+                    : 'Valor por acciones'
+              }
+              showLegend
+            />
+          </Animated.View>
+        </View>
 
-          {/* Gráfico de dona — card con degradado (estética fintech) */}
-          <View style={styles.chartSection}>
-            <View style={styles.chartCard}>
-              <LinearGradient
-                colors={[...chartCardGradient]}
-                style={{ flex: 1, borderRadius: 20 }}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <View style={styles.chartCardInner}>
-                  <View style={styles.chartTabs}>
-                    <Pressable
-                      style={[
-                        styles.chartTab,
-                        activeChart === 'sector' ? styles.chartTabActive : styles.chartTabInactive,
-                      ]}
-                      onPress={() => setActiveChart('sector')}
-                    >
-                      <Text
-                        style={[
-                          Hierarchy.caption,
-                          {
-                            color:
-                              activeChart === 'sector'
-                                ? palette.primaryText ?? '#FFF'
-                                : palette.icon ?? palette.text,
-                          },
-                        ]}
-                      >
-                        SECTOR
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      style={[
-                        styles.chartTab,
-                        activeChart === 'geo' ? styles.chartTabActive : styles.chartTabInactive,
-                      ]}
-                      onPress={() => setActiveChart('geo')}
-                    >
-                      <Text
-                        style={[
-                          Hierarchy.caption,
-                          {
-                            color:
-                              activeChart === 'geo'
-                                ? palette.primaryText ?? '#FFF'
-                                : palette.icon ?? palette.text,
-                          },
-                        ]}
-                      >
-                        GEOGRÁFICA
-                      </Text>
-                    </Pressable>
-                  </View>
+        {/* Contexto debajo del gráfico: mejor/peor inversión, activos, operaciones (sin repetir resumen) */}
+        <View style={styles.sectionTitleWrap}>
+          <View style={styles.sectionTitleAccent} />
+          <Text
+            style={[
+              Hierarchy.titleSection,
+              styles.sectionTitle,
+              { color: palette.icon ?? palette.text },
+            ]}
+          >
+            Contexto de tu cartera
+          </Text>
+        </View>
 
-                  <View style={styles.donutWrap}>
-                    <PortfolioDonutChart
-                      segments={segments}
-                      size={220}
-                      strokeWidth={42}
-                      centerLabel={centerLabel}
-                      centerSublabel={centerSublabel}
-                      showLegend
-                    />
-                  </View>
-                </View>
-              </LinearGradient>
-            </View>
-          </View>
-
-          {/* Métricas: Mejor activo, Diversificación */}
-          <View style={styles.sectionTitleWrap}>
-            <View style={styles.sectionTitleAccent} />
-            <Text
-              style={[
-                Hierarchy.titleSection,
-                styles.sectionTitle,
-                { color: palette.icon ?? palette.text },
-              ]}
-            >
-              Resumen
-            </Text>
-          </View>
-
-          <View style={styles.metricsRow}>
-            <View style={[styles.metricCard, styles.metricCardHighlight]}>
-              <LinearGradient
-                colors={[...chartCardGradient]}
-                style={styles.metricCardGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <View
-                  style={[
-                    styles.metricIconWrap,
-                    { backgroundColor: `${palette.primary}25` },
-                  ]}
-                >
-                  <TrendingUp size={18} color={palette.primary} />
-                </View>
-                <Text
-                  variant="muted"
-                  style={[Hierarchy.caption, styles.metricLabel, { color: palette.icon }]}
-                >
-                  Mejor activo
-                </Text>
-                <Text
-                  style={[Hierarchy.valueSecondary, styles.metricValue, { color: palette.text }]}
-                >
-                  Bitcoin
-                </Text>
-                <Text
-                  style={[Hierarchy.captionSmall, { color: palette.primary }]}
-                >
-                  +4,56%
-                </Text>
-              </LinearGradient>
-            </View>
-
-            <View style={styles.metricCard}>
-              <LinearGradient
-                colors={[...chartCardGradient]}
-                style={styles.metricCardGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <View
-                  style={[
-                    styles.metricIconWrap,
-                    { backgroundColor: palette.surfaceMuted },
-                  ]}
-                >
-                  <BarChart3 size={18} color={palette.primary} />
-                </View>
-                <Text
-                  variant="muted"
-                  style={[Hierarchy.caption, styles.metricLabel, { color: palette.icon }]}
-                >
-                  Diversificación
-                </Text>
-                <Text
-                  style={[Hierarchy.valueSecondary, styles.metricValue, { color: palette.text }]}
-                >
-                  5 sectores
-                </Text>
-                <Text
-                  style={[Hierarchy.captionSmall, { color: palette.icon }]}
-                >
-                  Bien distribuido
-                </Text>
-              </LinearGradient>
-            </View>
-
-            <View style={styles.metricCard}>
-              <LinearGradient
-                colors={[...chartCardGradient]}
-                style={styles.metricCardGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <View
-                  style={[
-                    styles.metricIconWrap,
-                    { backgroundColor: palette.surfaceMuted },
-                  ]}
-                >
-                  <Shield size={18} color={palette.primary} />
-                </View>
-                <Text
-                  variant="muted"
-                  style={[Hierarchy.caption, styles.metricLabel, { color: palette.icon }]}
-                >
-                  Riesgo
-                </Text>
-                <Text
-                  style={[Hierarchy.valueSecondary, styles.metricValue, { color: palette.text }]}
-                >
-                  Moderado
-                </Text>
-                <Text
-                  style={[Hierarchy.captionSmall, { color: palette.icon }]}
-                >
-                  4 regiones
-                </Text>
-              </LinearGradient>
-            </View>
-          </View>
-        </ScrollView>
-      </View>
+        <View style={styles.contextGrid}>
+          {contextCards.map((card) => (
+            <ContextCard key={card.id} card={card} styles={styles} />
+          ))}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
