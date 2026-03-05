@@ -8,9 +8,7 @@ import type {
 const CANDLES_TIMEOUT_MS = 8_000;
 
 /** period1/period2 en ms para cada range (desde ahora hacia atrás). */
-function rangeToPeriods(
-  range: CandleRange,
-): { period1: Date; period2: Date } {
+function rangeToPeriods(range: CandleRange): { period1: Date; period2: Date } {
   const now = Date.now();
   const period2 = new Date(now);
   let period1: Date;
@@ -89,7 +87,6 @@ export class YahooFinanceMarketCandlesAdapter implements MarketCandlesPort {
     range: CandleRange,
     interval: CandleInterval,
   ): Promise<Candle[]> {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const createYahooFinance =
       require('yahoo-finance2/createYahooFinance').default;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -112,8 +109,21 @@ export class YahooFinanceMarketCandlesAdapter implements MarketCandlesPort {
     );
 
     const quotes =
-      raw && typeof raw === 'object' && Array.isArray((raw as { quotes?: unknown[] }).quotes)
-        ? (raw as { quotes: Array<{ date: Date; open: number | null; high: number | null; low: number | null; close: number | null; volume?: number | null }> }).quotes
+      raw &&
+      typeof raw === 'object' &&
+      Array.isArray((raw as { quotes?: unknown[] }).quotes)
+        ? (
+            raw as {
+              quotes: {
+                date: Date;
+                open: number | null;
+                high: number | null;
+                low: number | null;
+                close: number | null;
+                volume?: number | null;
+              }[];
+            }
+          ).quotes
         : [];
 
     const candles: Candle[] = [];

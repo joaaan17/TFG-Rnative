@@ -73,9 +73,7 @@ export function IApreguntasScreen() {
       </View>
 
       <View style={styles.welcomeArea}>
-        <Text
-          style={[Hierarchy.bodySmallSemibold, styles.helloText]}
-        >
+        <Text style={[Hierarchy.bodySmallSemibold, styles.helloText]}>
           Hola Joan
         </Text>
         <TypewriterTextComponent
@@ -105,9 +103,7 @@ export function IApreguntasScreen() {
       </View>
 
       {error ? (
-        <Text style={[Hierarchy.bodySmall, styles.errorText]}>
-          {error}
-        </Text>
+        <Text style={[Hierarchy.bodySmall, styles.errorText]}>{error}</Text>
       ) : null}
 
       <View style={styles.inputArea}>
@@ -132,7 +128,11 @@ export function IApreguntasScreen() {
             ) : (
               <ArrowRight
                 size={20}
-                color={isSendActive ? (palette.primaryText ?? '#FFF') : (palette.icon ?? palette.text)}
+                color={
+                  isSendActive
+                    ? (palette.primaryText ?? '#FFF')
+                    : (palette.icon ?? palette.text)
+                }
               />
             )}
           </Pressable>

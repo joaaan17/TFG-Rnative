@@ -20,9 +20,14 @@ export function createRequestFriendship(repo: RelationshipRepository) {
     input: RequestFriendshipInput,
   ): Promise<RequestFriendshipOutput> {
     if (input.currentUserId === input.targetUserId) {
-      throw new RelationshipForbiddenError('Cannot send friend request to yourself');
+      throw new RelationshipForbiddenError(
+        'Cannot send friend request to yourself',
+      );
     }
-    const { userAId, userBId } = normalizePair(input.currentUserId, input.targetUserId);
+    const { userAId, userBId } = normalizePair(
+      input.currentUserId,
+      input.targetUserId,
+    );
     const existing = await repo.findByPair(userAId, userBId);
     if (existing) {
       if (existing.status === 'pending') {

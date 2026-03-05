@@ -1,5 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
-import { postSellOrder, type SellOrderResponse } from '../api/investmentsClient';
+import {
+  postSellOrder,
+  type SellOrderResponse,
+} from '../api/investmentsClient';
 
 export function useSellOrder(token: string | null) {
   const [loading, setLoading] = useState(false);
@@ -10,7 +13,10 @@ export function useSellOrder(token: string | null) {
     async (
       symbol: string,
       shares: number,
-      options?: { onSuccess?: (result: SellOrderResponse) => void; price?: number },
+      options?: {
+        onSuccess?: (result: SellOrderResponse) => void;
+        price?: number;
+      },
     ): Promise<SellOrderResponse | null> => {
       if (!token?.trim()) {
         setError('Debes iniciar sesión para vender');
@@ -32,7 +38,9 @@ export function useSellOrder(token: string | null) {
         return null;
       } catch (err) {
         if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : 'Error al ejecutar la venta');
+          setError(
+            err instanceof Error ? err.message : 'Error al ejecutar la venta',
+          );
         }
         return null;
       } finally {

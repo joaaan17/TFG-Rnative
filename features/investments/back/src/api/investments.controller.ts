@@ -6,13 +6,16 @@ import {
   getTransactionsUseCase,
   getPortfolioOverviewUseCase,
   getDashboardSummaryUseCase,
+  portfolioAnalyticsService,
 } from '../config/investments.wiring';
-import type { TimeframeParam, RangeParam } from '../application/usecases/get-portfolio-overview.usecase';
+import type {
+  TimeframeParam,
+  RangeParam,
+} from '../application/usecases/get-portfolio-overview.usecase';
 import { InsufficientCashError } from '../application/usecases/execute-buy-order.usecase';
 import { InsufficientSharesError } from '../application/usecases/execute-sell-order.usecase';
 import { requireAuth } from '../../../../auth/back/src/api/auth.middleware';
 import type { PerformanceRange } from '../domain/investments.types';
-import { portfolioAnalyticsService } from '../config/investments.wiring';
 
 function getUserId(req: Request): string {
   const id = req.auth?.userId;
@@ -26,21 +29,33 @@ function getUserId(req: Request): string {
  * GET /api/investments/portfolio/me
  * Obtiene la cartera del usuario autenticado. Si no existe, la crea con saldo inicial.
  */
-const VALID_PERFORMANCE_RANGES: PerformanceRange[] = ['1D', '1W', '1M', '3M', '6M', '1Y'];
+const VALID_PERFORMANCE_RANGES: PerformanceRange[] = [
+  '1D',
+  '1W',
+  '1M',
+  '3M',
+  '6M',
+  '1Y',
+];
 
 function parsePerformanceRange(q: unknown): PerformanceRange {
   const s = typeof q === 'string' ? q.trim().toUpperCase() : '';
-  if (VALID_PERFORMANCE_RANGES.includes(s as PerformanceRange)) return s as PerformanceRange;
+  if (VALID_PERFORMANCE_RANGES.includes(s as PerformanceRange))
+    return s as PerformanceRange;
   return '1M';
 }
 
-export const getPortfolioController = async (req: Request, res: Response): Promise<void> => {
+export const getPortfolioController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = getUserId(req);
     const result = await getOrCreatePortfolioUseCase.execute(userId);
     res.status(200).json(result);
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Error al obtener la cartera';
+    const message =
+      err instanceof Error ? err.message : 'Error al obtener la cartera';
     if (message.includes('required') || message.includes('autenticado')) {
       res.status(401).json({ message });
       return;
@@ -55,14 +70,20 @@ export const getPortfolioController = async (req: Request, res: Response): Promi
  * Body: { symbol: string, shares: number, price?: number }
  * Ejecuta una compra. Si se envía price (mismo que "Valor actual" en el modal: 6h → quote), se usa para la transacción y precio medio compra; si no, el servidor usa el quote. Así el precio de compra registrado coincide con lo que ve el usuario.
  */
-export const postBuyOrderController = async (req: Request, res: Response): Promise<void> => {
+export const postBuyOrderController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = getUserId(req);
     const body = req.body ?? {};
     const symbol = typeof body.symbol === 'string' ? body.symbol.trim() : '';
-    const shares = typeof body.shares === 'number' ? body.shares : Number(body.shares);
+    const shares =
+      typeof body.shares === 'number' ? body.shares : Number(body.shares);
     const priceFromClient =
-      typeof body.price === 'number' && Number.isFinite(body.price) && body.price > 0
+      typeof body.price === 'number' &&
+      Number.isFinite(body.price) &&
+      body.price > 0
         ? body.price
         : undefined;
 
@@ -71,21 +92,25 @@ export const postBuyOrderController = async (req: Request, res: Response): Promi
       return;
     }
     if (!Number.isFinite(shares) || shares <= 0) {
-      res.status(400).json({ message: 'shares debe ser un número mayor que 0' });
+      res
+        .status(400)
+        .json({ message: 'shares debe ser un número mayor que 0' });
       return;
     }
 
-    const requestId = typeof req.headers['x-request-id'] === 'string'
-      ? req.headers['x-request-id']
-      : undefined;
+    const requestId =
+      typeof req.headers['x-request-id'] === 'string'
+        ? req.headers['x-request-id']
+        : undefined;
 
-    const { updatedPortfolio, createdTransaction } = await executeBuyOrderUseCase.execute(
-      userId,
-      symbol.toUpperCase(),
-      shares,
-      requestId,
-      priceFromClient,
-    );
+    const { updatedPortfolio, createdTransaction } =
+      await executeBuyOrderUseCase.execute(
+        userId,
+        symbol.toUpperCase(),
+        shares,
+        requestId,
+        priceFromClient,
+      );
 
     res.status(200).json({
       updatedPortfolio: {
@@ -114,12 +139,17 @@ export const postBuyOrderController = async (req: Request, res: Response): Promi
       res.status(409).json({ message: err.message });
       return;
     }
-    const message = err instanceof Error ? err.message : 'Error al ejecutar la compra';
+    const message =
+      err instanceof Error ? err.message : 'Error al ejecutar la compra';
     if (message.includes('required') || message.includes('autenticado')) {
       res.status(401).json({ message });
       return;
     }
-    if (message.includes('Precio no disponible') || message.includes('symbol') || message.includes('shares')) {
+    if (
+      message.includes('Precio no disponible') ||
+      message.includes('symbol') ||
+      message.includes('shares')
+    ) {
       res.status(400).json({ message });
       return;
     }
@@ -137,14 +167,20 @@ export const postBuyOrderController = async (req: Request, res: Response): Promi
  * Body: { symbol: string, shares: number, price?: number }
  * Ejecuta una venta. Si se envía price (mismo criterio que "Valor actual" en el modal: 6h → quote), se usa para la transacción; si no, el servidor usa el quote. Retorna cartera actualizada y transacción.
  */
-export const postSellOrderController = async (req: Request, res: Response): Promise<void> => {
+export const postSellOrderController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = getUserId(req);
     const body = req.body ?? {};
     const symbol = typeof body.symbol === 'string' ? body.symbol.trim() : '';
-    const shares = typeof body.shares === 'number' ? body.shares : Number(body.shares);
+    const shares =
+      typeof body.shares === 'number' ? body.shares : Number(body.shares);
     const priceFromClient =
-      typeof body.price === 'number' && Number.isFinite(body.price) && body.price > 0
+      typeof body.price === 'number' &&
+      Number.isFinite(body.price) &&
+      body.price > 0
         ? body.price
         : undefined;
 
@@ -153,21 +189,25 @@ export const postSellOrderController = async (req: Request, res: Response): Prom
       return;
     }
     if (!Number.isFinite(shares) || shares <= 0) {
-      res.status(400).json({ message: 'shares debe ser un número mayor que 0' });
+      res
+        .status(400)
+        .json({ message: 'shares debe ser un número mayor que 0' });
       return;
     }
 
-    const requestId = typeof req.headers['x-request-id'] === 'string'
-      ? req.headers['x-request-id']
-      : undefined;
+    const requestId =
+      typeof req.headers['x-request-id'] === 'string'
+        ? req.headers['x-request-id']
+        : undefined;
 
-    const { updatedPortfolio, createdTransaction } = await executeSellOrderUseCase.execute(
-      userId,
-      symbol.toUpperCase(),
-      shares,
-      requestId,
-      priceFromClient,
-    );
+    const { updatedPortfolio, createdTransaction } =
+      await executeSellOrderUseCase.execute(
+        userId,
+        symbol.toUpperCase(),
+        shares,
+        requestId,
+        priceFromClient,
+      );
 
     res.status(200).json({
       updatedPortfolio: {
@@ -196,12 +236,17 @@ export const postSellOrderController = async (req: Request, res: Response): Prom
       res.status(409).json({ message: err.message });
       return;
     }
-    const message = err instanceof Error ? err.message : 'Error al ejecutar la venta';
+    const message =
+      err instanceof Error ? err.message : 'Error al ejecutar la venta';
     if (message.includes('required') || message.includes('autenticado')) {
       res.status(401).json({ message });
       return;
     }
-    if (message.includes('Precio no disponible') || message.includes('symbol') || message.includes('shares')) {
+    if (
+      message.includes('Precio no disponible') ||
+      message.includes('symbol') ||
+      message.includes('shares')
+    ) {
       res.status(400).json({ message });
       return;
     }
@@ -218,15 +263,29 @@ export const postSellOrderController = async (req: Request, res: Response): Prom
  * GET /api/investments/portfolio/overview?timeframe=1d&range=6mo
  * Resumen de cartera: allocation y markers para gráficos.
  */
-export const getPortfolioOverviewController = async (req: Request, res: Response): Promise<void> => {
+export const getPortfolioOverviewController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = getUserId(req);
-    const timeframe = (typeof req.query.timeframe === 'string' ? req.query.timeframe : '1d') as TimeframeParam;
-    const range = (typeof req.query.range === 'string' ? req.query.range : '6mo') as RangeParam;
-    const result = await getPortfolioOverviewUseCase.execute(userId, timeframe, range);
+    const timeframe = (
+      typeof req.query.timeframe === 'string' ? req.query.timeframe : '1d'
+    ) as TimeframeParam;
+    const range = (
+      typeof req.query.range === 'string' ? req.query.range : '6mo'
+    ) as RangeParam;
+    const result = await getPortfolioOverviewUseCase.execute(
+      userId,
+      timeframe,
+      range,
+    );
     res.status(200).json(result);
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Error al obtener resumen de cartera';
+    const message =
+      err instanceof Error
+        ? err.message
+        : 'Error al obtener resumen de cartera';
     if (message.includes('required') || message.includes('autenticado')) {
       res.status(401).json({ message });
       return;
@@ -241,10 +300,19 @@ export const getPortfolioOverviewController = async (req: Request, res: Response
  * a partir de las compras del mismo símbolo anteriores a la venta (solo BUY, misma symbol, fecha < venta).
  */
 function enrichSellsWithEstimatedAvgBuyPrice<
-  T extends { _id: string; symbol: string; type: string; executedAt: Date; avgBuyPrice?: number; shares: number; total: number },
+  T extends {
+    _id: string;
+    symbol: string;
+    type: string;
+    executedAt: Date;
+    avgBuyPrice?: number;
+    shares: number;
+    total: number;
+  },
 >(transactions: T[]): T[] {
   const byDateAsc = [...transactions].sort(
-    (a, b) => new Date(a.executedAt).getTime() - new Date(b.executedAt).getTime(),
+    (a, b) =>
+      new Date(a.executedAt).getTime() - new Date(b.executedAt).getTime(),
   );
   return transactions.map((t) => {
     if (t.type !== 'SELL' || t.avgBuyPrice != null) return t;
@@ -269,11 +337,15 @@ function enrichSellsWithEstimatedAvgBuyPrice<
  * Historial de transacciones del usuario autenticado.
  * Para ventas antiguas sin avgBuyPrice se estima a partir de compras previas del mismo símbolo.
  */
-export const getTransactionsController = async (req: Request, res: Response): Promise<void> => {
+export const getTransactionsController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = getUserId(req);
     const limitParam = req.query.limit;
-    const limit = typeof limitParam === 'string' ? parseInt(limitParam, 10) : 50;
+    const limit =
+      typeof limitParam === 'string' ? parseInt(limitParam, 10) : 50;
     let transactions = await getTransactionsUseCase.execute(userId, limit);
     transactions = enrichSellsWithEstimatedAvgBuyPrice(transactions);
     res.status(200).json({
@@ -290,7 +362,8 @@ export const getTransactionsController = async (req: Request, res: Response): Pr
       })),
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Error al obtener transacciones';
+    const message =
+      err instanceof Error ? err.message : 'Error al obtener transacciones';
     if (message.includes('required') || message.includes('autenticado')) {
       res.status(401).json({ message });
       return;
@@ -305,7 +378,10 @@ export const getTransactionsController = async (req: Request, res: Response): Pr
  * Resumen de efectivo: balance, entradas/salidas del mes y últimas transacciones.
  * Pensado para la pantalla "Efectivo" (neobanco). Opcional: el front puede usar portfolio/me + transactions/me.
  */
-export const getCashOverviewController = async (req: Request, res: Response): Promise<void> => {
+export const getCashOverviewController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = getUserId(req);
     const [portfolio, rawTransactions] = await Promise.all([
@@ -345,7 +421,8 @@ export const getCashOverviewController = async (req: Request, res: Response): Pr
       })),
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Error al obtener efectivo';
+    const message =
+      err instanceof Error ? err.message : 'Error al obtener efectivo';
     if (message.includes('required') || message.includes('autenticado')) {
       res.status(401).json({ message });
       return;
@@ -360,15 +437,24 @@ export const getCashOverviewController = async (req: Request, res: Response): Pr
  * Resumen y contexto para el Dashboard: valor total, rentabilidad, cash, invertido,
  * mejor/peor activo, activos en cartera, número de operaciones, última operación.
  */
-export const getDashboardSummaryController = async (req: Request, res: Response): Promise<void> => {
+export const getDashboardSummaryController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = getUserId(req);
-    console.log('[investments] getDashboardSummaryController: calling useCase.execute for userId=', userId);
+    console.log(
+      '[investments] getDashboardSummaryController: calling useCase.execute for userId=',
+      userId,
+    );
     const result = await getDashboardSummaryUseCase.execute(userId);
     console.log('[investments] getDashboardSummaryController: success');
     res.status(200).json(result);
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Error al obtener resumen del dashboard';
+    const message =
+      err instanceof Error
+        ? err.message
+        : 'Error al obtener resumen del dashboard';
     if (message.includes('autenticado')) {
       res.status(401).json({ message });
       return;
@@ -382,18 +468,23 @@ export const getDashboardSummaryController = async (req: Request, res: Response)
  * GET /api/investments/portfolio/performance?range=1M|3M|6M|1Y
  * Equity curve: valor total cartera (cash + posiciones) en el tiempo.
  */
-export const getPerformanceController = async (req: Request, res: Response): Promise<void> => {
+export const getPerformanceController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const start = Date.now();
   try {
     const userId = getUserId(req);
     const range = parsePerformanceRange(req.query.range);
-    const requestId = typeof req.headers['x-request-id'] === 'string' ? req.headers['x-request-id'] : undefined;
-    const { points, symbolsUsed, cacheStatuses } = await portfolioAnalyticsService.getPerformance(
-      userId,
-      range,
-      requestId,
-    );
-    const cacheStatus = cacheStatuses.every((s) => s === 'HIT_L1' || s === 'HIT_L2')
+    const requestId =
+      typeof req.headers['x-request-id'] === 'string'
+        ? req.headers['x-request-id']
+        : undefined;
+    const { points, symbolsUsed, cacheStatuses } =
+      await portfolioAnalyticsService.getPerformance(userId, range, requestId);
+    const cacheStatus = cacheStatuses.every(
+      (s) => s === 'HIT_L1' || s === 'HIT_L2',
+    )
       ? 'HIT'
       : cacheStatuses.some((s) => s === 'MISS_FETCH')
         ? 'MISS'
@@ -412,7 +503,8 @@ export const getPerformanceController = async (req: Request, res: Response): Pro
       },
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Error al obtener performance';
+    const message =
+      err instanceof Error ? err.message : 'Error al obtener performance';
     if (message.includes('autenticado')) {
       res.status(401).json({ message });
       return;

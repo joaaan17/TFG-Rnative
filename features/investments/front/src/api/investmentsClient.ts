@@ -50,7 +50,10 @@ async function parseJsonSafe(response: Response): Promise<unknown> {
 }
 
 function getMessage(data: unknown, fallback: string): string {
-  if (data != null && typeof (data as { message?: string }).message === 'string') {
+  if (
+    data != null &&
+    typeof (data as { message?: string }).message === 'string'
+  ) {
     return (data as { message: string }).message;
   }
   return fallback;
@@ -134,10 +137,13 @@ export async function getTransactions(
   token: string,
   limit: number = 50,
 ): Promise<{ transactions: TransactionResponse[] }> {
-  const response = await fetch(`${getBaseUrl()}/transactions/me?limit=${limit}`, {
-    method: 'GET',
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await fetch(
+    `${getBaseUrl()}/transactions/me?limit=${limit}`,
+    {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   const data = await parseJsonSafe(response);
   if (!response.ok) {
     throw new Error(getMessage(data, 'Error al obtener transacciones'));
@@ -264,6 +270,8 @@ export interface DashboardContextResponse {
 export interface DashboardSummaryApiResponse {
   summary: DashboardSummaryResponse;
   context: DashboardContextResponse;
+  /** Distribución por acciones (sin CASH ni OTHERS) para el donut "Acciones". */
+  allocationStocks: AllocationItemResponse[];
 }
 
 export async function getPortfolioSummary(
@@ -279,5 +287,17 @@ export async function getPortfolioSummary(
   if (!response.ok) {
     throw new Error(getMessage(data, 'Error al obtener resumen del dashboard'));
   }
-  return data as DashboardSummaryApiResponse;
+  // DEBUG: verificar estructura de la respuesta
+  const typed = data as DashboardSummaryApiResponse;
+  const rawAllocation = typed?.allocationStocks;
+  if (!Array.isArray(rawAllocation)) {
+    console.warn(
+      '[investmentsClient] portfolio/summary: allocationStocks no es array',
+      {
+        type: typeof rawAllocation,
+        keys: data != null && typeof data === 'object' ? Object.keys(data) : [],
+      },
+    );
+  }
+  return typed;
 }

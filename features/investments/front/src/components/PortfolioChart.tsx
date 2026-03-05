@@ -37,7 +37,14 @@ const TIMEFRAME_OPTIONS: { value: CandleTimeframe; label: string }[] = [
 const CHART_PADDING_HORIZONTAL = 20;
 
 function apiCandlesToChartCandles(
-  candles: Array<{ t: number; o: number; h: number; l: number; c: number; v?: number }>,
+  candles: {
+    t: number;
+    o: number;
+    h: number;
+    l: number;
+    c: number;
+    v?: number;
+  }[],
 ): Candle[] {
   return candles.map((c) => ({
     time: Math.floor(c.t / 1000),
@@ -91,7 +98,9 @@ export function PortfolioChart({
   }, [data?.candles]);
 
   const lastCandleClose =
-    chartCandles.length > 0 ? chartCandles[chartCandles.length - 1].close : undefined;
+    chartCandles.length > 0
+      ? chartCandles[chartCandles.length - 1].close
+      : undefined;
   const priceForLine = currentPrice ?? lastCandleClose;
   const priceLines = useMemo((): PriceLine[] => {
     if (priceForLine == null) return [];
@@ -140,14 +149,19 @@ export function PortfolioChart({
                 justifyContent: 'center',
                 alignItems: 'center',
                 backgroundColor:
-                  range === opt.value ? palette.primary : palette.surfaceMuted ?? '#f0f0f0',
+                  range === opt.value
+                    ? palette.primary
+                    : (palette.surfaceMuted ?? '#f0f0f0'),
               }}
             >
               <Text
                 style={[
                   Hierarchy.action,
                   {
-                    color: range === opt.value ? palette.primaryText ?? '#FFF' : palette.text,
+                    color:
+                      range === opt.value
+                        ? (palette.primaryText ?? '#FFF')
+                        : palette.text,
                   },
                 ]}
               >
@@ -160,11 +174,20 @@ export function PortfolioChart({
 
       {/* Loading */}
       {loading && (
-        <View style={{ justifyContent: 'center', alignItems: 'center', minHeight: height }}>
+        <View
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: height,
+          }}
+        >
           <ActivityIndicator size="large" color={palette.primary} />
           <Text
             variant="muted"
-            style={[Hierarchy.bodySmall, { marginTop: 12, color: palette.icon }]}
+            style={[
+              Hierarchy.bodySmall,
+              { marginTop: 12, color: palette.icon },
+            ]}
           >
             Cargando gráfico...
           </Text>
@@ -173,10 +196,19 @@ export function PortfolioChart({
 
       {/* Error */}
       {error && !loading && (
-        <View style={{ justifyContent: 'center', alignItems: 'center', minHeight: height }}>
+        <View
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: height,
+          }}
+        >
           <Text
             variant="muted"
-            style={[Hierarchy.bodySmall, { textAlign: 'center', color: palette.icon }]}
+            style={[
+              Hierarchy.bodySmall,
+              { textAlign: 'center', color: palette.icon },
+            ]}
           >
             {error}
           </Text>
@@ -190,7 +222,12 @@ export function PortfolioChart({
               backgroundColor: palette.primary,
             }}
           >
-            <Text style={[Hierarchy.action, { color: palette.primaryText ?? '#FFF' }]}>
+            <Text
+              style={[
+                Hierarchy.action,
+                { color: palette.primaryText ?? '#FFF' },
+              ]}
+            >
               Reintentar
             </Text>
           </Pressable>
@@ -199,10 +236,19 @@ export function PortfolioChart({
 
       {/* Sin datos */}
       {!loading && !error && chartCandles.length === 0 && (
-        <View style={{ justifyContent: 'center', alignItems: 'center', minHeight: height }}>
+        <View
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: height,
+          }}
+        >
           <Text
             variant="muted"
-            style={[Hierarchy.bodySmall, { textAlign: 'center', color: palette.icon }]}
+            style={[
+              Hierarchy.bodySmall,
+              { textAlign: 'center', color: palette.icon },
+            ]}
           >
             No hay datos para este período
           </Text>
@@ -219,7 +265,8 @@ export function PortfolioChart({
             seriesType={chartMode}
             priceLines={priceLines}
             theme={{
-              layoutBackgroundColor: palette.mainBackground ?? palette.background,
+              layoutBackgroundColor:
+                palette.mainBackground ?? palette.background,
               textColor: palette.text,
               gridColor: palette.surfaceBorder ?? '#D6DEE8',
               upColor: palette.primary,
@@ -251,7 +298,7 @@ export function PortfolioChart({
                     backgroundColor:
                       timeframe === opt.value
                         ? palette.primary
-                        : palette.surfaceMuted ?? '#f0f0f0',
+                        : (palette.surfaceMuted ?? '#f0f0f0'),
                   }}
                 >
                   <Text
@@ -259,7 +306,9 @@ export function PortfolioChart({
                       Hierarchy.action,
                       {
                         color:
-                          timeframe === opt.value ? palette.primaryText ?? '#FFF' : palette.text,
+                          timeframe === opt.value
+                            ? (palette.primaryText ?? '#FFF')
+                            : palette.text,
                       },
                     ]}
                   >
@@ -268,7 +317,14 @@ export function PortfolioChart({
                 </Pressable>
               ))}
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingLeft: 4 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                paddingLeft: 4,
+              }}
+            >
               <Pressable
                 onPress={() => setChartMode('candlestick')}
                 style={({ pressed }) => ({
@@ -287,7 +343,7 @@ export function PortfolioChart({
                   color={
                     chartMode === 'candlestick'
                       ? palette.primary
-                      : palette.icon ?? palette.text
+                      : (palette.icon ?? palette.text)
                   }
                   strokeWidth={2}
                 />
@@ -308,7 +364,9 @@ export function PortfolioChart({
                 <LineChart
                   size={18}
                   color={
-                    chartMode === 'line' ? palette.primary : palette.icon ?? palette.text
+                    chartMode === 'line'
+                      ? palette.primary
+                      : (palette.icon ?? palette.text)
                   }
                   strokeWidth={2}
                 />

@@ -2,7 +2,7 @@ import type { IndicatorCalculator } from '../../domain/ports';
 import type { Candle, IndicatorSeries } from '../../domain/market-chart.types';
 
 function calculateRSIValues(candles: Candle[], period = 14): IndicatorSeries {
-  const values: Array<{ time: number; value: number }> = [];
+  const values: { time: number; value: number }[] = [];
 
   for (let i = period; i < candles.length; i++) {
     let gains = 0;
@@ -49,7 +49,7 @@ function calculateMACDValues(
   }
   const signalLine = ema(macdLine, signal);
 
-  const values: Array<{ time: number; value: number }> = [];
+  const values: { time: number; value: number }[] = [];
   for (let i = slow; i < candles.length; i++) {
     values.push({
       time: candles[i].time,

@@ -74,8 +74,18 @@ export function MarketCandlesModal({
     session?.token ?? null,
     visible,
   );
-  const { execute: executeBuy, loading: buyLoading, error: buyError, clearError: clearBuyError } = useBuyOrder(session?.token ?? null);
-  const { execute: executeSell, loading: sellLoading, error: sellError, clearError: clearSellError } = useSellOrder(session?.token ?? null);
+  const {
+    execute: executeBuy,
+    loading: buyLoading,
+    error: buyError,
+    clearError: clearBuyError,
+  } = useBuyOrder(session?.token ?? null);
+  const {
+    execute: executeSell,
+    loading: sellLoading,
+    error: sellError,
+    clearError: clearSellError,
+  } = useSellOrder(session?.token ?? null);
   const {
     data: overviewData,
     loading: overviewLoading,
@@ -103,7 +113,9 @@ export function MarketCandlesModal({
   const showChart = operarStep === 'chart';
   const showActions = operarStep === 'actions';
   const cashBalance = portfolioData?.cashBalance ?? 0;
-  const holdingForSymbol = portfolioData?.holdings?.find((h) => h.symbol === symbol);
+  const holdingForSymbol = portfolioData?.holdings?.find(
+    (h) => h.symbol === symbol,
+  );
   const quote = overviewData?.quote;
   // Valor actual en Tu posición: prioridad velas 6h (más actualizado), luego quote, luego overview
   const lastClose =
@@ -113,395 +125,541 @@ export function MarketCandlesModal({
         ? currentQuotePrice
         : quote?.high != null && quote?.low != null
           ? (quote.high + quote.low) / 2
-          : quote?.high ?? quote?.low ?? undefined;
+          : (quote?.high ?? quote?.low ?? undefined);
   const positionAmount = (holdingForSymbol?.shares ?? 0) * (lastClose ?? 0);
 
   if (!visible) return null;
 
   return (
     <>
-    <CardModal
-      open={visible}
-      onClose={onClose}
-      maxHeightPct={showActions ? 0.42 : 1}
-      closeOnBackdropPress
-      scrollable={!showActions}
-      contentNoPaddingTop
-    >
-      <View style={{ flex: 1, minHeight: 0 }}>
-        <ModalHeader
-          title={asset?.name ?? ''}
-          subtitle={asset?.symbol ?? ''}
-          onBack={
-            showActions || onBack != null
-              ? showActions
-                ? () => setOperarStep('chart')
-                : onBack!
-              : undefined
-          }
-          onClose={onClose}
-          backAccessibilityLabel={showActions ? 'Volver al gráfico' : 'Volver al buscador'}
-        />
+      <CardModal
+        open={visible}
+        onClose={onClose}
+        maxHeightPct={showActions ? 0.42 : 1}
+        closeOnBackdropPress
+        scrollable={!showActions}
+        contentNoPaddingTop
+      >
+        <View style={{ flex: 1, minHeight: 0 }}>
+          <ModalHeader
+            title={asset?.name ?? ''}
+            subtitle={asset?.symbol ?? ''}
+            onBack={
+              showActions || onBack != null
+                ? showActions
+                  ? () => setOperarStep('chart')
+                  : onBack!
+                : undefined
+            }
+            onClose={onClose}
+            backAccessibilityLabel={
+              showActions ? 'Volver al gráfico' : 'Volver al buscador'
+            }
+          />
 
-        {operarStep === 'chart' && (
-        <ScrollView
-          style={{ flex: 1, minHeight: 0 }}
-          contentContainerStyle={{
-            paddingBottom: 24 + Math.max(insets.bottom, 0),
-          }}
-          showsVerticalScrollIndicator={true}
-          keyboardShouldPersistTaps="handled"
-        >
-        {operarStep === 'chart' && (
-        <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
-          {showChart && symbol ? (
-            <PortfolioChart
-              symbol={symbol}
-              enabled={!!symbol}
-              height={280}
-              containerStyle={{ paddingHorizontal: 0 }}
-              currentPrice={lastClose6h ?? currentQuotePrice ?? undefined}
-            />
-          ) : null}
+          {operarStep === 'chart' && (
+            <ScrollView
+              style={{ flex: 1, minHeight: 0 }}
+              contentContainerStyle={{
+                paddingBottom: 24 + Math.max(insets.bottom, 0),
+              }}
+              showsVerticalScrollIndicator={true}
+              keyboardShouldPersistTaps="handled"
+            >
+              {operarStep === 'chart' && (
+                <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
+                  {showChart && symbol ? (
+                    <PortfolioChart
+                      symbol={symbol}
+                      enabled={!!symbol}
+                      height={280}
+                      containerStyle={{ paddingHorizontal: 0 }}
+                      currentPrice={
+                        lastClose6h ?? currentQuotePrice ?? undefined
+                      }
+                    />
+                  ) : null}
 
-          {holdingForSymbol && (
-            <View style={{ marginTop: 20, marginBottom: 16 }}>
-              <Text
-                style={[
-                  Hierarchy.titleSection,
-                  { color: palette.icon ?? palette.text, marginBottom: 4 },
-                ]}
-              >
-                Tu posición
-              </Text>
-              <Text
-                style={[
-                  Hierarchy.caption,
-                  { color: palette.icon ?? palette.text, marginBottom: 10, opacity: 0.85 },
-                ]}
-              >
-                Valores en tiempo real (beneficio no realizado)
-              </Text>
-              <View style={{ gap: 8 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={[Hierarchy.bodySmall, { color: palette.icon ?? palette.text }]}>
-                    Acciones
-                  </Text>
-                  <Text style={[Hierarchy.action, { color: palette.text, fontWeight: '600' }]}>
-                    {holdingForSymbol.shares.toLocaleString('es-ES', { maximumFractionDigits: 4 })}
-                  </Text>
+                  {holdingForSymbol && (
+                    <View style={{ marginTop: 20, marginBottom: 16 }}>
+                      <Text
+                        style={[
+                          Hierarchy.titleSection,
+                          {
+                            color: palette.icon ?? palette.text,
+                            marginBottom: 4,
+                          },
+                        ]}
+                      >
+                        Tu posición
+                      </Text>
+                      <Text
+                        style={[
+                          Hierarchy.caption,
+                          {
+                            color: palette.icon ?? palette.text,
+                            marginBottom: 10,
+                            opacity: 0.85,
+                          },
+                        ]}
+                      >
+                        Valores en tiempo real (beneficio no realizado)
+                      </Text>
+                      <View style={{ gap: 8 }}>
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Text
+                            style={[
+                              Hierarchy.bodySmall,
+                              { color: palette.icon ?? palette.text },
+                            ]}
+                          >
+                            Acciones
+                          </Text>
+                          <Text
+                            style={[
+                              Hierarchy.action,
+                              { color: palette.text, fontWeight: '600' },
+                            ]}
+                          >
+                            {holdingForSymbol.shares.toLocaleString('es-ES', {
+                              maximumFractionDigits: 4,
+                            })}
+                          </Text>
+                        </View>
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Text
+                            style={[
+                              Hierarchy.bodySmall,
+                              { color: palette.icon ?? palette.text },
+                            ]}
+                          >
+                            Precio medio compra
+                          </Text>
+                          <Text
+                            style={[Hierarchy.action, { color: palette.text }]}
+                          >
+                            {holdingForSymbol.avgBuyPrice.toLocaleString(
+                              'es-ES',
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              },
+                            )}{' '}
+                            $
+                          </Text>
+                        </View>
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Text
+                            style={[
+                              Hierarchy.bodySmall,
+                              { color: palette.icon ?? palette.text },
+                            ]}
+                          >
+                            Valor actual
+                          </Text>
+                          <Text
+                            style={[
+                              Hierarchy.action,
+                              { color: palette.text, fontWeight: '600' },
+                            ]}
+                          >
+                            {positionAmount.toLocaleString('es-ES', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}{' '}
+                            $
+                          </Text>
+                        </View>
+                        {lastClose != null && (
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              marginTop: 4,
+                              paddingTop: 8,
+                              borderTopWidth: 1,
+                              borderTopColor:
+                                palette.surfaceBorder ?? 'rgba(0,0,0,0.08)',
+                            }}
+                          >
+                            <Text
+                              style={[
+                                Hierarchy.bodySmall,
+                                { color: palette.icon ?? palette.text },
+                              ]}
+                            >
+                              Beneficios
+                            </Text>
+                            <Text
+                              style={[
+                                Hierarchy.action,
+                                {
+                                  fontWeight: '600',
+                                  color:
+                                    positionAmount -
+                                      holdingForSymbol.shares *
+                                        holdingForSymbol.avgBuyPrice >=
+                                    0
+                                      ? (palette.positive ?? '#16A34A')
+                                      : (palette.destructive ?? '#E5484D'),
+                                },
+                              ]}
+                            >
+                              {positionAmount -
+                                holdingForSymbol.shares *
+                                  holdingForSymbol.avgBuyPrice >=
+                              0
+                                ? '+'
+                                : ''}
+                              {(
+                                positionAmount -
+                                holdingForSymbol.shares *
+                                  holdingForSymbol.avgBuyPrice
+                              ).toLocaleString('es-ES', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}{' '}
+                              $
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  )}
+
+                  {
+                    <>
+                      {overviewLoading && !overviewData && (
+                        <View style={{ paddingTop: 8, paddingBottom: 8 }}>
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              flexWrap: 'wrap',
+                              gap: 10,
+                              marginBottom: 12,
+                            }}
+                          >
+                            {[1, 2, 3, 4, 5, 6].map((i) => (
+                              <View
+                                key={i}
+                                style={{
+                                  width: '30%',
+                                  height: 52,
+                                  borderRadius: 10,
+                                  backgroundColor:
+                                    palette.surfaceMuted ?? '#eee',
+                                }}
+                              />
+                            ))}
+                          </View>
+                          <View style={{ gap: 8 }}>
+                            {[1, 2, 3, 4, 5].map((i) => (
+                              <View
+                                key={i}
+                                style={{
+                                  height: 40,
+                                  borderRadius: 8,
+                                  backgroundColor:
+                                    palette.surfaceMuted ?? '#eee',
+                                }}
+                              />
+                            ))}
+                          </View>
+                        </View>
+                      )}
+                      {overviewError && !overviewData && (
+                        <View
+                          style={{
+                            paddingVertical: 16,
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Text
+                            variant="muted"
+                            style={[
+                              Hierarchy.bodySmall,
+                              { textAlign: 'center', color: palette.icon },
+                            ]}
+                          >
+                            {overviewError}
+                          </Text>
+                          <Pressable
+                            onPress={refetchOverview}
+                            style={{
+                              marginTop: 12,
+                              paddingHorizontal: 20,
+                              paddingVertical: 10,
+                              borderRadius: 8,
+                              backgroundColor: palette.primary,
+                            }}
+                          >
+                            <Text
+                              style={[
+                                Hierarchy.action,
+                                { color: palette.primaryText ?? '#FFF' },
+                              ]}
+                            >
+                              Reintentar
+                            </Text>
+                          </Pressable>
+                        </View>
+                      )}
+                      {overviewData && (
+                        <>
+                          <QuoteGrid
+                            quote={overviewData.quote}
+                            palette={palette}
+                          />
+                          <FundamentalsList
+                            fundamentals={overviewData.fundamentals}
+                            palette={palette}
+                          />
+                        </>
+                      )}
+                    </>
+                  }
                 </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={[Hierarchy.bodySmall, { color: palette.icon ?? palette.text }]}>
-                    Precio medio compra
-                  </Text>
-                  <Text style={[Hierarchy.action, { color: palette.text }]}>
-                    {holdingForSymbol.avgBuyPrice.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $
-                  </Text>
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={[Hierarchy.bodySmall, { color: palette.icon ?? palette.text }]}>
-                    Valor actual
-                  </Text>
-                  <Text style={[Hierarchy.action, { color: palette.text, fontWeight: '600' }]}>
-                    {positionAmount.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $
-                  </Text>
-                </View>
-                {lastClose != null && (
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, paddingTop: 8, borderTopWidth: 1, borderTopColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.08)' }}>
-                    <Text style={[Hierarchy.bodySmall, { color: palette.icon ?? palette.text }]}>
-                      Beneficios
-                    </Text>
-                    <Text
-                      style={[
-                        Hierarchy.action,
-                        {
-                          fontWeight: '600',
-                          color:
-                            positionAmount - holdingForSymbol.shares * holdingForSymbol.avgBuyPrice >= 0
-                              ? palette.positive ?? '#16A34A'
-                              : palette.destructive ?? '#E5484D',
-                        },
-                      ]}
-                    >
-                      {(positionAmount - holdingForSymbol.shares * holdingForSymbol.avgBuyPrice >= 0 ? '+' : '')}
-                      {(positionAmount - holdingForSymbol.shares * holdingForSymbol.avgBuyPrice).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
+              )}
+            </ScrollView>
           )}
 
-          {(
-            <>
-              {overviewLoading && !overviewData && (
-                <View style={{ paddingTop: 8, paddingBottom: 8 }}>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      flexWrap: 'wrap',
-                      gap: 10,
-                      marginBottom: 12,
-                    }}
-                  >
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <View
-                        key={i}
-                        style={{
-                          width: '30%',
-                          height: 52,
-                          borderRadius: 10,
-                          backgroundColor: palette.surfaceMuted ?? '#eee',
-                        }}
-                      />
-                    ))}
-                  </View>
-                  <View style={{ gap: 8 }}>
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <View
-                        key={i}
-                        style={{
-                          height: 40,
-                          borderRadius: 8,
-                          backgroundColor: palette.surfaceMuted ?? '#eee',
-                        }}
-                      />
-                    ))}
-                  </View>
-                </View>
-              )}
-              {overviewError && !overviewData && (
-                <View
-                  style={{
-                    paddingVertical: 16,
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text
-                    variant="muted"
-                    style={[Hierarchy.bodySmall, { textAlign: 'center', color: palette.icon }]}
-                  >
-                    {overviewError}
-                  </Text>
-                  <Pressable
-                    onPress={refetchOverview}
-                    style={{
-                      marginTop: 12,
-                      paddingHorizontal: 20,
-                      paddingVertical: 10,
-                      borderRadius: 8,
-                      backgroundColor: palette.primary,
-                    }}
-                  >
-                    <Text style={[Hierarchy.action, { color: palette.primaryText ?? '#FFF' }]}>
-                      Reintentar
-                    </Text>
-                  </Pressable>
-                </View>
-              )}
-              {overviewData && (
-                <>
-                  <QuoteGrid quote={overviewData.quote} palette={palette} />
-                  <FundamentalsList fundamentals={overviewData.fundamentals} palette={palette} />
-                </>
-              )}
-            </>
-          )}
-        </View>
-        )}
-        </ScrollView>
-        )}
-
-        {operarStep === 'chart' && showChart && (
-        <View
-          style={{
-            flexDirection: 'row',
-            gap: 12,
-            paddingHorizontal: 16,
-            paddingTop: 12,
-            paddingBottom: 16 + Math.max(insets.bottom, 0),
-            backgroundColor: 'transparent',
-            borderTopWidth: 1,
-            borderTopColor: (palette.surfaceBorder ?? palette.surfaceMuted) + '60',
-          }}
-        >
-          <Pressable
-            onPress={onOrdenes}
-            style={({ pressed }) => ({
-              flex: 1,
-              height: 48,
-              borderRadius: 12,
-              backgroundColor: palette.surfaceMuted ?? '#f0f0f0',
-              borderWidth: 1,
-              borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
-              justifyContent: 'center',
-              alignItems: 'center',
-              opacity: pressed ? 0.85 : 1,
-            })}
-            accessibilityRole="button"
-            accessibilityLabel="Órdenes"
-          >
-            <Text
-              style={[Hierarchy.action, { color: palette.primary }]}
-            >
-              Órdenes
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setOperarStep('actions')}
-            style={({ pressed }) => ({
-              flex: 1,
-              height: 48,
-              borderRadius: 12,
-              backgroundColor: palette.primary,
-              justifyContent: 'center',
-              alignItems: 'center',
-              opacity: pressed ? 0.85 : 1,
-            })}
-            accessibilityRole="button"
-            accessibilityLabel="Operar"
-          >
-            <Text
-              style={[Hierarchy.action, { color: palette.primaryText ?? '#FFF', fontWeight: '600' }]}
-            >
-              Operar
-            </Text>
-          </Pressable>
-        </View>
-        )}
-
-        {showActions && (
-          <Animated.View
-            entering={FadeIn.duration(220)}
-            style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 20, justifyContent: 'center' }}
-          >
-            <Animated.View
-              entering={FadeInUp.delay(100).duration(260)}
-              style={{ marginTop: 24 }}
+          {operarStep === 'chart' && showChart && (
+            <View
+              style={{
+                flexDirection: 'row',
+                gap: 12,
+                paddingHorizontal: 16,
+                paddingTop: 12,
+                paddingBottom: 16 + Math.max(insets.bottom, 0),
+                backgroundColor: 'transparent',
+                borderTopWidth: 1,
+                borderTopColor:
+                  (palette.surfaceBorder ?? palette.surfaceMuted) + '60',
+              }}
             >
               <Pressable
-                onPress={() => setComprarOpen(true)}
+                onPress={onOrdenes}
                 style={({ pressed }) => ({
-                  width: '100%',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  height: 56,
-                  paddingHorizontal: 20,
-                  borderRadius: 14,
-                  backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
+                  flex: 1,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: palette.surfaceMuted ?? '#f0f0f0',
                   borderWidth: 1,
                   borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
+                  justifyContent: 'center',
+                  alignItems: 'center',
                   opacity: pressed ? 0.85 : 1,
                 })}
                 accessibilityRole="button"
-                accessibilityLabel="Comprar"
+                accessibilityLabel="Órdenes"
               >
-                <Text style={[Hierarchy.action, { color: palette.text, fontWeight: '600' }]}>
-                  Comprar
+                <Text style={[Hierarchy.action, { color: palette.primary }]}>
+                  Órdenes
                 </Text>
-                <Plus size={22} color={palette.text} strokeWidth={2.5} />
               </Pressable>
-            </Animated.View>
-            <Animated.View
-              entering={FadeInUp.delay(180).duration(260)}
-              style={{ marginTop: 12 }}
-            >
               <Pressable
-                onPress={() => (holdingForSymbol?.shares ?? 0) > 0 && setVenderOpen(true)}
-                disabled={!holdingForSymbol || (holdingForSymbol?.shares ?? 0) <= 0}
+                onPress={() => setOperarStep('actions')}
                 style={({ pressed }) => ({
-                  width: '100%',
-                  flexDirection: 'row',
+                  flex: 1,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: palette.primary,
+                  justifyContent: 'center',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
-                  height: 56,
-                  paddingHorizontal: 20,
-                  borderRadius: 14,
-                  backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
-                  borderWidth: 1,
-                  borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
-                  opacity: pressed ? 0.85 : (holdingForSymbol?.shares ?? 0) > 0 ? 1 : 0.5,
+                  opacity: pressed ? 0.85 : 1,
                 })}
                 accessibilityRole="button"
-                accessibilityLabel={(holdingForSymbol?.shares ?? 0) > 0 ? 'Vender' : 'No tienes posición para vender'}
+                accessibilityLabel="Operar"
               >
-                <Text style={[Hierarchy.action, { color: palette.text, fontWeight: '600' }]}>
-                  Vender
+                <Text
+                  style={[
+                    Hierarchy.action,
+                    { color: palette.primaryText ?? '#FFF', fontWeight: '600' },
+                  ]}
+                >
+                  Operar
                 </Text>
-                <Minus size={22} color={palette.text} strokeWidth={2.5} />
               </Pressable>
-            </Animated.View>
-          </Animated.View>
-        )}
-      </View>
-    </CardModal>
+            </View>
+          )}
 
-    <VenderSheet
-      visible={venderOpen}
-      onClose={() => setVenderOpen(false)}
-      sharesAvailable={holdingForSymbol?.shares ?? 0}
-      price={lastClose ?? 0}
-      symbol={asset?.symbol}
-      onSell={async (sym, shares) => {
-        const result = await executeSell(sym, shares, {
-          price: lastClose ?? undefined,
-        });
-        if (result) {
-          setVenderOpen(false);
-          setSaleSuccessOpen(true);
-        }
-      }}
-      sellLoading={sellLoading}
-      sellError={sellError}
-      onClearSellError={clearSellError}
-    />
-    <InvertirSheet
-      visible={comprarOpen}
-      onClose={() => setComprarOpen(false)}
-      availableAmount={cashBalance}
-      price={lastClose ?? 0}
-      symbol={asset?.symbol}
-      onBuy={async (sym, shares) => {
-        const result = await executeBuy(sym, shares, {
-          price: lastClose ?? undefined,
-        });
-        if (result) {
-          setComprarOpen(false);
-          setPurchaseSuccessOpen(true);
-        }
-      }}
-      buyLoading={buyLoading}
-      buyError={buyError}
-      onClearBuyError={clearBuyError}
-    />
-    <PurchaseSuccessModal
-      visible={purchaseSuccessOpen}
-      onClose={() => setPurchaseSuccessOpen(false)}
-      onGoToMain={() => {
-        setPurchaseSuccessOpen(false);
-        if (onGoToMainFromParent) {
-          onGoToMainFromParent();
-        } else {
-          refetchPortfolio();
-          onClose();
-        }
-      }}
-    />
-    <SaleSuccessModal
-      visible={saleSuccessOpen}
-      onClose={() => setSaleSuccessOpen(false)}
-      onGoToMain={() => {
-        setSaleSuccessOpen(false);
-        if (onGoToMainFromParent) {
-          onGoToMainFromParent();
-        } else {
-          refetchPortfolio();
-          onClose();
-        }
-      }}
-    />
+          {showActions && (
+            <Animated.View
+              entering={FadeIn.duration(220)}
+              style={{
+                flex: 1,
+                paddingHorizontal: 16,
+                paddingVertical: 20,
+                justifyContent: 'center',
+              }}
+            >
+              <Animated.View
+                entering={FadeInUp.delay(100).duration(260)}
+                style={{ marginTop: 24 }}
+              >
+                <Pressable
+                  onPress={() => setComprarOpen(true)}
+                  style={({ pressed }) => ({
+                    width: '100%',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    height: 56,
+                    paddingHorizontal: 20,
+                    borderRadius: 14,
+                    backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
+                    borderWidth: 1,
+                    borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
+                    opacity: pressed ? 0.85 : 1,
+                  })}
+                  accessibilityRole="button"
+                  accessibilityLabel="Comprar"
+                >
+                  <Text
+                    style={[
+                      Hierarchy.action,
+                      { color: palette.text, fontWeight: '600' },
+                    ]}
+                  >
+                    Comprar
+                  </Text>
+                  <Plus size={22} color={palette.text} strokeWidth={2.5} />
+                </Pressable>
+              </Animated.View>
+              <Animated.View
+                entering={FadeInUp.delay(180).duration(260)}
+                style={{ marginTop: 12 }}
+              >
+                <Pressable
+                  onPress={() =>
+                    (holdingForSymbol?.shares ?? 0) > 0 && setVenderOpen(true)
+                  }
+                  disabled={
+                    !holdingForSymbol || (holdingForSymbol?.shares ?? 0) <= 0
+                  }
+                  style={({ pressed }) => ({
+                    width: '100%',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    height: 56,
+                    paddingHorizontal: 20,
+                    borderRadius: 14,
+                    backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
+                    borderWidth: 1,
+                    borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
+                    opacity: pressed
+                      ? 0.85
+                      : (holdingForSymbol?.shares ?? 0) > 0
+                        ? 1
+                        : 0.5,
+                  })}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    (holdingForSymbol?.shares ?? 0) > 0
+                      ? 'Vender'
+                      : 'No tienes posición para vender'
+                  }
+                >
+                  <Text
+                    style={[
+                      Hierarchy.action,
+                      { color: palette.text, fontWeight: '600' },
+                    ]}
+                  >
+                    Vender
+                  </Text>
+                  <Minus size={22} color={palette.text} strokeWidth={2.5} />
+                </Pressable>
+              </Animated.View>
+            </Animated.View>
+          )}
+        </View>
+      </CardModal>
+
+      <VenderSheet
+        visible={venderOpen}
+        onClose={() => setVenderOpen(false)}
+        sharesAvailable={holdingForSymbol?.shares ?? 0}
+        price={lastClose ?? 0}
+        symbol={asset?.symbol}
+        onSell={async (sym, shares) => {
+          const result = await executeSell(sym, shares, {
+            price: lastClose ?? undefined,
+          });
+          if (result) {
+            setVenderOpen(false);
+            setSaleSuccessOpen(true);
+          }
+        }}
+        sellLoading={sellLoading}
+        sellError={sellError}
+        onClearSellError={clearSellError}
+      />
+      <InvertirSheet
+        visible={comprarOpen}
+        onClose={() => setComprarOpen(false)}
+        availableAmount={cashBalance}
+        price={lastClose ?? 0}
+        symbol={asset?.symbol}
+        onBuy={async (sym, shares) => {
+          const result = await executeBuy(sym, shares, {
+            price: lastClose ?? undefined,
+          });
+          if (result) {
+            setComprarOpen(false);
+            setPurchaseSuccessOpen(true);
+          }
+        }}
+        buyLoading={buyLoading}
+        buyError={buyError}
+        onClearBuyError={clearBuyError}
+      />
+      <PurchaseSuccessModal
+        visible={purchaseSuccessOpen}
+        onClose={() => setPurchaseSuccessOpen(false)}
+        onGoToMain={() => {
+          setPurchaseSuccessOpen(false);
+          if (onGoToMainFromParent) {
+            onGoToMainFromParent();
+          } else {
+            refetchPortfolio();
+            onClose();
+          }
+        }}
+      />
+      <SaleSuccessModal
+        visible={saleSuccessOpen}
+        onClose={() => setSaleSuccessOpen(false)}
+        onGoToMain={() => {
+          setSaleSuccessOpen(false);
+          if (onGoToMainFromParent) {
+            onGoToMainFromParent();
+          } else {
+            refetchPortfolio();
+            onClose();
+          }
+        }}
+      />
     </>
   );
 }

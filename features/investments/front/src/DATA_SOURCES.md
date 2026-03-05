@@ -29,14 +29,14 @@ Las APIs de precios del backend (`/api/market/quotes`, `/api/market/candles`, `/
 
 **Origen de peticiones en el front:**
 
-| Origen | API | Frecuencia |
-|--------|-----|------------|
-| Lista de posiciones (precios) | quotes | 1 vez al cargar/cambiar cartera |
-| Precio actual en modal | quotes | cada 10 s (modal abierto) |
-| Gráfico principal (precio línea) | quotes | cada 30 s |
-| Gráfico principal (velas) | candles | cada 60 s |
-| Modal: gráfico + valor 6h | candles | 2 peticiones cada 60 s (mismo símbolo, timeframe distinto) |
-| Minigráficos en cards | candles | **1 petición por posición** cada 2 min |
-| Overview (modal) | overview | cada 30 s (backend tiene caché 30 s) |
+| Origen                           | API      | Frecuencia                                                 |
+| -------------------------------- | -------- | ---------------------------------------------------------- |
+| Lista de posiciones (precios)    | quotes   | 1 vez al cargar/cambiar cartera                            |
+| Precio actual en modal           | quotes   | cada 10 s (modal abierto)                                  |
+| Gráfico principal (precio línea) | quotes   | cada 30 s                                                  |
+| Gráfico principal (velas)        | candles  | cada 60 s                                                  |
+| Modal: gráfico + valor 6h        | candles  | 2 peticiones cada 60 s (mismo símbolo, timeframe distinto) |
+| Minigráficos en cards            | candles  | **1 petición por posición** cada 2 min                     |
+| Overview (modal)                 | overview | cada 30 s (backend tiene caché 30 s)                       |
 
 **Backend (caché L1 + L2):** Las peticiones a `/quotes` y `/candles` pasan por `PriceCacheService`: L1 en memoria (rápido), L2 en MongoDB (compartido y persistente), deduplicación in-flight y SWR (stale-while-revalidate). TTL quotes: 10 min (símbolos hot) / 30 min (resto); histórico 12 h. Warmup de los 7 hot cada 10 min. Ver `features/market/back/src/infrastructure/cache/README.md`.

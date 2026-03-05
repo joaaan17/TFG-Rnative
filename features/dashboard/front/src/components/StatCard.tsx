@@ -25,10 +25,18 @@ export function StatCard({ card, styles: s }: StatCardProps) {
   const palette = usePalette();
   const isHighlighted = card.highlighted === true;
 
-  const valueColor = isHighlighted ? (palette.primaryText ?? '#FFF') : palette.text;
-  const labelColor = isHighlighted ? (palette.primaryText ?? '#FFF') : (palette.icon ?? palette.text);
-  const trackBg = isHighlighted ? `${palette.primaryText ?? '#FFF'}40` : palette.surfaceBorder ?? palette.surfaceMuted;
-  const fillBg = isHighlighted ? (palette.primaryText ?? '#FFF') : palette.primary;
+  const valueColor = isHighlighted
+    ? (palette.primaryText ?? '#FFF')
+    : palette.text;
+  const labelColor = isHighlighted
+    ? (palette.primaryText ?? '#FFF')
+    : (palette.icon ?? palette.text);
+  const trackBg = isHighlighted
+    ? `${palette.primaryText ?? '#FFF'}40`
+    : (palette.surfaceBorder ?? palette.surfaceMuted);
+  const fillBg = isHighlighted
+    ? (palette.primaryText ?? '#FFF')
+    : palette.primary;
 
   return (
     <View style={[s.statCard, isHighlighted && s.statCardHighlighted]}>
@@ -55,9 +63,17 @@ export function StatCard({ card, styles: s }: StatCardProps) {
           ]}
         />
       </View>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          marginTop: 4,
+        }}
+      >
         <Text style={[Hierarchy.captionSmall, { color: labelColor }]}>0%</Text>
-        <Text style={[Hierarchy.captionSmall, { color: labelColor }]}>{card.progressPercent}%</Text>
+        <Text style={[Hierarchy.captionSmall, { color: labelColor }]}>
+          {card.progressPercent}%
+        </Text>
       </View>
     </View>
   );

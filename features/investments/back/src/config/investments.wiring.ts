@@ -49,7 +49,9 @@ export const executeSellOrderUseCase = new ExecuteSellOrderUseCase(
   portfolioRepository,
   transactionRepository,
 );
-export const getTransactionsUseCase = new GetTransactionsUseCase(transactionRepository);
+export const getTransactionsUseCase = new GetTransactionsUseCase(
+  transactionRepository,
+);
 export const getPortfolioOverviewUseCase = new GetPortfolioOverviewUseCase(
   portfolioRepository,
   getQuotesAdapter,
@@ -61,7 +63,11 @@ function getPortfolioOverviewFn(
   timeframe: string,
   range: string,
 ): ReturnType<GetPortfolioOverviewUseCase['execute']> {
-  console.log('[wiring] getPortfolioOverviewFn called', { userId, timeframe, range });
+  console.log('[wiring] getPortfolioOverviewFn called', {
+    userId,
+    timeframe,
+    range,
+  });
   return getPortfolioOverviewUseCase.execute(
     userId,
     timeframe as Parameters<GetPortfolioOverviewUseCase['execute']>[1],
@@ -82,7 +88,14 @@ const getHistorical = (
   range: string,
   strategy?: 'swr' | 'cache-first' | 'network-first',
   requestId?: string,
-) => priceCacheService.getHistorical(symbol, interval, range, strategy ?? 'swr', requestId);
+) =>
+  priceCacheService.getHistorical(
+    symbol,
+    interval,
+    range,
+    strategy ?? 'swr',
+    requestId,
+  );
 
 const historicalDailyAdapter = createHistoricalDailyAdapter(getHistorical);
 const historicalHourlyAdapter = createHistoricalHourlyAdapter(getHistorical);
@@ -94,12 +107,16 @@ export const portfolioAnalyticsService = new PortfolioAnalyticsService(
   initialCash,
 );
 
-console.log('[wiring] Creating getDashboardSummaryUseCase with getPortfolioOverviewFn');
+console.log(
+  '[wiring] Creating getDashboardSummaryUseCase with getPortfolioOverviewFn',
+);
 export const getDashboardSummaryUseCase = new GetDashboardSummaryUseCase(
   portfolioRepository,
   getPortfolioOverviewFn,
   transactionRepository,
   (userId: string) =>
-    portfolioAnalyticsService.getPerformance(userId, '1D').then((r) => ({ points: r.points })),
+    portfolioAnalyticsService
+      .getPerformance(userId, '1D')
+      .then((r) => ({ points: r.points })),
 );
 console.log('[wiring] getDashboardSummaryUseCase created');

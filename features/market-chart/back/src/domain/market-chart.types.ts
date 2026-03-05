@@ -14,7 +14,7 @@ export interface Candle {
 
 export interface IndicatorSeries {
   name: string;
-  values: Array<{ time: number; value: number }>;
+  values: { time: number; value: number }[];
 }
 
 export interface MarketChartData {

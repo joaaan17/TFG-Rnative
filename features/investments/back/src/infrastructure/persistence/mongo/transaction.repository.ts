@@ -21,7 +21,10 @@ function mapDocToTransaction(doc: {
     shares: doc.shares,
     price: doc.price,
     total: doc.total,
-    executedAt: doc.executedAt instanceof Date ? doc.executedAt : new Date(doc.executedAt),
+    executedAt:
+      doc.executedAt instanceof Date
+        ? doc.executedAt
+        : new Date(doc.executedAt),
     avgBuyPrice: doc.avgBuyPrice,
   };
 }

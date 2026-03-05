@@ -38,7 +38,9 @@ export function NewsCard({
 }: NewsCardProps) {
   const palette = usePalette();
   const s = React.useMemo(() => createNewsCardStyles(palette), [palette]);
-  const isDark = palette.background === '#070B14' || (palette.background?.length && palette.background.startsWith('#0'));
+  const isDark =
+    palette.background === '#070B14' ||
+    (palette.background?.length && palette.background.startsWith('#0'));
   const placeholderGradientColors = React.useMemo(
     () =>
       isDark
@@ -56,7 +58,9 @@ export function NewsCard({
   );
   const dateLabel = formatDate(item.publishedAt);
   const sourceLabel = (item.source || '').trim() || 'Noticias';
-  const metaLine = dateLabel ? `${sourceLabel.toUpperCase()} · ${dateLabel}` : sourceLabel.toUpperCase();
+  const metaLine = dateLabel
+    ? `${sourceLabel.toUpperCase()} · ${dateLabel}`
+    : sourceLabel.toUpperCase();
 
   return (
     <View style={[s.card, { width: cardWidth, height: cardHeight }]}>
@@ -82,7 +86,10 @@ export function NewsCard({
               />
             </View>
             <Text
-              style={[s.imagePlaceholderLabel, { color: palette.icon ?? palette.text }]}
+              style={[
+                s.imagePlaceholderLabel,
+                { color: palette.icon ?? palette.text },
+              ]}
               numberOfLines={1}
             >
               Sin imagen

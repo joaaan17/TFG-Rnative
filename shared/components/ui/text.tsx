@@ -114,8 +114,12 @@ function Text({
         ? (palette.icon ?? palette.text)
         : palette.text;
 
-  const resolvedStyle = suppressVariant ? style : [typographyStyle, { color }, style];
-  const resolvedClassName = suppressVariant ? className : cn(textVariants({ variant }), textClass, className);
+  const resolvedStyle = suppressVariant
+    ? style
+    : [typographyStyle, { color }, style];
+  const resolvedClassName = suppressVariant
+    ? className
+    : cn(textVariants({ variant }), textClass, className);
 
   return (
     <Component

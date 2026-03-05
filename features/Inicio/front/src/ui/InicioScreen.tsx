@@ -232,7 +232,11 @@ function NewsModalContent({
             accessibilityLabel="Realizar test de comprensión"
           >
             <Text style={Hierarchy.action}>Realizar test</Text>
-            <ChevronRight size={20} color={palette.primaryText} strokeWidth={2} />
+            <ChevronRight
+              size={20}
+              color={palette.primaryText}
+              strokeWidth={2}
+            />
           </Button>
         </View>
       </ScrollView>

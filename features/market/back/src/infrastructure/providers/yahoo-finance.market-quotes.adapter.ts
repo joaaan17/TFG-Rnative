@@ -24,9 +24,12 @@ export class YahooFinanceMarketQuotesAdapter implements MarketQuotesPort {
   async getQuotes(symbols: string[]): Promise<QuoteItem[]> {
     if (symbols.length === 0) return [];
 
-    const normalized = [...new Set(symbols.map((s) => String(s).trim().toUpperCase()).filter(Boolean))];
+    const normalized = [
+      ...new Set(
+        symbols.map((s) => String(s).trim().toUpperCase()).filter(Boolean),
+      ),
+    ];
 
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const createYahooFinance =
       require('yahoo-finance2/createYahooFinance').default;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -36,10 +39,7 @@ export class YahooFinanceMarketQuotesAdapter implements MarketQuotesPort {
     });
     const client = new YahooFinanceClass();
 
-    const raw = await withTimeout(
-      client.quote(normalized),
-      QUOTES_TIMEOUT_MS,
-    );
+    const raw = await withTimeout(client.quote(normalized), QUOTES_TIMEOUT_MS);
 
     const list = Array.isArray(raw) ? raw : [];
     const results: QuoteItem[] = [];
@@ -54,9 +54,10 @@ export class YahooFinanceMarketQuotesAdapter implements MarketQuotesPort {
           ? q.longName.trim()
           : typeof q.shortName === 'string' && q.shortName.trim()
             ? q.shortName.trim()
-            : symbol ?? '';
+            : (symbol ?? '');
       const price =
-        typeof q.regularMarketPrice === 'number' && Number.isFinite(q.regularMarketPrice)
+        typeof q.regularMarketPrice === 'number' &&
+        Number.isFinite(q.regularMarketPrice)
           ? q.regularMarketPrice
           : undefined;
       const currency =

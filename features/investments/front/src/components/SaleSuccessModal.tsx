@@ -40,7 +40,14 @@ export function SaleSuccessModal({
       scrollable={false}
       contentNoPaddingTop
     >
-      <View style={{ flex: 1, paddingHorizontal: 24, paddingVertical: 32, alignItems: 'center' }}>
+      <View
+        style={{
+          flex: 1,
+          paddingHorizontal: 24,
+          paddingVertical: 32,
+          alignItems: 'center',
+        }}
+      >
         <View
           style={{
             width: 72,
@@ -66,7 +73,11 @@ export function SaleSuccessModal({
           variant="muted"
           style={[
             Hierarchy.bodySmall,
-            { color: palette.icon ?? palette.text, textAlign: 'center', marginBottom: 28 },
+            {
+              color: palette.icon ?? palette.text,
+              textAlign: 'center',
+              marginBottom: 28,
+            },
           ]}
         >
           Tu venta se ha efectuado correctamente. Verás tu cartera actualizada.
@@ -87,10 +98,19 @@ export function SaleSuccessModal({
           accessibilityRole="button"
           accessibilityLabel="Ir a Inversiones"
         >
-          <Text style={[Hierarchy.action, { color: palette.primaryText ?? '#FFF', fontWeight: '600' }]}>
+          <Text
+            style={[
+              Hierarchy.action,
+              { color: palette.primaryText ?? '#FFF', fontWeight: '600' },
+            ]}
+          >
             Ir a Inversiones
           </Text>
-          <ChevronRight size={20} color={palette.primaryText ?? '#FFF'} style={{ marginLeft: 6 }} />
+          <ChevronRight
+            size={20}
+            color={palette.primaryText ?? '#FFF'}
+            style={{ marginLeft: 6 }}
+          />
         </Pressable>
       </View>
     </CardModal>

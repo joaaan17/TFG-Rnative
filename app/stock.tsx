@@ -3,10 +3,9 @@
  * Ruta: /stock?symbol=BTC (ej. desde Inversiones)
  */
 import React from 'react';
-import { View } from 'react-native';
+import { View, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
-import { Pressable } from 'react-native';
 import AppShellComponent from '@/shared/components/layout/AppShell';
 import { Text } from '@/shared/components/ui/text';
 import { usePalette } from '@/shared/hooks/use-palette';
@@ -26,7 +25,11 @@ export default function StockScreen() {
       >
         <Pressable
           onPress={() => router.back()}
-          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 16,
+          }}
           accessibilityRole="button"
           accessibilityLabel="Volver"
         >

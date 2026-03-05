@@ -20,7 +20,11 @@ export function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
   const isUser = message.role === 'user';
 
   const bubbleStyle = isUser
-    ? [chatMessageBubbleStyles.bubble, chatMessageBubbleStyles.bubbleUser, { backgroundColor: palette.primary }]
+    ? [
+        chatMessageBubbleStyles.bubble,
+        chatMessageBubbleStyles.bubbleUser,
+        { backgroundColor: palette.primary },
+      ]
     : [
         chatMessageBubbleStyles.bubble,
         chatMessageBubbleStyles.bubbleAssistant,
@@ -31,15 +35,21 @@ export function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
       ];
 
   const textStyle = isUser
-    ? [Hierarchy.body, chatMessageBubbleStyles.textUser, { color: palette.primaryText ?? '#FFF' }]
-    : [Hierarchy.body, chatMessageBubbleStyles.textAssistant, { color: palette.text }];
+    ? [
+        Hierarchy.body,
+        chatMessageBubbleStyles.textUser,
+        { color: palette.primaryText ?? '#FFF' },
+      ]
+    : [
+        Hierarchy.body,
+        chatMessageBubbleStyles.textAssistant,
+        { color: palette.text },
+      ];
 
   return (
     <View style={bubbleStyle}>
       {isUser ? (
-        <Text style={textStyle}>
-          {message.content}
-        </Text>
+        <Text style={textStyle}>{message.content}</Text>
       ) : (
         <TypewriterTextComponent
           text={message.content}

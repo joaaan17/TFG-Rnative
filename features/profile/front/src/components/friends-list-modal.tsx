@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { CardModal } from '@/shared/components/card-modal';
 import { ModalHeader } from '@/shared/components/modal-header';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -31,24 +26,24 @@ function FriendCard({
   return (
     <Pressable onPress={onPress}>
       <Card style={{ marginBottom: 8, paddingVertical: 4 }}>
-      <CardContent
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 12,
-          paddingVertical: 8,
-        }}
-      >
-        <ProfileAvatar size={44} iconOnly imageUri={item.avatarUrl} />
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text variant="default" style={{ fontWeight: '600' }}>
-            {item.name}
-          </Text>
-          {item.username ? (
-            <Text variant="muted">@{item.username}</Text>
-          ) : null}
-        </View>
-      </CardContent>
+        <CardContent
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+            paddingVertical: 8,
+          }}
+        >
+          <ProfileAvatar size={44} iconOnly imageUri={item.avatarUrl} />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text variant="default" style={{ fontWeight: '600' }}>
+              {item.name}
+            </Text>
+            {item.username ? (
+              <Text variant="muted">@{item.username}</Text>
+            ) : null}
+          </View>
+        </CardContent>
       </Card>
     </Pressable>
   );
@@ -63,8 +58,18 @@ export function FriendsListModal({
   onSelectFriend,
 }: FriendsListModalProps) {
   return (
-    <CardModal open={open} onClose={onClose} maxHeightPct={0.7} contentNoPaddingTop>
-      <ModalHeader title="Mis amigos" onBack={onClose} onClose={onClose} backAccessibilityLabel="Volver" />
+    <CardModal
+      open={open}
+      onClose={onClose}
+      maxHeightPct={0.7}
+      contentNoPaddingTop
+    >
+      <ModalHeader
+        title="Mis amigos"
+        onBack={onClose}
+        onClose={onClose}
+        backAccessibilityLabel="Volver"
+      />
       <View style={{ paddingHorizontal: 16, gap: 16, flex: 1 }}>
         {loading ? (
           <View style={{ paddingVertical: 24, alignItems: 'center' }}>

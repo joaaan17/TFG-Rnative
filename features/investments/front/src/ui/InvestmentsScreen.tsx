@@ -61,22 +61,34 @@ export function InvestmentsScreen() {
     session?.token ?? null,
     true,
   );
-  const { holdingsWithPrice, totalValue: holdingsTotalValue, refetch: refetchHoldingsQuotes } =
-    useHoldingsWithPrices(portfolioData?.holdings);
+  const {
+    holdingsWithPrice,
+    totalValue: holdingsTotalValue,
+    refetch: refetchHoldingsQuotes,
+  } = useHoldingsWithPrices(portfolioData?.holdings);
   const holdingSymbols = useMemo(
     () => (portfolioData?.holdings ?? []).map((h) => h.symbol),
     [portfolioData?.holdings],
   );
-  const sparklines = useHoldingsSparklines(holdingSymbols, !!session && holdingSymbols.length > 0);
+  const sparklines = useHoldingsSparklines(
+    holdingSymbols,
+    !!session && holdingSymbols.length > 0,
+  );
   const [tab, setTab] = React.useState<SegmentedTextTabsValue>(0);
   const [stockSearchModalOpen, setStockSearchModalOpen] = React.useState(false);
-  const [transactionsModalOpen, setTransactionsModalOpen] = React.useState(false);
+  const [transactionsModalOpen, setTransactionsModalOpen] =
+    React.useState(false);
   const [candlesModalOpen, setCandlesModalOpen] = React.useState(false);
-  const [selectedAsset, setSelectedAsset] = React.useState<MarketCandlesModalAsset | null>(null);
+  const [selectedAsset, setSelectedAsset] =
+    React.useState<MarketCandlesModalAsset | null>(null);
   /** true si el modal de velas se abrió desde el buscador (atrás → volver al buscador). */
-  const [candlesOpenedFromSearch, setCandlesOpenedFromSearch] = React.useState(false);
-  const [selectedCashTransaction, setSelectedCashTransaction] = React.useState<CashTransactionView | null>(null);
-  const [selectedCalendarDate, setSelectedCalendarDate] = React.useState(() => new Date());
+  const [candlesOpenedFromSearch, setCandlesOpenedFromSearch] =
+    React.useState(false);
+  const [selectedCashTransaction, setSelectedCashTransaction] =
+    React.useState<CashTransactionView | null>(null);
+  const [selectedCalendarDate, setSelectedCalendarDate] = React.useState(
+    () => new Date(),
+  );
   const [calendarMonth, setCalendarMonth] = React.useState(() => new Date());
 
   const {
@@ -96,10 +108,15 @@ export function InvestmentsScreen() {
   }, [cashFlatTransactions]);
 
   const selectedDayTransactions = useMemo(() => {
-    const dayKey = selectedCalendarDate.getFullYear() +
-      '-' + String(selectedCalendarDate.getMonth() + 1).padStart(2, '0') +
-      '-' + String(selectedCalendarDate.getDate()).padStart(2, '0');
-    return cashFlatTransactions.filter((tx) => tx.createdAt.slice(0, 10) === dayKey);
+    const dayKey =
+      selectedCalendarDate.getFullYear() +
+      '-' +
+      String(selectedCalendarDate.getMonth() + 1).padStart(2, '0') +
+      '-' +
+      String(selectedCalendarDate.getDate()).padStart(2, '0');
+    return cashFlatTransactions.filter(
+      (tx) => tx.createdAt.slice(0, 10) === dayKey,
+    );
   }, [cashFlatTransactions, selectedCalendarDate]);
 
   /** Último día con transacciones: para seleccionarlo al abrir Efectivo. */
@@ -122,7 +139,13 @@ export function InvestmentsScreen() {
     if (lastTransactionDate && !hasAutoSelectedLastDayRef.current) {
       hasAutoSelectedLastDayRef.current = true;
       setSelectedCalendarDate(lastTransactionDate);
-      setCalendarMonth(new Date(lastTransactionDate.getFullYear(), lastTransactionDate.getMonth(), 1));
+      setCalendarMonth(
+        new Date(
+          lastTransactionDate.getFullYear(),
+          lastTransactionDate.getMonth(),
+          1,
+        ),
+      );
     }
   }, [tab, lastTransactionDate]);
 
@@ -181,297 +204,333 @@ export function InvestmentsScreen() {
 
   return (
     <View
-        style={styles.container}
-        accessibilityElementsHidden={false}
-        importantForAccessibility="yes"
-      >
-        <View style={styles.topBar}>
-          <SegmentedTextTabs
-            labels={['Cartera', 'Efectivo']}
-            value={tab}
-            onValueChange={setTab}
-            variant="minimal"
-          />
-        </View>
+      style={styles.container}
+      accessibilityElementsHidden={false}
+      importantForAccessibility="yes"
+    >
+      <View style={styles.topBar}>
+        <SegmentedTextTabs
+          labels={['Cartera', 'Efectivo']}
+          value={tab}
+          onValueChange={setTab}
+          variant="minimal"
+        />
+      </View>
 
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {tab === 1 ? (
-            <>
-              <CashHeader
-                balance={cashOverviewBalance}
-                currency={cashCurrency}
-                monthly={cashMonthly}
-                styles={cashStyles}
-              />
-              {cashLoading ? (
-                <View style={{ paddingVertical: 32, alignItems: 'center' }}>
-                  <ActivityIndicator size="small" color={palette.primary} />
-                </View>
-              ) : (
-                <>
-                  <View style={cashStyles.calendarTitleWrap}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                      <View style={[cashStyles.calendarTitleAccent]} />
-                      <Text
-                        style={[
-                          Hierarchy.titleSection,
-                          cashStyles.calendarTitleText,
-                          { color: palette.icon ?? palette.text },
-                        ]}
-                      >
-                        Transacciones
-                      </Text>
-                    </View>
-                    <Pressable
-                      onPress={handleOrdersPress}
-                      style={({ pressed }) => [
-                        cashStyles.calendarTitleIcon,
-                        { opacity: pressed ? 0.7 : 1 },
-                      ]}
-                      accessibilityRole="button"
-                      accessibilityLabel="Historial de transacciones"
-                    >
-                      <ClipboardList
-                        size={18}
-                        color={palette.primary}
-                        strokeWidth={2}
-                      />
-                    </Pressable>
-                  </View>
-                  <CashCalendar
-                    monthDate={calendarMonth}
-                    selectedDate={selectedCalendarDate}
-                    onSelectDay={(d) => {
-                      setSelectedCalendarDate(d);
-                      setCalendarMonth(new Date(d.getFullYear(), d.getMonth(), 1));
-                    }}
-                    onMonthChange={setCalendarMonth}
-                    daysWithActivity={cashDaysWithActivity}
-                    styles={cashStyles}
-                  />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {tab === 1 ? (
+          <>
+            <CashHeader
+              balance={cashOverviewBalance}
+              currency={cashCurrency}
+              monthly={cashMonthly}
+              styles={cashStyles}
+            />
+            {cashLoading ? (
+              <View style={{ paddingVertical: 32, alignItems: 'center' }}>
+                <ActivityIndicator size="small" color={palette.primary} />
+              </View>
+            ) : (
+              <>
+                <View style={cashStyles.calendarTitleWrap}>
                   <View
                     style={{
-                      height: 30,
-                      marginHorizontal: -20,
-                      backgroundColor: palette.primary,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 10,
                     }}
-                  />
-                  <DayTransactionsSheet
-                    selectedDate={selectedCalendarDate}
-                    transactions={selectedDayTransactions}
-                    onSelectTransaction={setSelectedCashTransaction}
-                    styles={cashStyles}
-                  />
-                </>
-              )}
-            </>
-          ) : (
+                  >
+                    <View style={[cashStyles.calendarTitleAccent]} />
+                    <Text
+                      style={[
+                        Hierarchy.titleSection,
+                        cashStyles.calendarTitleText,
+                        { color: palette.icon ?? palette.text },
+                      ]}
+                    >
+                      Transacciones
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={handleOrdersPress}
+                    style={({ pressed }) => [
+                      cashStyles.calendarTitleIcon,
+                      { opacity: pressed ? 0.7 : 1 },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Historial de transacciones"
+                  >
+                    <ClipboardList
+                      size={18}
+                      color={palette.primary}
+                      strokeWidth={2}
+                    />
+                  </Pressable>
+                </View>
+                <CashCalendar
+                  monthDate={calendarMonth}
+                  selectedDate={selectedCalendarDate}
+                  onSelectDay={(d) => {
+                    setSelectedCalendarDate(d);
+                    setCalendarMonth(
+                      new Date(d.getFullYear(), d.getMonth(), 1),
+                    );
+                  }}
+                  onMonthChange={setCalendarMonth}
+                  daysWithActivity={cashDaysWithActivity}
+                  styles={cashStyles}
+                />
+                <View
+                  style={{
+                    height: 30,
+                    marginHorizontal: -20,
+                    backgroundColor: palette.primary,
+                  }}
+                />
+                <DayTransactionsSheet
+                  selectedDate={selectedCalendarDate}
+                  transactions={selectedDayTransactions}
+                  onSelectTransaction={setSelectedCashTransaction}
+                  styles={cashStyles}
+                />
+              </>
+            )}
+          </>
+        ) : (
           <>
-          <View style={styles.chartSection}>
-            <View style={styles.chartLabel}>
-              <View style={styles.chartLabelAccent} />
+            <View style={styles.chartSection}>
+              <View style={styles.chartLabel}>
+                <View style={styles.chartLabelAccent} />
+                <Text
+                  style={[
+                    Hierarchy.titleSection,
+                    styles.chartLabelText,
+                    { color: palette.icon ?? palette.text },
+                  ]}
+                >
+                  Evolución de la cartera
+                </Text>
+              </View>
+              <View style={styles.amountWrap}>
+                <Text
+                  style={[
+                    Hierarchy.value,
+                    styles.amountValue,
+                    { color: palette.text },
+                  ]}
+                >
+                  {session
+                    ? tab === 0
+                      ? `${totalCarteraValue.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
+                      : `${cashBalance.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
+                    : '—'}
+                </Text>
+                <Text
+                  variant="muted"
+                  style={[
+                    Hierarchy.bodySmall,
+                    styles.amountLabel,
+                    { color: palette.icon },
+                  ]}
+                >
+                  {session
+                    ? tab === 0
+                      ? 'Valor total cartera'
+                      : 'Cash disponible'
+                    : 'Inicia sesión para ver tu cartera'}
+                </Text>
+              </View>
+              <PortfolioPerformanceChart
+                token={session?.token ?? null}
+                height={280}
+              />
+            </View>
+
+            <View style={styles.sectionTitleWrap}>
+              <View style={styles.sectionTitleAccent} />
               <Text
                 style={[
                   Hierarchy.titleSection,
-                  styles.chartLabelText,
+                  styles.sectionTitle,
                   { color: palette.icon ?? palette.text },
                 ]}
               >
-                Evolución de la cartera
+                {portfolioData ? 'Tus posiciones' : 'Inversiones'}
               </Text>
             </View>
-            <View style={styles.amountWrap}>
-              <Text
-                style={[
-                  Hierarchy.value,
-                  styles.amountValue,
-                  { color: palette.text },
-                ]}
-              >
-                {session
-                ? tab === 0
-                  ? `${totalCarteraValue.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
-                  : `${cashBalance.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
-                : '—'}
-              </Text>
-              <Text
-                variant="muted"
-                style={[
-                  Hierarchy.bodySmall,
-                  styles.amountLabel,
-                  { color: palette.icon },
-                ]}
-              >
-                {session ? (tab === 0 ? 'Valor total cartera' : 'Cash disponible') : 'Inicia sesión para ver tu cartera'}
-              </Text>
-            </View>
-            <PortfolioPerformanceChart
-              token={session?.token ?? null}
-              height={280}
-            />
-          </View>
 
-          <View style={styles.sectionTitleWrap}>
-            <View style={styles.sectionTitleAccent} />
-            <Text
-              style={[
-                Hierarchy.titleSection,
-                styles.sectionTitle,
-                { color: palette.icon ?? palette.text },
-              ]}
-            >
-              {portfolioData ? 'Tus posiciones' : 'Inversiones'}
-            </Text>
-          </View>
-
-          <View style={styles.assetsList}>
-            {holdingsWithPrice.length > 0 ? (
-              holdingsWithPrice.map((h) => {
-                const priceStr =
-                  h.currentPrice != null
-                    ? h.currentPrice.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                    : '—';
-                const changePercentStr =
-                  h.changePercent != null
-                    ? `${h.changePercent >= 0 ? '+' : ''}${h.changePercent.toFixed(2)}%`
-                    : '—';
-                const changeVal =
-                  h.currentPrice != null
-                    ? (h.currentPrice - h.avgBuyPrice) * h.shares
-                    : 0;
-                const changeStr = changeVal.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                return (
-                  <View key={h.symbol} style={styles.assetCardWrapper}>
-                    <AssetCard
-                      name={h.symbol}
-                      symbol={h.symbol}
-                      shares={`${h.shares} ${h.symbol}`}
-                      price={`${priceStr} $`}
-                      change={`${changeStr} $`}
-                      changePercent={changePercentStr}
-                      trend={changeVal >= 0 ? 'up' : 'down'}
-                      profits={`${changeStr} $`}
-                      variant="primaryTransparent"
-                      sparklineData={sparklines[h.symbol]}
-                      logoUrl={getLogoUrlForSymbol(h.symbol)}
-                      onPress={() => handleOpenPositionModal(h)}
-                    />
-                  </View>
-                );
-              })
-            ) : (
-              <View style={{ paddingVertical: 24, paddingHorizontal: 16 }}>
-                <Text
-                  variant="muted"
-                  style={[Hierarchy.bodySmall, { textAlign: 'center', color: palette.icon }]}
-                >
-                  {session
-                    ? 'No tienes posiciones. Busca un activo para comprar.'
-                    : 'Inicia sesión para ver tu cartera y operar.'}
-                </Text>
-                {session && (
-                  <Pressable
-                    onPress={handleSearchPress}
-                    style={{ marginTop: 12, alignSelf: 'center', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, backgroundColor: palette.primary }}
+            <View style={styles.assetsList}>
+              {holdingsWithPrice.length > 0 ? (
+                holdingsWithPrice.map((h) => {
+                  const priceStr =
+                    h.currentPrice != null
+                      ? h.currentPrice.toLocaleString('es-ES', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      : '—';
+                  const changePercentStr =
+                    h.changePercent != null
+                      ? `${h.changePercent >= 0 ? '+' : ''}${h.changePercent.toFixed(2)}%`
+                      : '—';
+                  const changeVal =
+                    h.currentPrice != null
+                      ? (h.currentPrice - h.avgBuyPrice) * h.shares
+                      : 0;
+                  const changeStr = changeVal.toLocaleString('es-ES', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  });
+                  return (
+                    <View key={h.symbol} style={styles.assetCardWrapper}>
+                      <AssetCard
+                        name={h.symbol}
+                        symbol={h.symbol}
+                        shares={`${h.shares} ${h.symbol}`}
+                        price={`${priceStr} $`}
+                        change={`${changeStr} $`}
+                        changePercent={changePercentStr}
+                        trend={changeVal >= 0 ? 'up' : 'down'}
+                        profits={`${changeStr} $`}
+                        variant="primaryTransparent"
+                        sparklineData={sparklines[h.symbol]}
+                        logoUrl={getLogoUrlForSymbol(h.symbol)}
+                        onPress={() => handleOpenPositionModal(h)}
+                      />
+                    </View>
+                  );
+                })
+              ) : (
+                <View style={{ paddingVertical: 24, paddingHorizontal: 16 }}>
+                  <Text
+                    variant="muted"
+                    style={[
+                      Hierarchy.bodySmall,
+                      { textAlign: 'center', color: palette.icon },
+                    ]}
                   >
-                    <Text style={[Hierarchy.action, { color: palette.primaryText ?? '#FFF' }]}>
-                      Buscar activo
-                    </Text>
-                  </Pressable>
-                )}
-              </View>
-            )}
-          </View>
+                    {session
+                      ? 'No tienes posiciones. Busca un activo para comprar.'
+                      : 'Inicia sesión para ver tu cartera y operar.'}
+                  </Text>
+                  {session && (
+                    <Pressable
+                      onPress={handleSearchPress}
+                      style={{
+                        marginTop: 12,
+                        alignSelf: 'center',
+                        paddingVertical: 8,
+                        paddingHorizontal: 16,
+                        borderRadius: 8,
+                        backgroundColor: palette.primary,
+                      }}
+                    >
+                      <Text
+                        style={[
+                          Hierarchy.action,
+                          { color: palette.primaryText ?? '#FFF' },
+                        ]}
+                      >
+                        Buscar activo
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
+              )}
+            </View>
           </>
-          )}
-        </ScrollView>
+        )}
+      </ScrollView>
 
-        <View style={styles.bottomActions}>
-          {tab === 0 && (
-            <Pressable
-              style={[styles.iconButton, { backgroundColor: palette.primary }]}
-              onPress={handleSearchPress}
-              accessibilityRole="button"
-              accessibilityLabel="Buscar"
-            >
-              <Search
-                size={20}
-                color={palette.primaryText ?? '#FFF'}
-                strokeWidth={2}
-              />
-            </Pressable>
-          )}
-          {tab === 0 && (
-            <Pressable
-              style={[
-                styles.iconButton,
-                {
-                  backgroundColor: palette.surfaceMuted,
-                  borderWidth: 1,
-                  borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
-                },
-              ]}
-              onPress={handleOrdersPress}
-              accessibilityRole="button"
-              accessibilityLabel="Órdenes"
-            >
-              <ClipboardList size={20} color={palette.primary} strokeWidth={2} />
-            </Pressable>
-          )}
-        </View>
-
-        <StockSearchModal
-          open={stockSearchModalOpen}
-          onClose={() => setStockSearchModalOpen(false)}
-          onSelectAsset={handleSelectAsset}
-        />
-        <TransactionsHistoryModal
-          open={transactionsModalOpen}
-          onClose={() => setTransactionsModalOpen(false)}
-        />
-        <MarketCandlesModal
-          visible={candlesModalOpen}
-          asset={selectedAsset}
-          onClose={() => {
-            setCandlesModalOpen(false);
-            setSelectedAsset(null);
-          }}
-          onBack={
-            candlesOpenedFromSearch
-              ? () => {
-                  setCandlesModalOpen(false);
-                  setSelectedAsset(null);
-                  setStockSearchModalOpen(true);
-                }
-              : () => {
-                  setCandlesModalOpen(false);
-                  setSelectedAsset(null);
-                }
-          }
-          onOperar={() => {
-            if (selectedAsset?.symbol) {
-              setCandlesModalOpen(false);
-              setSelectedAsset(null);
-              router.push({ pathname: '/stock', params: { symbol: selectedAsset.symbol } });
-            }
-          }}
-          onOrdenes={handleOrdersPress}
-          onGoToMain={() => {
-            refetchPortfolio();
-            setCandlesModalOpen(false);
-            setSelectedAsset(null);
-          }}
-        />
-        <TransactionDetailModal
-          open={selectedCashTransaction != null}
-          onClose={() => setSelectedCashTransaction(null)}
-          transaction={selectedCashTransaction}
-        />
+      <View style={styles.bottomActions}>
+        {tab === 0 && (
+          <Pressable
+            style={[styles.iconButton, { backgroundColor: palette.primary }]}
+            onPress={handleSearchPress}
+            accessibilityRole="button"
+            accessibilityLabel="Buscar"
+          >
+            <Search
+              size={20}
+              color={palette.primaryText ?? '#FFF'}
+              strokeWidth={2}
+            />
+          </Pressable>
+        )}
+        {tab === 0 && (
+          <Pressable
+            style={[
+              styles.iconButton,
+              {
+                backgroundColor: palette.surfaceMuted,
+                borderWidth: 1,
+                borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
+              },
+            ]}
+            onPress={handleOrdersPress}
+            accessibilityRole="button"
+            accessibilityLabel="Órdenes"
+          >
+            <ClipboardList size={20} color={palette.primary} strokeWidth={2} />
+          </Pressable>
+        )}
       </View>
+
+      <StockSearchModal
+        open={stockSearchModalOpen}
+        onClose={() => setStockSearchModalOpen(false)}
+        onSelectAsset={handleSelectAsset}
+      />
+      <TransactionsHistoryModal
+        open={transactionsModalOpen}
+        onClose={() => setTransactionsModalOpen(false)}
+      />
+      <MarketCandlesModal
+        visible={candlesModalOpen}
+        asset={selectedAsset}
+        onClose={() => {
+          setCandlesModalOpen(false);
+          setSelectedAsset(null);
+        }}
+        onBack={
+          candlesOpenedFromSearch
+            ? () => {
+                setCandlesModalOpen(false);
+                setSelectedAsset(null);
+                setStockSearchModalOpen(true);
+              }
+            : () => {
+                setCandlesModalOpen(false);
+                setSelectedAsset(null);
+              }
+        }
+        onOperar={() => {
+          if (selectedAsset?.symbol) {
+            setCandlesModalOpen(false);
+            setSelectedAsset(null);
+            router.push({
+              pathname: '/stock',
+              params: { symbol: selectedAsset.symbol },
+            });
+          }
+        }}
+        onOrdenes={handleOrdersPress}
+        onGoToMain={() => {
+          refetchPortfolio();
+          setCandlesModalOpen(false);
+          setSelectedAsset(null);
+        }}
+      />
+      <TransactionDetailModal
+        open={selectedCashTransaction != null}
+        onClose={() => setSelectedCashTransaction(null)}
+        transaction={selectedCashTransaction}
+      />
+    </View>
   );
 }
 

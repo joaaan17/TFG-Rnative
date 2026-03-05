@@ -45,9 +45,7 @@ function ProfileSearchCard({
           <Text variant="default" style={{ fontWeight: '600' }}>
             {item.name}
           </Text>
-          {item.username ? (
-            <Text variant="muted">@{item.username}</Text>
-          ) : null}
+          {item.username ? <Text variant="muted">@{item.username}</Text> : null}
         </View>
         <View style={{ alignSelf: 'stretch', justifyContent: 'center' }}>
           {isRequested ? (
@@ -94,13 +92,27 @@ export function AddFriendsModal({
   onRequestFriend,
 }: AddFriendsModalProps) {
   const showResults =
-    searchValue.trim().length > 0 && (searchLoading || searchResults.length > 0 || searchError);
+    searchValue.trim().length > 0 &&
+    (searchLoading || searchResults.length > 0 || searchError);
   const showEmpty =
-    searchValue.trim().length > 0 && !searchLoading && searchResults.length === 0 && !searchError;
+    searchValue.trim().length > 0 &&
+    !searchLoading &&
+    searchResults.length === 0 &&
+    !searchError;
 
   return (
-    <CardModal open={open} onClose={onClose} maxHeightPct={0.7} contentNoPaddingTop>
-      <ModalHeader title="Buscar amigos" onBack={onClose} onClose={onClose} backAccessibilityLabel="Volver" />
+    <CardModal
+      open={open}
+      onClose={onClose}
+      maxHeightPct={0.7}
+      contentNoPaddingTop
+    >
+      <ModalHeader
+        title="Buscar amigos"
+        onBack={onClose}
+        onClose={onClose}
+        backAccessibilityLabel="Volver"
+      />
       <View style={{ paddingHorizontal: 16, gap: 16, flex: 1 }}>
         <SearchBar
           value={searchValue}
@@ -119,11 +131,17 @@ export function AddFriendsModal({
                 <ActivityIndicator size="small" />
               </View>
             ) : searchError ? (
-              <Text variant="muted" style={{ textAlign: 'center', paddingVertical: 16 }}>
+              <Text
+                variant="muted"
+                style={{ textAlign: 'center', paddingVertical: 16 }}
+              >
                 {searchError}
               </Text>
             ) : showEmpty ? (
-              <Text variant="muted" style={{ textAlign: 'center', paddingVertical: 16 }}>
+              <Text
+                variant="muted"
+                style={{ textAlign: 'center', paddingVertical: 16 }}
+              >
                 No se encontraron usuarios
               </Text>
             ) : (

@@ -1,10 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { Image } from 'expo-image';
 import { CardModal } from '@/shared/components/card-modal';
 import { ModalHeader } from '@/shared/components/modal-header';
@@ -12,7 +7,10 @@ import { SearchBar } from '@/shared/components/ui/search-bar';
 import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
-import { searchMarket, type MarketSearchResultItem } from '../api/marketSearchClient';
+import {
+  searchMarket,
+  type MarketSearchResultItem,
+} from '../api/marketSearchClient';
 import { getQuotes, type QuoteItem } from '../api/marketQuotesClient';
 import { getLogoUrlForSymbol } from '../utils/logoForSymbol';
 
@@ -21,27 +19,27 @@ const SEARCH_LIMIT = 15;
 
 /** 7 magníficas + oro (GLD) + Bitcoin. Símbolos para la lista por defecto. */
 const DEFAULT_SYMBOLS = [
-  'AAPL',   // Apple
-  'TSLA',   // Tesla
-  'NVDA',   // Nvidia
-  'MSFT',   // Microsoft
-  'GOOGL',  // Alphabet
-  'AMZN',   // Amazon
-  'META',   // Meta (7ª magnífica)
-  'GLD',    // ETF oro (precio en USD)
+  'AAPL', // Apple
+  'TSLA', // Tesla
+  'NVDA', // Nvidia
+  'MSFT', // Microsoft
+  'GOOGL', // Alphabet
+  'AMZN', // Amazon
+  'META', // Meta (7ª magnífica)
+  'GLD', // ETF oro (precio en USD)
   'BTC-USD', // Bitcoin
 ];
 
 /** Nombre de empresa por símbolo para la lista por defecto (arriba el nombre, abajo el símbolo). */
 const DEFAULT_DISPLAY_NAMES: Record<string, string> = {
-  'AAPL': 'Apple Inc.',
-  'TSLA': 'Tesla, Inc.',
-  'NVDA': 'NVIDIA Corporation',
-  'MSFT': 'Microsoft Corporation',
-  'GOOGL': 'Alphabet Inc.',
-  'AMZN': 'Amazon.com, Inc.',
-  'META': 'Meta Platforms, Inc.',
-  'GLD': 'Oro (ETF)',
+  AAPL: 'Apple Inc.',
+  TSLA: 'Tesla, Inc.',
+  NVDA: 'NVIDIA Corporation',
+  MSFT: 'Microsoft Corporation',
+  GOOGL: 'Alphabet Inc.',
+  AMZN: 'Amazon.com, Inc.',
+  META: 'Meta Platforms, Inc.',
+  GLD: 'Oro (ETF)',
   'BTC-USD': 'Bitcoin',
 };
 
@@ -103,7 +101,10 @@ function AssetAvatar({
           />
         ) : (
           <Text
-            style={[Hierarchy.bodySmallSemibold, { color: textColor, opacity: 0.78 }]}
+            style={[
+              Hierarchy.bodySmallSemibold,
+              { color: textColor, opacity: 0.78 },
+            ]}
             numberOfLines={1}
           >
             {getInitial(name)}
@@ -151,8 +152,7 @@ export function StockSearchModal({
       const res = await searchMarket(trimmed, SEARCH_LIMIT);
       setResults(res.results);
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Error al buscar';
+      const message = err instanceof Error ? err.message : 'Error al buscar';
       setError(message);
       setResults([]);
     } finally {
@@ -285,14 +285,15 @@ export function StockSearchModal({
       const usdPerOz = item.price * 10;
       return `~${usdPerOz.toFixed(0)} $/oz`;
     }
-    const value = item.price >= 1e6
-      ? (item.price / 1e6).toFixed(2) + 'M'
-      : item.price >= 1e3
-        ? item.price.toFixed(2)
-        : item.price < 1
-          ? item.price.toFixed(4)
-          : item.price.toFixed(2);
-    const cur = item.currency === 'USD' ? '$' : item.currency ?? '';
+    const value =
+      item.price >= 1e6
+        ? (item.price / 1e6).toFixed(2) + 'M'
+        : item.price >= 1e3
+          ? item.price.toFixed(2)
+          : item.price < 1
+            ? item.price.toFixed(4)
+            : item.price.toFixed(2);
+    const cur = item.currency === 'USD' ? '$' : (item.currency ?? '');
     return `${cur}${value}`;
   };
 
@@ -315,11 +316,7 @@ export function StockSearchModal({
           accessibilityRole="button"
           accessibilityLabel={`${displayName} ${item.symbol}`}
         >
-          <AssetAvatar
-            logoUrl={logoUrl}
-            name={displayName}
-            palette={palette}
-          />
+          <AssetAvatar logoUrl={logoUrl} name={displayName} palette={palette} />
           <View style={{ marginLeft: 12, flex: 1, minWidth: 0 }}>
             <Text
               style={[Hierarchy.bodySmallSemibold, { color: palette.text }]}
@@ -338,9 +335,7 @@ export function StockSearchModal({
             </Text>
           </View>
           {item.price != null && (
-            <Text
-              style={[Hierarchy.action, { color: palette.text }]}
-            >
+            <Text style={[Hierarchy.action, { color: palette.text }]}>
               {formatPrice(item)}
             </Text>
           )}
@@ -351,7 +346,8 @@ export function StockSearchModal({
   );
 
   const showDefaultList = query.trim().length < 1 && !loading;
-  const showSearchResults = query.trim().length >= 1 && results.length > 0 && !loading;
+  const showSearchResults =
+    query.trim().length >= 1 && results.length > 0 && !loading;
 
   return (
     <CardModal
@@ -369,76 +365,91 @@ export function StockSearchModal({
           onClose={onClose}
           backAccessibilityLabel="Volver"
         />
-        <View style={{ flex: 1, paddingHorizontal: 16, paddingBottom: 24, minHeight: 200 }}>
-        <SearchBar
-          value={query}
-          onChangeText={setQuery}
-          placeholder="ej. Apple, AAPL, TSLA"
-          autoFocus={open}
-          variant="input"
-        />
-
-        {loading && (
-          <View style={{ paddingVertical: 24, alignItems: 'center' }}>
-            <ActivityIndicator size="small" color={palette.primary} />
-          </View>
-        )}
-
-        {showDefaultList && defaultQuotesLoading && (
-          <View style={{ paddingVertical: 24, alignItems: 'center' }}>
-            <ActivityIndicator size="small" color={palette.primary} />
-          </View>
-        )}
-
-        {showDefaultList && !defaultQuotesLoading && defaultQuotes.length > 0 && (
-          <FlatList
-            data={defaultQuotes}
-            keyExtractor={(item) => item.symbol}
-            renderItem={renderDefaultItem}
-            scrollEnabled={true}
-            style={{ flex: 1, marginTop: 8 }}
-            contentContainerStyle={{ paddingBottom: 24 }}
-            showsVerticalScrollIndicator={true}
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: 16,
+            paddingBottom: 24,
+            minHeight: 200,
+          }}
+        >
+          <SearchBar
+            value={query}
+            onChangeText={setQuery}
+            placeholder="ej. Apple, AAPL, TSLA"
+            autoFocus={open}
+            variant="input"
           />
-        )}
 
-        {error && !loading && (
-          <View style={{ paddingVertical: 16 }}>
-            <Text
-              style={[
-                Hierarchy.bodySmall,
-                { textAlign: 'center', color: palette.icon ?? palette.text },
-              ]}
-            >
-              {error}
-            </Text>
-          </View>
-        )}
+          {loading && (
+            <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color={palette.primary} />
+            </View>
+          )}
 
-        {!loading && !error && results.length === 0 && query.trim().length >= 1 && (
-          <View style={{ paddingVertical: 24 }}>
-            <Text
-              style={[
-                Hierarchy.bodySmall,
-                { textAlign: 'center', color: palette.icon ?? palette.text },
-              ]}
-            >
-              No se encontraron resultados para "{query.trim()}"
-            </Text>
-          </View>
-        )}
+          {showDefaultList && defaultQuotesLoading && (
+            <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color={palette.primary} />
+            </View>
+          )}
 
-        {showSearchResults && (
-          <FlatList
-            data={results}
-            keyExtractor={(item) => item.symbol}
-            renderItem={renderSearchItem}
-            scrollEnabled={true}
-            style={{ flex: 1, marginTop: 8 }}
-            contentContainerStyle={{ paddingBottom: 24 }}
-            showsVerticalScrollIndicator={true}
-          />
-        )}
+          {showDefaultList &&
+            !defaultQuotesLoading &&
+            defaultQuotes.length > 0 && (
+              <FlatList
+                data={defaultQuotes}
+                keyExtractor={(item) => item.symbol}
+                renderItem={renderDefaultItem}
+                scrollEnabled={true}
+                style={{ flex: 1, marginTop: 8 }}
+                contentContainerStyle={{ paddingBottom: 24 }}
+                showsVerticalScrollIndicator={true}
+              />
+            )}
+
+          {error && !loading && (
+            <View style={{ paddingVertical: 16 }}>
+              <Text
+                style={[
+                  Hierarchy.bodySmall,
+                  { textAlign: 'center', color: palette.icon ?? palette.text },
+                ]}
+              >
+                {error}
+              </Text>
+            </View>
+          )}
+
+          {!loading &&
+            !error &&
+            results.length === 0 &&
+            query.trim().length >= 1 && (
+              <View style={{ paddingVertical: 24 }}>
+                <Text
+                  style={[
+                    Hierarchy.bodySmall,
+                    {
+                      textAlign: 'center',
+                      color: palette.icon ?? palette.text,
+                    },
+                  ]}
+                >
+                  {`No se encontraron resultados para "${query.trim()}"`}
+                </Text>
+              </View>
+            )}
+
+          {showSearchResults && (
+            <FlatList
+              data={results}
+              keyExtractor={(item) => item.symbol}
+              renderItem={renderSearchItem}
+              scrollEnabled={true}
+              style={{ flex: 1, marginTop: 8 }}
+              contentContainerStyle={{ paddingBottom: 24 }}
+              showsVerticalScrollIndicator={true}
+            />
+          )}
         </View>
       </View>
     </CardModal>

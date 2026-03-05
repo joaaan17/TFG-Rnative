@@ -1,5 +1,13 @@
-import type { GetQuotePort, PortfolioRepository, TransactionRepository } from '../../domain/ports';
-import type { Holding, Portfolio, Transaction } from '../../domain/investments.types';
+import type {
+  GetQuotePort,
+  PortfolioRepository,
+  TransactionRepository,
+} from '../../domain/ports';
+import type {
+  Holding,
+  Portfolio,
+  Transaction,
+} from '../../domain/investments.types';
 
 const MIN_SHARES = 0.0001;
 const MAX_SYMBOL_LENGTH = 15;
@@ -56,7 +64,9 @@ export class ExecuteBuyOrderUseCase {
 
     const portfolio = await this.portfolioRepository.findByUserId(uid);
     if (!portfolio) {
-      throw new Error('Cartera no encontrada. Obtén la cartera primero (GET /portfolio/me).');
+      throw new Error(
+        'Cartera no encontrada. Obtén la cartera primero (GET /portfolio/me).',
+      );
     }
 
     if (portfolio.cashBalance < totalCost) {
@@ -92,11 +102,23 @@ export class ExecuteBuyOrderUseCase {
       ];
     }
 
-    const newCashBalance = Math.round((portfolio.cashBalance - totalCost) * 100) / 100;
+    const newCashBalance =
+      Math.round((portfolio.cashBalance - totalCost) * 100) / 100;
 
     const [createdTransaction, updatedPortfolio] = await Promise.all([
-      this.transactionRepository.create(uid, sym, 'BUY', shares, price, totalCost),
-      this.portfolioRepository.updateCashAndHoldings(uid, newCashBalance, newHoldings),
+      this.transactionRepository.create(
+        uid,
+        sym,
+        'BUY',
+        shares,
+        price,
+        totalCost,
+      ),
+      this.portfolioRepository.updateCashAndHoldings(
+        uid,
+        newCashBalance,
+        newHoldings,
+      ),
     ]);
 
     if (!updatedPortfolio) {
@@ -104,7 +126,9 @@ export class ExecuteBuyOrderUseCase {
     }
 
     if (requestId) {
-      console.log(`[orders] requestId=${requestId} userId=${uid} symbol=${sym} shares=${shares} total=${totalCost} BUY executed`);
+      console.log(
+        `[orders] requestId=${requestId} userId=${uid} symbol=${sym} shares=${shares} total=${totalCost} BUY executed`,
+      );
     }
 
     return {
@@ -112,7 +136,10 @@ export class ExecuteBuyOrderUseCase {
         ...updatedPortfolio,
         holdings: updatedPortfolio.holdings.map((h) => ({
           ...h,
-          lastUpdatedAt: h.lastUpdatedAt instanceof Date ? h.lastUpdatedAt : new Date(h.lastUpdatedAt),
+          lastUpdatedAt:
+            h.lastUpdatedAt instanceof Date
+              ? h.lastUpdatedAt
+              : new Date(h.lastUpdatedAt),
         })),
       },
       createdTransaction: {

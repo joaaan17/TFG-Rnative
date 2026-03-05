@@ -42,18 +42,35 @@ function isVolatility(
 export function ContextCard({ card, styles: s }: ContextCardProps) {
   const palette = usePalette();
 
-  const labelStyle = [Hierarchy.caption, s.contextLabel, { color: palette.icon ?? palette.text }];
-  const valueStyle = [Hierarchy.bodySmallSemibold, s.contextValue, { color: palette.text }];
+  const labelStyle = [
+    Hierarchy.caption,
+    s.contextLabel,
+    { color: palette.icon ?? palette.text },
+  ];
+  const valueStyle = [
+    Hierarchy.bodySmallSemibold,
+    s.contextValue,
+    { color: palette.text },
+  ];
 
   if (isBestWorst(card)) {
-    const isPositive = card.id === 'best' ? card.percent.startsWith('+') : false;
+    const isPositive =
+      card.id === 'best' ? card.percent.startsWith('+') : false;
     const percentColor = isPositive ? ENTRY_GREEN : palette.destructive;
     return (
       <CardWithBlueBar style={s.contextCard}>
-        <Text style={labelStyle} numberOfLines={1}>{card.label}</Text>
-        <Text style={valueStyle} numberOfLines={1}>{card.assetName}</Text>
+        <Text style={labelStyle} numberOfLines={1}>
+          {card.label}
+        </Text>
+        <Text style={valueStyle} numberOfLines={1}>
+          {card.assetName}
+        </Text>
         <Text
-          style={[Hierarchy.bodySmallSemibold, s.contextPercent, { color: percentColor }]}
+          style={[
+            Hierarchy.bodySmallSemibold,
+            s.contextPercent,
+            { color: percentColor },
+          ]}
           numberOfLines={1}
         >
           {card.percent}
@@ -66,12 +83,25 @@ export function ContextCard({ card, styles: s }: ContextCardProps) {
     const opLabel = card.operationType === 'compra' ? 'Compra' : 'Venta';
     return (
       <CardWithBlueBar style={s.contextCard}>
-        <Text style={labelStyle} numberOfLines={1}>{card.label}</Text>
-        <Text style={valueStyle} numberOfLines={1}>{opLabel} {card.assetName}</Text>
-        <Text style={[Hierarchy.caption, { color: palette.icon ?? palette.text }]} numberOfLines={1}>
+        <Text style={labelStyle} numberOfLines={1}>
+          {card.label}
+        </Text>
+        <Text style={valueStyle} numberOfLines={1}>
+          {opLabel} {card.assetName}
+        </Text>
+        <Text
+          style={[Hierarchy.caption, { color: palette.icon ?? palette.text }]}
+          numberOfLines={1}
+        >
           {card.quantity}
         </Text>
-        <Text style={[Hierarchy.caption, { color: palette.icon ?? palette.text, opacity: 0.85 }]} numberOfLines={1}>
+        <Text
+          style={[
+            Hierarchy.caption,
+            { color: palette.icon ?? palette.text, opacity: 0.85 },
+          ]}
+          numberOfLines={1}
+        >
           {card.timeAgo}
         </Text>
       </CardWithBlueBar>
@@ -81,8 +111,17 @@ export function ContextCard({ card, styles: s }: ContextCardProps) {
   if (isVolatility(card)) {
     return (
       <CardWithBlueBar style={s.contextCard}>
-        <Text style={labelStyle} numberOfLines={1}>{card.label}</Text>
-        <Text style={[Hierarchy.valueSecondary, s.contextValue, { color: palette.text }]} numberOfLines={1}>
+        <Text style={labelStyle} numberOfLines={1}>
+          {card.label}
+        </Text>
+        <Text
+          style={[
+            Hierarchy.valueSecondary,
+            s.contextValue,
+            { color: palette.text },
+          ]}
+          numberOfLines={1}
+        >
           {card.value}
         </Text>
       </CardWithBlueBar>
@@ -91,8 +130,17 @@ export function ContextCard({ card, styles: s }: ContextCardProps) {
 
   return (
     <CardWithBlueBar style={s.contextCard}>
-      <Text style={labelStyle} numberOfLines={1}>{card.label}</Text>
-      <Text style={[Hierarchy.valueSecondary, s.contextValue, { color: palette.text }]} numberOfLines={1}>
+      <Text style={labelStyle} numberOfLines={1}>
+        {card.label}
+      </Text>
+      <Text
+        style={[
+          Hierarchy.valueSecondary,
+          s.contextValue,
+          { color: palette.text },
+        ]}
+        numberOfLines={1}
+      >
         {card.value}
       </Text>
     </CardWithBlueBar>

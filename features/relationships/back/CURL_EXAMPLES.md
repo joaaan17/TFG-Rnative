@@ -12,8 +12,9 @@ curl -X POST "$BASE_URL/api/relationships/request" \
 ```
 
 Respuesta 201:
+
 ```json
-{"ok":true,"data":{"id":"...","status":"pending"}}
+{ "ok": true, "data": { "id": "...", "status": "pending" } }
 ```
 
 ## 2. Aceptar solicitud
@@ -26,8 +27,9 @@ curl -X POST "$BASE_URL/api/relationships/accept" \
 ```
 
 Respuesta 200:
+
 ```json
-{"ok":true,"data":{"id":"...","status":"accepted"}}
+{ "ok": true, "data": { "id": "...", "status": "accepted" } }
 ```
 
 ## 3. Rechazar solicitud
@@ -40,8 +42,9 @@ curl -X POST "$BASE_URL/api/relationships/reject" \
 ```
 
 Respuesta 200:
+
 ```json
-{"ok":true,"data":{"message":"Request rejected"}}
+{ "ok": true, "data": { "message": "Request rejected" } }
 ```
 
 ## 4. Eliminar amigo
@@ -52,8 +55,9 @@ curl -X DELETE "$BASE_URL/api/relationships/friend/USER_ID_DEL_AMIGO" \
 ```
 
 Respuesta 200:
+
 ```json
-{"ok":true,"data":{"message":"Friend removed"}}
+{ "ok": true, "data": { "message": "Friend removed" } }
 ```
 
 ## 5. Listar amigos (paginado)
@@ -64,8 +68,18 @@ curl "$BASE_URL/api/relationships/friends?page=1&limit=20" \
 ```
 
 Respuesta 200:
+
 ```json
-{"ok":true,"data":{"items":[{"userId":"...","username":"...","name":"...","avatarUrl":"..."}],"page":1,"limit":20}}
+{
+  "ok": true,
+  "data": {
+    "items": [
+      { "userId": "...", "username": "...", "name": "...", "avatarUrl": "..." }
+    ],
+    "page": 1,
+    "limit": 20
+  }
+}
 ```
 
 ## 6. Buscar entre mis amigos
@@ -76,6 +90,7 @@ curl "$BASE_URL/api/relationships/friends?search=joa&page=1&limit=20" \
 ```
 
 Respuesta 200:
+
 ```json
 {"ok":true,"data":{"items":[...],"page":1,"limit":20}}
 ```

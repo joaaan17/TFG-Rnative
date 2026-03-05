@@ -17,7 +17,11 @@ export function PaletteProvider({
   children: React.ReactNode;
 }) {
   // Nota: este archivo es `.ts` (sin JSX). Usamos createElement.
-  return React.createElement(PaletteOverrideContext.Provider, { value }, children);
+  return React.createElement(
+    PaletteOverrideContext.Provider,
+    { value },
+    children,
+  );
 }
 
 // Devuelve la paleta actual del design system según el modo de color.

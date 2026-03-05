@@ -2,9 +2,16 @@ import type { Holding, Portfolio } from '../../domain/investments.types';
 import type { PortfolioRepository as IPortfolioRepository } from '../../domain/ports';
 import { PortfolioModel } from './portfolio.model';
 
-const DEFAULT_INITIAL_CASH = Number(process.env.PORTFOLIO_INITIAL_CASH) || 10_000;
+const DEFAULT_INITIAL_CASH =
+  Number(process.env.PORTFOLIO_INITIAL_CASH) || 10_000;
 
-function mapDocToPortfolio(doc: { _id: unknown; userId: string; cashBalance: number; currency: string; holdings: Holding[] }): Portfolio {
+function mapDocToPortfolio(doc: {
+  _id: unknown;
+  userId: string;
+  cashBalance: number;
+  currency: string;
+  holdings: Holding[];
+}): Portfolio {
   return {
     _id: String(doc._id),
     userId: doc.userId,
@@ -14,13 +21,18 @@ function mapDocToPortfolio(doc: { _id: unknown; userId: string; cashBalance: num
       symbol: h.symbol,
       shares: h.shares,
       avgBuyPrice: h.avgBuyPrice,
-      lastUpdatedAt: h.lastUpdatedAt instanceof Date ? h.lastUpdatedAt : new Date(h.lastUpdatedAt),
+      lastUpdatedAt:
+        h.lastUpdatedAt instanceof Date
+          ? h.lastUpdatedAt
+          : new Date(h.lastUpdatedAt),
     })),
   };
 }
 
 export class MongoPortfolioRepository implements IPortfolioRepository {
-  constructor(private readonly initialCashBalance: number = DEFAULT_INITIAL_CASH) {}
+  constructor(
+    private readonly initialCashBalance: number = DEFAULT_INITIAL_CASH,
+  ) {}
 
   async findByUserId(userId: string): Promise<Portfolio | null> {
     const doc = await PortfolioModel.findOne({ userId }).lean().exec();
@@ -28,7 +40,11 @@ export class MongoPortfolioRepository implements IPortfolioRepository {
     return mapDocToPortfolio(doc);
   }
 
-  async create(userId: string, cashBalance: number, currency: string): Promise<Portfolio> {
+  async create(
+    userId: string,
+    cashBalance: number,
+    currency: string,
+  ): Promise<Portfolio> {
     const doc = await PortfolioModel.create({
       userId,
       cashBalance,

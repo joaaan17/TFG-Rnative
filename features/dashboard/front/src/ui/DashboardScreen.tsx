@@ -359,14 +359,8 @@ export function DashboardScreen() {
               segments={donutSegments}
               size={220}
               strokeWidth={42}
-              centerLabel={summary.totalValue}
-              centerSublabel={
-                activeChart === 'sector'
-                  ? 'Valor por sector'
-                  : activeChart === 'geo'
-                    ? 'Valor por región'
-                    : 'Valor por acciones'
-              }
+              centerLabel={summary.totalInvested}
+              centerSublabel="Total invertido"
               showLegend
             />
           </Animated.View>

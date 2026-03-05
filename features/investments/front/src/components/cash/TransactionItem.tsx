@@ -50,7 +50,11 @@ function getTitle(item: CashTransactionView): string {
   return 'Movimiento';
 }
 
-export function TransactionItem({ item, onPress, styles: s }: TransactionItemProps) {
+export function TransactionItem({
+  item,
+  onPress,
+  styles: s,
+}: TransactionItemProps) {
   const palette = usePalette();
   const isEntry = item.amount > 0;
   const amountColor = isEntry
@@ -60,9 +64,8 @@ export function TransactionItem({ item, onPress, styles: s }: TransactionItemPro
       : palette.text;
 
   const Icon = item.type === 'BUY' ? ShoppingBag : TrendingUp;
-  const iconBg = item.type === 'BUY'
-    ? (palette.primary + '18')
-    : (ENTRY_GREEN + '18');
+  const iconBg =
+    item.type === 'BUY' ? palette.primary + '18' : ENTRY_GREEN + '18';
   const iconColor = item.type === 'BUY' ? palette.primary : ENTRY_GREEN;
 
   return (
@@ -72,7 +75,12 @@ export function TransactionItem({ item, onPress, styles: s }: TransactionItemPro
       accessibilityRole="button"
       accessibilityLabel={`Ver detalle: ${getTitle(item)}`}
     >
-      <View style={[s.itemWrap, { borderBottomColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.06)' }]}>
+      <View
+        style={[
+          s.itemWrap,
+          { borderBottomColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.06)' },
+        ]}
+      >
         <View style={[s.itemIconWrap, { backgroundColor: iconBg }]}>
           <Icon size={22} color={iconColor} strokeWidth={2} />
         </View>
@@ -93,10 +101,7 @@ export function TransactionItem({ item, onPress, styles: s }: TransactionItemPro
         </View>
         <View style={s.itemAmount}>
           <Text
-            style={[
-              Hierarchy.bodySmallSemibold,
-              { color: amountColor },
-            ]}
+            style={[Hierarchy.bodySmallSemibold, { color: amountColor }]}
             numberOfLines={1}
           >
             {formatAmount(item.amount, item.currency)}

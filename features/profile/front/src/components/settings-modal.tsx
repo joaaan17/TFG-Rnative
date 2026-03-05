@@ -67,8 +67,18 @@ export function SettingsModal({
   const displayJoined = formatJoinedYear(profile?.joinedAt);
 
   return (
-    <CardModal open={open} onClose={onClose} maxHeightPct={0.75} contentNoPaddingTop>
-      <ModalHeader title="Ajustes" onBack={onClose} onClose={onClose} backAccessibilityLabel="Volver" />
+    <CardModal
+      open={open}
+      onClose={onClose}
+      maxHeightPct={0.75}
+      contentNoPaddingTop
+    >
+      <ModalHeader
+        title="Ajustes"
+        onBack={onClose}
+        onClose={onClose}
+        backAccessibilityLabel="Volver"
+      />
       <ScrollView
         style={{ paddingHorizontal: 16, flexGrow: 1 }}
         contentContainerStyle={{ paddingBottom: 24 }}

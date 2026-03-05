@@ -1,5 +1,13 @@
-import type { GetQuotePort, PortfolioRepository, TransactionRepository } from '../../domain/ports';
-import type { Holding, Portfolio, Transaction } from '../../domain/investments.types';
+import type {
+  GetQuotePort,
+  PortfolioRepository,
+  TransactionRepository,
+} from '../../domain/ports';
+import type {
+  Holding,
+  Portfolio,
+  Transaction,
+} from '../../domain/investments.types';
 
 const MIN_SHARES = 0.0001;
 const MAX_SYMBOL_LENGTH = 15;
@@ -40,7 +48,9 @@ export class ExecuteSellOrderUseCase {
 
     const portfolio = await this.portfolioRepository.findByUserId(uid);
     if (!portfolio) {
-      throw new Error('Cartera no encontrada. Obtén la cartera primero (GET /portfolio/me).');
+      throw new Error(
+        'Cartera no encontrada. Obtén la cartera primero (GET /portfolio/me).',
+      );
     }
 
     const holdingIndex = portfolio.holdings.findIndex((h) => h.symbol === sym);
@@ -50,7 +60,9 @@ export class ExecuteSellOrderUseCase {
 
     const holding = portfolio.holdings[holdingIndex];
     if (holding.shares < shares) {
-      throw new InsufficientSharesError('No tienes suficientes acciones para vender');
+      throw new InsufficientSharesError(
+        'No tienes suficientes acciones para vender',
+      );
     }
 
     const hasValidClientPrice =
@@ -71,7 +83,8 @@ export class ExecuteSellOrderUseCase {
 
     const now = new Date();
     const newHoldings: Holding[] = [...portfolio.holdings];
-    const remainingShares = Math.round((holding.shares - shares) * 10000) / 10000;
+    const remainingShares =
+      Math.round((holding.shares - shares) * 10000) / 10000;
 
     if (remainingShares <= 0) {
       newHoldings.splice(holdingIndex, 1);
@@ -84,7 +97,8 @@ export class ExecuteSellOrderUseCase {
       };
     }
 
-    const newCashBalance = Math.round((portfolio.cashBalance + totalProceeds) * 100) / 100;
+    const newCashBalance =
+      Math.round((portfolio.cashBalance + totalProceeds) * 100) / 100;
 
     const [createdTransaction, updatedPortfolio] = await Promise.all([
       this.transactionRepository.create(
@@ -96,7 +110,11 @@ export class ExecuteSellOrderUseCase {
         totalProceeds,
         holding.avgBuyPrice,
       ),
-      this.portfolioRepository.updateCashAndHoldings(uid, newCashBalance, newHoldings),
+      this.portfolioRepository.updateCashAndHoldings(
+        uid,
+        newCashBalance,
+        newHoldings,
+      ),
     ]);
 
     if (!updatedPortfolio) {
@@ -104,7 +122,9 @@ export class ExecuteSellOrderUseCase {
     }
 
     if (requestId) {
-      console.log(`[orders] requestId=${requestId} userId=${uid} symbol=${sym} shares=${shares} total=${totalProceeds} SELL executed`);
+      console.log(
+        `[orders] requestId=${requestId} userId=${uid} symbol=${sym} shares=${shares} total=${totalProceeds} SELL executed`,
+      );
     }
 
     return {
@@ -112,7 +132,10 @@ export class ExecuteSellOrderUseCase {
         ...updatedPortfolio,
         holdings: updatedPortfolio.holdings.map((h) => ({
           ...h,
-          lastUpdatedAt: h.lastUpdatedAt instanceof Date ? h.lastUpdatedAt : new Date(h.lastUpdatedAt),
+          lastUpdatedAt:
+            h.lastUpdatedAt instanceof Date
+              ? h.lastUpdatedAt
+              : new Date(h.lastUpdatedAt),
         })),
       },
       createdTransaction: {

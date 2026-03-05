@@ -196,8 +196,7 @@ export const deleteUserController = async (
     res.status(204).send();
   } catch (error) {
     res.status(404).json({
-      message:
-        error instanceof Error ? error.message : 'Usuario no encontrado',
+      message: error instanceof Error ? error.message : 'Usuario no encontrado',
     });
   }
 };

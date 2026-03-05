@@ -15,7 +15,14 @@ const router = Router();
 router.get('/', (_req: Request, res: Response) => {
   res.status(200).json({
     ok: true,
-    routes: ['/search', '/candles', '/quotes', '/overview', '/cache/stats', '/cache/warmup'],
+    routes: [
+      '/search',
+      '/candles',
+      '/quotes',
+      '/overview',
+      '/cache/stats',
+      '/cache/warmup',
+    ],
   });
 });
 

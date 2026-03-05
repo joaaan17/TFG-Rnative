@@ -18,7 +18,10 @@ import {
 import { Text } from '@/shared/components/ui/text';
 import { usePalette } from '@/shared/hooks/use-palette';
 import { Hierarchy } from '@/design-system/typography';
-import type { DonutSegment, PortfolioDonutChartProps } from '../types/portfolio-chart.types';
+import type {
+  DonutSegment,
+  PortfolioDonutChartProps,
+} from '../types/portfolio-chart.types';
 
 const AnimatedCircle = createAnimatedComponent(Circle);
 
@@ -62,7 +65,7 @@ function AnimatedDonutSegment({
       revealProgress.value,
       [index / total, Math.min((index + 1.15) / total, 1)],
       [0, 1],
-      Extrapolation.CLAMP
+      Extrapolation.CLAMP,
     );
     const visibleLength = progress * dashLength;
     return {
@@ -127,45 +130,60 @@ export function PortfolioDonutChart({
   const normalized = useMemo(() => normalizeSegments(segments), [segments]);
   const legendItems = useMemo(
     () => normalized.slice(0, maxLegendItems),
-    [normalized, maxLegendItems]
+    [normalized, maxLegendItems],
   );
 
-  const { cx, cy, r, circumference, ringThickness, ringSegments } = useMemo(() => {
-    const c = size / 2;
-    const oR = size / 2 - 4;
-    const iR = Math.max(oR - strokeWidth, 4);
-    const radius = (oR + iR) / 2;
-    const circ = 2 * Math.PI * radius;
+  const { cx, cy, r, circumference, ringThickness, ringSegments } =
+    useMemo(() => {
+      const c = size / 2;
+      const oR = size / 2 - 4;
+      const iR = Math.max(oR - strokeWidth, 4);
+      const radius = (oR + iR) / 2;
+      const circ = 2 * Math.PI * radius;
 
-    const n = normalized.length;
-    const totalGap = n * SEGMENT_GAP;
-    const availableLength = Math.max(0, circ - totalGap);
+      const n = normalized.length;
+      const totalGap = n * SEGMENT_GAP;
+      const availableLength = Math.max(0, circ - totalGap);
 
-    let offset = 0;
-    const ringSegments: {
-      color: string;
-      dashLength: number;
-      dashOffset: number;
-      key: string;
-    }[] = [];
-    for (const seg of normalized) {
-      const dashLength = (seg.value / 100) * availableLength;
-      ringSegments.push({
-        color: seg.color,
-        dashLength,
-        dashOffset: offset,
-        key: seg.label,
-      });
-      offset += dashLength + SEGMENT_GAP;
-    }
+      let offset = 0;
+      const ringSegments: {
+        color: string;
+        dashLength: number;
+        dashOffset: number;
+        key: string;
+      }[] = [];
+      for (const seg of normalized) {
+        const dashLength = (seg.value / 100) * availableLength;
+        ringSegments.push({
+          color: seg.color,
+          dashLength,
+          dashOffset: offset,
+          key: seg.label,
+        });
+        offset += dashLength + SEGMENT_GAP;
+      }
 
-    const ringThickness = oR - iR;
-    return { cx: c, cy: c, r: radius, circumference: circ, ringThickness, ringSegments };
-  }, [normalized, size, strokeWidth]);
+      const ringThickness = oR - iR;
+      return {
+        cx: c,
+        cy: c,
+        r: radius,
+        circumference: circ,
+        ringThickness,
+        ringSegments,
+      };
+    }, [normalized, size, strokeWidth]);
 
   return (
     <View style={{ alignItems: 'center' }}>
-      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <View
+        style={{
+          width: size,
+          height: size,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
           {ringSegments.map(({ color, dashLength, dashOffset, key }, index) =>
             animateOnMount ? (
@@ -197,7 +215,7 @@ export function PortfolioDonutChart({
                 strokeLinecap="butt"
                 transform={`rotate(-90 ${cx} ${cy})`}
               />
-            )
+            ),
           )}
         </Svg>
         {(centerLabel != null || centerSublabel != null) && (
@@ -263,12 +281,7 @@ export function PortfolioDonutChart({
                   backgroundColor: s.color,
                 }}
               />
-              <Text
-                style={[
-                  Hierarchy.captionSmall,
-                  { color: '#0B1220' },
-                ]}
-              >
+              <Text style={[Hierarchy.captionSmall, { color: '#0B1220' }]}>
                 {s.label} {s.value}%
               </Text>
             </View>

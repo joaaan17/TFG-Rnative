@@ -292,7 +292,8 @@ function LightweightChartWeb({
       layout: {
         background: { color: chartTheme.layoutBackgroundColor },
         textColor: chartTheme.textColor,
-        fontSize: (chartTheme as ChartTheme & { fontSize?: number }).fontSize ?? 11,
+        fontSize:
+          (chartTheme as ChartTheme & { fontSize?: number }).fontSize ?? 11,
         fontFamily:
           '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "DM Sans", sans-serif',
       },
@@ -323,8 +324,17 @@ function LightweightChartWeb({
       width: w,
       height: h,
       ...(intraday && {
-        handleScroll: { horzTouchDrag: true, vertTouchDrag: false, pressedMouseMove: true, mouseWheel: true },
-        handleScale: { pinch: true, mouseWheel: true, axisPressedMouseMove: true },
+        handleScroll: {
+          horzTouchDrag: true,
+          vertTouchDrag: false,
+          pressedMouseMove: true,
+          mouseWheel: true,
+        },
+        handleScale: {
+          pinch: true,
+          mouseWheel: true,
+          axisPressedMouseMove: true,
+        },
       }),
       crosshair: {
         vertLine: {

@@ -18,7 +18,9 @@ export class MongoProfileRepository implements ProfileRepository {
   }
 
   async updateCashBalance(userId: string, cashBalance: number): Promise<void> {
-    await ProfileModel.findByIdAndUpdate(userId, { $set: { cashBalance } }).exec();
+    await ProfileModel.findByIdAndUpdate(userId, {
+      $set: { cashBalance },
+    }).exec();
   }
 
   async deleteById(id: string): Promise<void> {

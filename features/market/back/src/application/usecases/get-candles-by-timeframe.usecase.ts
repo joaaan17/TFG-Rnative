@@ -53,7 +53,13 @@ function aggregate1hTo6h(candles: Candle[]): Candle[] {
   if (candles.length === 0) return [];
   const byBucket = new Map<number, Candle[]>();
   for (const c of candles) {
-    if (!isValidNumber(c.t) || !isValidNumber(c.o) || !isValidNumber(c.h) || !isValidNumber(c.l) || !isValidNumber(c.c)) {
+    if (
+      !isValidNumber(c.t) ||
+      !isValidNumber(c.o) ||
+      !isValidNumber(c.h) ||
+      !isValidNumber(c.l) ||
+      !isValidNumber(c.c)
+    ) {
       continue;
     }
     const bucketStart = Math.floor(c.t / BUCKET_6H_MS) * BUCKET_6H_MS;
@@ -97,7 +103,9 @@ export class GetCandlesByTimeframeUseCase {
       throw new Error(`symbol must be at most ${MAX_SYMBOL_LENGTH} characters`);
     }
     if (!VALID_TIMEFRAMES.includes(timeframe)) {
-      throw new Error(`timeframe must be one of: ${VALID_TIMEFRAMES.join(', ')}`);
+      throw new Error(
+        `timeframe must be one of: ${VALID_TIMEFRAMES.join(', ')}`,
+      );
     }
 
     const defaultMapping = TIMEFRAME_TO_RANGE_INTERVAL[timeframe];
@@ -107,7 +115,10 @@ export class GetCandlesByTimeframeUseCase {
         : defaultMapping.range;
 
     // Para velas 6h o 1h pedimos datos 1h al proveedor; Yahoo limita 1h a ~60 días.
-    if ((timeframe === '6h' || timeframe === '1h') && (range === '6mo' || range === '1y')) {
+    if (
+      (timeframe === '6h' || timeframe === '1h') &&
+      (range === '6mo' || range === '1y')
+    ) {
       range = MAX_RANGE_FOR_1H;
     }
 

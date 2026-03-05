@@ -44,7 +44,9 @@ function getDateGroupLabel(dateStr: string): string {
   return `${day} ${month}`;
 }
 
-function groupTransactionsByDate(list: CashTransactionView[]): CashTransactionGroup[] {
+function groupTransactionsByDate(
+  list: CashTransactionView[],
+): CashTransactionGroup[] {
   const byLabel = new Map<string, CashTransactionView[]>();
   for (const tx of list) {
     const label = getDateGroupLabel(tx.createdAt);
@@ -76,10 +78,11 @@ function groupTransactionsByDate(list: CashTransactionView[]): CashTransactionGr
  * No mezcla lógica de red: usa usePortfolio y useTransactions.
  */
 export function useCashOverview(token: string | null, enabled: boolean) {
-  const { data: portfolio, loading: loadingPortfolio, refetch: refetchPortfolio } = usePortfolio(
-    token,
-    enabled,
-  );
+  const {
+    data: portfolio,
+    loading: loadingPortfolio,
+    refetch: refetchPortfolio,
+  } = usePortfolio(token, enabled);
   const {
     data: transactions,
     loading: loadingTransactions,

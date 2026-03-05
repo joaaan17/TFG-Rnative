@@ -40,7 +40,14 @@ export function PurchaseSuccessModal({
       scrollable={false}
       contentNoPaddingTop
     >
-      <View style={{ flex: 1, paddingHorizontal: 24, paddingVertical: 32, alignItems: 'center' }}>
+      <View
+        style={{
+          flex: 1,
+          paddingHorizontal: 24,
+          paddingVertical: 32,
+          alignItems: 'center',
+        }}
+      >
         <View
           style={{
             width: 72,
@@ -66,10 +73,15 @@ export function PurchaseSuccessModal({
           variant="muted"
           style={[
             Hierarchy.bodySmall,
-            { color: palette.icon ?? palette.text, textAlign: 'center', marginBottom: 28 },
+            {
+              color: palette.icon ?? palette.text,
+              textAlign: 'center',
+              marginBottom: 28,
+            },
           ]}
         >
-          Tu compra se ha efectuado correctamente. Verás tus acciones actualizadas en tu cartera.
+          Tu compra se ha efectuado correctamente. Verás tus acciones
+          actualizadas en tu cartera.
         </Text>
         <Pressable
           onPress={handleGoToMain}
@@ -87,10 +99,19 @@ export function PurchaseSuccessModal({
           accessibilityRole="button"
           accessibilityLabel="Ir a Inversiones"
         >
-          <Text style={[Hierarchy.action, { color: palette.primaryText ?? '#FFF', fontWeight: '600' }]}>
+          <Text
+            style={[
+              Hierarchy.action,
+              { color: palette.primaryText ?? '#FFF', fontWeight: '600' },
+            ]}
+          >
             Ir a Inversiones
           </Text>
-          <ChevronRight size={20} color={palette.primaryText ?? '#FFF'} style={{ marginLeft: 6 }} />
+          <ChevronRight
+            size={20}
+            color={palette.primaryText ?? '#FFF'}
+            style={{ marginLeft: 6 }}
+          />
         </Pressable>
       </View>
     </CardModal>

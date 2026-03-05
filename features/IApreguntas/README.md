@@ -87,11 +87,11 @@ front/src/
 
 ### Componentes principales
 
-| Componente | Descripción |
-|------------|-------------|
-| **ConsultorioComposer** | Input de texto con placeholder "Escribe tu pregunta...", sin fondo |
-| **ChatMessageBubble** | Burbuja por mensaje: usuario (negro, texto blanco) / IA (blanco, texto negro) |
-| **IApreguntasScreen** | Header "CONSULTORIO", saludo animado, FlatList de mensajes, input + botón enviar |
+| Componente              | Descripción                                                                      |
+| ----------------------- | -------------------------------------------------------------------------------- |
+| **ConsultorioComposer** | Input de texto con placeholder "Escribe tu pregunta...", sin fondo               |
+| **ChatMessageBubble**   | Burbuja por mensaje: usuario (negro, texto blanco) / IA (blanco, texto negro)    |
+| **IApreguntasScreen**   | Header "CONSULTORIO", saludo animado, FlatList de mensajes, input + botón enviar |
 
 ### Estilo del chat
 
@@ -129,4 +129,4 @@ El ViewModel selecciona un mensaje aleatorio de `IA_PREGUNTAS_WELCOME_MESSAGES` 
 
 ---
 
-*Última actualización: Febrero 2026*
+_Última actualización: Febrero 2026_

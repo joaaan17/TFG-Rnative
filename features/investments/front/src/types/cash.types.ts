@@ -49,7 +49,7 @@ export interface CashOverviewResponse {
   monthlyIn: number;
   monthlyOut: number;
   monthlyFees: number;
-  transactions: Array<{
+  transactions: {
     id: string;
     type: string;
     amount: number;
@@ -61,5 +61,5 @@ export interface CashOverviewResponse {
     price?: number;
     fee?: number;
     reference?: string;
-  }>;
+  }[];
 }

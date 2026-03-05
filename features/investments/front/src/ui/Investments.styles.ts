@@ -1,10 +1,7 @@
 import { StyleSheet } from 'react-native';
 import type { Palette } from '@/shared/hooks/use-palette';
 
-export function createInvestmentsStyles(
-  palette: Palette,
-  screenWidth: number,
-) {
+export function createInvestmentsStyles(palette: Palette, screenWidth: number) {
   return StyleSheet.create({
     container: {
       flex: 1,

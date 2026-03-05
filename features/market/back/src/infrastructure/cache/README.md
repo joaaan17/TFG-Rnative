@@ -4,10 +4,10 @@ Caché global compartida por símbolo para reducir peticiones al proveedor (Yaho
 
 ## TTLs
 
-| Tipo        | Símbolos hot (AAPL, MSFT, AMZN, GOOGL, NVDA, META, TSLA) | Resto |
-|------------|----------------------------------------------------------|--------|
-| **QUOTE**  | 10 min                                                   | 30 min |
-| **HISTORICAL** | 12 h (ejemplo)                                        | 12 h  |
+| Tipo           | Símbolos hot (AAPL, MSFT, AMZN, GOOGL, NVDA, META, TSLA) | Resto  |
+| -------------- | -------------------------------------------------------- | ------ |
+| **QUOTE**      | 10 min                                                   | 30 min |
+| **HISTORICAL** | 12 h (ejemplo)                                           | 12 h   |
 
 - **Fresh:** `now < expiresAt` → se sirve desde caché.
 - **Stale:** `staleAt <= now < expiresAt` → se sirve caché y se lanza refresco en background (SWR).

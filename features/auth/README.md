@@ -52,24 +52,24 @@ features/auth/
 
 **`ports.ts`** — Contratos (interfaces) que el dominio espera:
 
-| Puerto | Métodos principales | Uso |
-|--------|---------------------|-----|
-| `AuthRepository` | `findByEmail`, `save`, `verifyCode`, `verifyCodeOnly`, `updateVerificationCode`, `updatePassword` | Persistencia de usuarios |
-| `PasswordService` | `hash`, `compare` | Bcrypt para contraseñas |
-| `TokenService` | `sign`, `verify` | JWT para sesiones |
-| `MailService` | `sendVerificationCode` | Envío de emails |
+| Puerto            | Métodos principales                                                                               | Uso                      |
+| ----------------- | ------------------------------------------------------------------------------------------------- | ------------------------ |
+| `AuthRepository`  | `findByEmail`, `save`, `verifyCode`, `verifyCodeOnly`, `updateVerificationCode`, `updatePassword` | Persistencia de usuarios |
+| `PasswordService` | `hash`, `compare`                                                                                 | Bcrypt para contraseñas  |
+| `TokenService`    | `sign`, `verify`                                                                                  | JWT para sesiones        |
+| `MailService`     | `sendVerificationCode`                                                                            | Envío de emails          |
 
 ### 2. Casos de uso (`back/src/application/usecases/`)
 
-| Caso de uso | Archivo | Responsabilidad |
-|-------------|---------|-----------------|
-| **Login** | `login.ts` | Buscar usuario, comparar contraseña, generar JWT. No valida `isVerified`. |
-| **Register** | `register.ts` | Comprobar email no existente, generar código 6 dígitos, hashear contraseña, guardar con `isVerified: false`, enviar email. |
-| **Verify** | `verify.ts` | Validar código, marcar `isVerified: true`, limpiar `verificationCode`, devolver JWT. |
-| **ResendCode** | `resend-code.ts` | Solo si `!isVerified`. Generar nuevo código, actualizar en BD, enviar email. |
-| **SendPasswordResetCode** | `send-password-reset-code.ts` | Buscar usuario, generar código, actualizar en BD, enviar email. No comprueba `isVerified`. |
-| **VerifyPasswordResetCode** | `verify-password-reset-code.ts` | Comprobar código con `verifyCodeOnly` (sin modificar `isVerified` ni el código). |
-| **ResetPassword** | `reset-password.ts` | Validar código, hashear nueva contraseña, actualizar en BD, limpiar `verificationCode`. |
+| Caso de uso                 | Archivo                         | Responsabilidad                                                                                                            |
+| --------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **Login**                   | `login.ts`                      | Buscar usuario, comparar contraseña, generar JWT. No valida `isVerified`.                                                  |
+| **Register**                | `register.ts`                   | Comprobar email no existente, generar código 6 dígitos, hashear contraseña, guardar con `isVerified: false`, enviar email. |
+| **Verify**                  | `verify.ts`                     | Validar código, marcar `isVerified: true`, limpiar `verificationCode`, devolver JWT.                                       |
+| **ResendCode**              | `resend-code.ts`                | Solo si `!isVerified`. Generar nuevo código, actualizar en BD, enviar email.                                               |
+| **SendPasswordResetCode**   | `send-password-reset-code.ts`   | Buscar usuario, generar código, actualizar en BD, enviar email. No comprueba `isVerified`.                                 |
+| **VerifyPasswordResetCode** | `verify-password-reset-code.ts` | Comprobar código con `verifyCodeOnly` (sin modificar `isVerified` ni el código).                                           |
+| **ResetPassword**           | `reset-password.ts`             | Validar código, hashear nueva contraseña, actualizar en BD, limpiar `verificationCode`.                                    |
 
 **Diferencia importante** entre verificación de registro y recuperación de contraseña:
 
@@ -78,14 +78,14 @@ features/auth/
 
 ### 3. Infraestructura (`back/src/infrastructure/`)
 
-| Adaptador | Archivo | Implementación |
-|-----------|---------|----------------|
-| Persistencia | `mongo/mongoRepository.ts` | Mongoose. Mapea `_id` → `id` al devolver `User`. |
-| Modelo | `mongo/user.model.ts` | Schema con `email`, `passwordHash`, `name`, `isVerified`, `verificationCode`. |
-| Contraseñas | `crypto/bcryptHasher.ts` | `bcryptjs` para hash y compare. |
-| Tokens | `tokens/jwtTokerService.ts` | `jsonwebtoken` para sign y verify. |
-| Email (producción) | `mail/nodemailerService.ts` | Nodemailer + SMTP. |
-| Email (desarrollo) | `mail/consoleMailService.ts` | Solo `console.log`, sin envío real. |
+| Adaptador          | Archivo                      | Implementación                                                                |
+| ------------------ | ---------------------------- | ----------------------------------------------------------------------------- |
+| Persistencia       | `mongo/mongoRepository.ts`   | Mongoose. Mapea `_id` → `id` al devolver `User`.                              |
+| Modelo             | `mongo/user.model.ts`        | Schema con `email`, `passwordHash`, `name`, `isVerified`, `verificationCode`. |
+| Contraseñas        | `crypto/bcryptHasher.ts`     | `bcryptjs` para hash y compare.                                               |
+| Tokens             | `tokens/jwtTokerService.ts`  | `jsonwebtoken` para sign y verify.                                            |
+| Email (producción) | `mail/nodemailerService.ts`  | Nodemailer + SMTP.                                                            |
+| Email (desarrollo) | `mail/consoleMailService.ts` | Solo `console.log`, sin envío real.                                           |
 
 ### 4. Configuración (`back/src/config/`)
 
@@ -109,15 +109,15 @@ features/auth/
 
 **Rutas** (`api.routes.ts`):
 
-| Método | Ruta | Caso de uso |
-|--------|------|-------------|
-| POST | `/login` | LoginUseCase |
-| POST | `/register` | RegisterUseCase |
-| POST | `/verify` | VerifyUseCase |
-| POST | `/resend-code` | ResendCodeUseCase |
-| POST | `/send-password-reset-code` | SendPasswordResetCodeUseCase |
-| POST | `/verify-password-reset-code` | VerifyPasswordResetCodeUseCase |
-| POST | `/reset-password` | ResetPasswordUseCase |
+| Método | Ruta                          | Caso de uso                    |
+| ------ | ----------------------------- | ------------------------------ |
+| POST   | `/login`                      | LoginUseCase                   |
+| POST   | `/register`                   | RegisterUseCase                |
+| POST   | `/verify`                     | VerifyUseCase                  |
+| POST   | `/resend-code`                | ResendCodeUseCase              |
+| POST   | `/send-password-reset-code`   | SendPasswordResetCodeUseCase   |
+| POST   | `/verify-password-reset-code` | VerifyPasswordResetCodeUseCase |
+| POST   | `/reset-password`             | ResetPasswordUseCase           |
 
 Montaje en `index.ts`: `app.use('/api/auth', authRoutes)`.
 
@@ -153,22 +153,22 @@ Montaje en `index.ts`: `app.use('/api/auth', authRoutes)`.
 
 ### 4. ViewModels (MVVM)
 
-| ViewModel | Archivo | Responsabilidad |
-|-----------|---------|-----------------|
-| **useAuthViewModel** | `useAuthViewModel.ts` | Login, registro, “olvidé contraseña”. Estados: email, password, loading, error. `handleLogin` llama a `authClient.login` y `signIn`. `handleRegister` llama a `authClient.register` (sin auto-login). `handleSendResetCode` llama a `authClient.sendPasswordResetCode`. |
-| **useVerificationViewModel** | `useVerificationViewModel.ts` | Código de 6 dígitos, temporizador 10 min, reenvío. `mode: 'register' | 'reset-password'`. En modo `register`, `handleVerify` hace `signIn` tras verificar. En modo `reset-password`, solo devuelve el resultado para que el padre abra el modal de nueva contraseña. |
-| **useResetPasswordViewModel** | `useResetPasswordViewModel.ts` | Nueva contraseña, repetir contraseña, validación, llamada a `authClient.resetPassword`. |
+| ViewModel                     | Archivo                        | Responsabilidad                                                                                                                                                                                                                                                         |
+| ----------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **useAuthViewModel**          | `useAuthViewModel.ts`          | Login, registro, “olvidé contraseña”. Estados: email, password, loading, error. `handleLogin` llama a `authClient.login` y `signIn`. `handleRegister` llama a `authClient.register` (sin auto-login). `handleSendResetCode` llama a `authClient.sendPasswordResetCode`. |
+| **useVerificationViewModel**  | `useVerificationViewModel.ts`  | Código de 6 dígitos, temporizador 10 min, reenvío. `mode: 'register'                                                                                                                                                                                                    | 'reset-password'`. En modo `register`, `handleVerify`hace`signIn`tras verificar. En modo`reset-password`, solo devuelve el resultado para que el padre abra el modal de nueva contraseña. |
+| **useResetPasswordViewModel** | `useResetPasswordViewModel.ts` | Nueva contraseña, repetir contraseña, validación, llamada a `authClient.resetPassword`.                                                                                                                                                                                 |
 
 ### 5. Componentes y pantallas
 
-| Componente | Archivo | Uso |
-|------------|---------|-----|
-| **SignInForm** | `sign-form.tsx` | Formulario reutilizable. Con `isRegister` muestra nombre y repetir contraseña. Props: `onForgotPassword`, `onGoToRegister`, `onGoToLogin`. |
-| **ForgotPasswordModal** | `forgot-password-modal.tsx` | Modal para introducir email y enviar código de recuperación. |
-| **VerificationModal** | `verification-modal.tsx` | Modal para introducir código de 6 dígitos, con temporizador y botón “Reenviar”. |
-| **ResetPasswordModal** | `reset-password-modal.tsx` | Modal para nueva contraseña y repetir contraseña. |
-| **LoginScreen** | `ui/LoginScreen.tsx` | Formulario de login + flujo completo de “Olvidé contraseña”. |
-| **RegisterScreen** | `ui/RegisterScreen.tsx` | Formulario de registro + modal de verificación. |
+| Componente              | Archivo                     | Uso                                                                                                                                        |
+| ----------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **SignInForm**          | `sign-form.tsx`             | Formulario reutilizable. Con `isRegister` muestra nombre y repetir contraseña. Props: `onForgotPassword`, `onGoToRegister`, `onGoToLogin`. |
+| **ForgotPasswordModal** | `forgot-password-modal.tsx` | Modal para introducir email y enviar código de recuperación.                                                                               |
+| **VerificationModal**   | `verification-modal.tsx`    | Modal para introducir código de 6 dígitos, con temporizador y botón “Reenviar”.                                                            |
+| **ResetPasswordModal**  | `reset-password-modal.tsx`  | Modal para nueva contraseña y repetir contraseña.                                                                                          |
+| **LoginScreen**         | `ui/LoginScreen.tsx`        | Formulario de login + flujo completo de “Olvidé contraseña”.                                                                               |
+| **RegisterScreen**      | `ui/RegisterScreen.tsx`     | Formulario de registro + modal de verificación.                                                                                            |
 
 ---
 

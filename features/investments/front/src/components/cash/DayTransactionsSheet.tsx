@@ -58,7 +58,11 @@ function getNetImpact(tx: CashTransactionView): {
       isGain: false,
     };
   }
-  if (tx.type === 'SELL' && r.avgBuyPrice != null && Number.isFinite(r.avgBuyPrice)) {
+  if (
+    tx.type === 'SELL' &&
+    r.avgBuyPrice != null &&
+    Number.isFinite(r.avgBuyPrice)
+  ) {
     const pnl = (r.price - r.avgBuyPrice) * r.shares;
     const isLoss = pnl < 0;
     return {
@@ -124,11 +128,7 @@ export function DayTransactionsSheet({
     >
       <View style={[s.daySheetHandle, { backgroundColor: palette.primary }]} />
       <Text
-        style={[
-          Hierarchy.titleModal,
-          s.daySheetTitle,
-          { color: palette.text },
-        ]}
+        style={[Hierarchy.titleModal, s.daySheetTitle, { color: palette.text }]}
       >
         {titleLabel}
       </Text>
@@ -137,7 +137,10 @@ export function DayTransactionsSheet({
         <View style={{ paddingVertical: 32 }}>
           <Text
             variant="muted"
-            style={[Hierarchy.bodySmall, { textAlign: 'center', color: palette.icon }]}
+            style={[
+              Hierarchy.bodySmall,
+              { textAlign: 'center', color: palette.icon },
+            ]}
           >
             No hay movimientos este día
           </Text>
@@ -170,7 +173,8 @@ export function DayTransactionsSheet({
                 style={({ pressed }) => [
                   s.daySheetCard,
                   {
-                    backgroundColor: palette.surfaceMuted ?? palette.chartAreaBackground,
+                    backgroundColor:
+                      palette.surfaceMuted ?? palette.chartAreaBackground,
                   },
                   pressed && { opacity: 0.9 },
                 ]}
@@ -185,14 +189,20 @@ export function DayTransactionsSheet({
                 />
                 <View style={s.daySheetCardBody}>
                   <Text
-                    style={[Hierarchy.bodySmallSemibold, { color: palette.text }]}
+                    style={[
+                      Hierarchy.bodySmallSemibold,
+                      { color: palette.text },
+                    ]}
                     numberOfLines={1}
                   >
                     {getTitle(tx)}
                   </Text>
                   <Text
                     variant="muted"
-                    style={[Hierarchy.caption, { marginTop: 4, color: palette.icon }]}
+                    style={[
+                      Hierarchy.caption,
+                      { marginTop: 4, color: palette.icon },
+                    ]}
                     numberOfLines={1}
                   >
                     {formatTime(tx.createdAt)}
@@ -219,7 +229,10 @@ export function DayTransactionsSheet({
                     </>
                   ) : (
                     <Text
-                      style={[Hierarchy.bodySmallSemibold, { color: amountColor }]}
+                      style={[
+                        Hierarchy.bodySmallSemibold,
+                        { color: amountColor },
+                      ]}
                       numberOfLines={1}
                     >
                       {impact.value}

@@ -1,6 +1,8 @@
 import type { GetQuotesPort } from '../../domain/ports';
 
-export type GetQuotesFn = (symbols: string[]) => Promise<Array<{ symbol: string; price?: number | null }>>;
+export type GetQuotesFn = (
+  symbols: string[],
+) => Promise<{ symbol: string; price?: number | null }[]>;
 
 /**
  * Adaptador que obtiene precios de varios símbolos (para allocation).
@@ -9,7 +11,9 @@ export type GetQuotesFn = (symbols: string[]) => Promise<Array<{ symbol: string;
 export class MarketQuotesAdapter implements GetQuotesPort {
   constructor(private readonly fetchQuotes: GetQuotesFn) {}
 
-  async getQuotes(symbols: string[]): Promise<Array<{ symbol: string; price: number | null }>> {
+  async getQuotes(
+    symbols: string[],
+  ): Promise<{ symbol: string; price: number | null }[]> {
     const normalized = symbols
       .map((s) => (typeof s === 'string' ? s.trim().toUpperCase() : ''))
       .filter((s) => s.length > 0);

@@ -121,4 +121,3 @@ Si tu proyecto también compila a web con NativeWind:
 - **Tokens**: `Hierarchy` y `TextStyles` viven en `design-system/typography.ts` ✅
 - **Web**: `global.css` importa Google Fonts + define `--font-family-*` ✅
 - **Uso**: en pantallas, aplicar `Hierarchy.*` en `style` ✅
-

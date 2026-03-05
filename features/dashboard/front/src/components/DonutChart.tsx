@@ -49,8 +49,17 @@ function describeArc(
   const sweep = clockwise ? 1 : 0;
   const largeArc = Math.abs(endDeg - startDeg) > 180 ? 1 : 0;
   return [
-    'M', start.x, start.y,
-    'A', r, r, 0, largeArc, sweep, end.x, end.y,
+    'M',
+    start.x,
+    start.y,
+    'A',
+    r,
+    r,
+    0,
+    largeArc,
+    sweep,
+    end.x,
+    end.y,
   ].join(' ');
 }
 
@@ -85,7 +94,14 @@ export function DonutChart({
   });
 
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center', width: size, height: size }}>
+    <View
+      style={{
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: size,
+        height: size,
+      }}
+    >
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {paths.map(({ d, color, key }) => (
           <Path key={key} d={d} fill={color} />

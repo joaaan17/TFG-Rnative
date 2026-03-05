@@ -13,12 +13,16 @@ export function useHoldingsSparklines(symbols: string[], enabled: boolean) {
       setSparklines({});
       return;
     }
-    const unique = [...new Set(symbols.map((s) => s.trim().toUpperCase()).filter(Boolean))];
+    const unique = [
+      ...new Set(symbols.map((s) => s.trim().toUpperCase()).filter(Boolean)),
+    ];
     const results = await Promise.allSettled(
       unique.map((symbol) =>
         getCandles(symbol, '1d', '1mo').then((res) => ({
           symbol,
-          closes: (res.candles ?? []).map((c) => c.c).filter((n) => Number.isFinite(n)),
+          closes: (res.candles ?? [])
+            .map((c) => c.c)
+            .filter((n) => Number.isFinite(n)),
         })),
       ),
     );
@@ -29,12 +33,16 @@ export function useHoldingsSparklines(symbols: string[], enabled: boolean) {
         next[r.value.symbol] = r.value.closes;
       }
     });
-    setSparklines((prev) => (Object.keys(next).length === 0 ? prev : { ...prev, ...next }));
+    setSparklines((prev) =>
+      Object.keys(next).length === 0 ? prev : { ...prev, ...next },
+    );
   }, [symbols.join(','), enabled]);
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {

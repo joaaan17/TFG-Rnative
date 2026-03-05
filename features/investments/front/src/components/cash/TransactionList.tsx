@@ -5,8 +5,11 @@ import { Text } from '@/shared/components/ui/text';
 import { usePalette } from '@/shared/hooks/use-palette';
 import { Hierarchy } from '@/design-system/typography';
 
-import type { CashTransactionGroup } from '../../types/cash.types';
-import type { CashTransactionView } from '../../types/cash.types';
+import type {
+  CashTransactionGroup,
+  CashTransactionView,
+} from '../../types/cash.types';
+
 import { TransactionItem } from './TransactionItem';
 
 export type TransactionListProps = {
@@ -36,7 +39,10 @@ export function TransactionList({
       <View style={{ paddingVertical: 32, paddingHorizontal: 0 }}>
         <Text
           variant="muted"
-          style={[Hierarchy.bodySmall, { textAlign: 'center', color: palette.icon }]}
+          style={[
+            Hierarchy.bodySmall,
+            { textAlign: 'center', color: palette.icon },
+          ]}
         >
           No hay movimientos de efectivo
         </Text>

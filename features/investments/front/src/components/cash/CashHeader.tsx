@@ -52,25 +52,29 @@ export function CashHeader({
         <View style={s.headerTitleWrap}>
           <View style={s.headerTitleAccent} />
           <Text
-            style={[Hierarchy.titleSection, s.headerTitle, { color: palette.icon ?? palette.text }]}
+            style={[
+              Hierarchy.titleSection,
+              s.headerTitle,
+              { color: palette.icon ?? palette.text },
+            ]}
           >
             Efectivo
           </Text>
         </View>
         <View style={s.headerBalanceWrap}>
           <Text
-            style={[
-              Hierarchy.value,
-              s.headerBalance,
-              { color: palette.text },
-            ]}
+            style={[Hierarchy.value, s.headerBalance, { color: palette.text }]}
             numberOfLines={1}
           >
             {formatMoney(balance, currency)}
           </Text>
           <Text
             variant="muted"
-            style={[Hierarchy.caption, s.headerSubtitle, { color: palette.icon, marginTop: 2 }]}
+            style={[
+              Hierarchy.caption,
+              s.headerSubtitle,
+              { color: palette.icon, marginTop: 2 },
+            ]}
           >
             Disponible
           </Text>

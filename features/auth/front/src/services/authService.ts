@@ -32,7 +32,13 @@ export const authService = {
     const cleanName = name.trim();
     const cleanUsername = username.trim();
     const cleanEmail = email.trim();
-    if (!cleanName || !cleanUsername || !cleanEmail || !password || !confirmPassword) {
+    if (
+      !cleanName ||
+      !cleanUsername ||
+      !cleanEmail ||
+      !password ||
+      !confirmPassword
+    ) {
       throw new Error('Nombre, usuario, email y contraseña son obligatorios');
     }
     if (password !== confirmPassword) {

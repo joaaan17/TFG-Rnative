@@ -39,7 +39,9 @@ export function IncomeLineChart({ data, width }: IncomeLineChartProps) {
       return { x, y, label: d.label };
     });
 
-    const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+    const linePath = points
+      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
+      .join(' ');
     const last = points[points.length - 1];
     const first = points[0];
     const areaPath = `${linePath} L ${last.x} ${PADDING.top + h} L ${first.x} ${PADDING.top + h} Z`;
@@ -53,8 +55,16 @@ export function IncomeLineChart({ data, width }: IncomeLineChartProps) {
 
   if (data.length === 0) {
     return (
-      <View style={{ height: CHART_HEIGHT + 20, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={[Hierarchy.caption, { color: palette.icon }]}>Sin datos</Text>
+      <View
+        style={{
+          height: CHART_HEIGHT + 20,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <Text style={[Hierarchy.caption, { color: palette.icon }]}>
+          Sin datos
+        </Text>
       </View>
     );
   }
@@ -88,7 +98,10 @@ export function IncomeLineChart({ data, width }: IncomeLineChartProps) {
         {xLabels.map((item, i) => (
           <View key={i} style={{ flex: 1, alignItems: 'center' }}>
             <Text
-              style={[Hierarchy.captionSmall, { color: palette.icon ?? palette.text }]}
+              style={[
+                Hierarchy.captionSmall,
+                { color: palette.icon ?? palette.text },
+              ]}
             >
               {item.label}
             </Text>

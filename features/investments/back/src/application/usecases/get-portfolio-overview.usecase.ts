@@ -1,5 +1,8 @@
-import type { PortfolioRepository, TransactionRepository } from '../../domain/ports';
-import type { GetQuotesPort } from '../../domain/ports';
+import type {
+  PortfolioRepository,
+  TransactionRepository,
+  GetQuotesPort,
+} from '../../domain/ports';
 import type {
   AllocationItem,
   PortfolioOverview,
@@ -76,7 +79,8 @@ export class GetPortfolioOverviewUseCase {
       this.computeMarkers(uid, portfolio.holdings, timeframe, range),
     ]);
 
-    const finalTotal = Math.round(allocation.reduce((sum, a) => sum + a.value, 0) * 100) / 100;
+    const finalTotal =
+      Math.round(allocation.reduce((sum, a) => sum + a.value, 0) * 100) / 100;
 
     return {
       totalValue: finalTotal,
@@ -138,7 +142,8 @@ export class GetPortfolioOverviewUseCase {
     items.sort((a, b) => b.value - a.value);
     const top = items.slice(0, TOP_N);
     const rest = items.slice(TOP_N);
-    const othersValue = Math.round(rest.reduce((s, a) => s + a.value, 0) * 100) / 100;
+    const othersValue =
+      Math.round(rest.reduce((s, a) => s + a.value, 0) * 100) / 100;
 
     top.forEach((a) => {
       result.push({
@@ -156,7 +161,11 @@ export class GetPortfolioOverviewUseCase {
     }
 
     const sumWeight = result.reduce((s, a) => s + a.weight, 0);
-    if (sumWeight > 0 && Math.abs(sumWeight - 1) > 0.0001 && result.length > 0) {
+    if (
+      sumWeight > 0 &&
+      Math.abs(sumWeight - 1) > 0.0001 &&
+      result.length > 0
+    ) {
       const last = result[result.length - 1];
       last.weight = Math.round((1 - (sumWeight - last.weight)) * 10000) / 10000;
     }
@@ -172,13 +181,23 @@ export class GetPortfolioOverviewUseCase {
   ): Promise<PortfolioMarker[]> {
     const to = new Date();
     const from = new Date(to.getTime() - rangeToMs(range));
-    const transactions = await this.transactionRepository.findByUserIdBetween(userId, from, to);
+    const transactions = await this.transactionRepository.findByUserIdBetween(
+      userId,
+      from,
+      to,
+    );
     if (!transactions.length) return [];
 
-    const byBucket: Map<number, { buy: number; sell: number; buyAmount: number; sellAmount: number }> = new Map();
+    const byBucket: Map<
+      number,
+      { buy: number; sell: number; buyAmount: number; sellAmount: number }
+    > = new Map();
 
     for (const tx of transactions) {
-      const key = bucketKey(tx.executedAt instanceof Date ? tx.executedAt : new Date(tx.executedAt), timeframe);
+      const key = bucketKey(
+        tx.executedAt instanceof Date ? tx.executedAt : new Date(tx.executedAt),
+        timeframe,
+      );
       let entry = byBucket.get(key);
       if (!entry) {
         entry = { buy: 0, sell: 0, buyAmount: 0, sellAmount: 0 };

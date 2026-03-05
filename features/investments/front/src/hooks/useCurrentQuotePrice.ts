@@ -27,7 +27,11 @@ export function useCurrentQuotePrice(
       const item = (res.quotes ?? []).find(
         (q) => (q.symbol ?? '').toUpperCase() === symbol.trim().toUpperCase(),
       );
-      if (mountedRef.current && item?.price != null && Number.isFinite(item.price)) {
+      if (
+        mountedRef.current &&
+        item?.price != null &&
+        Number.isFinite(item.price)
+      ) {
         setPrice(item.price);
       } else if (mountedRef.current) {
         setPrice(null);
@@ -41,7 +45,9 @@ export function useCurrentQuotePrice(
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -51,7 +57,8 @@ export function useCurrentQuotePrice(
       return;
     }
     fetchPrice();
-    const interval = refreshIntervalMs > 0 ? refreshIntervalMs : DEFAULT_REFRESH_INTERVAL_MS;
+    const interval =
+      refreshIntervalMs > 0 ? refreshIntervalMs : DEFAULT_REFRESH_INTERVAL_MS;
     const intervalId = setInterval(fetchPrice, interval);
     return () => clearInterval(intervalId);
   }, [enabled, symbol, fetchPrice, refreshIntervalMs]);

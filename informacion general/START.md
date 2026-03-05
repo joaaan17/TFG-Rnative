@@ -44,6 +44,7 @@ npm start
 ```
 
 Luego elige:
+
 - `a` para Android
 - `i` para iOS
 - `w` para web

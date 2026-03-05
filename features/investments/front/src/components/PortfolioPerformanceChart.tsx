@@ -1,9 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 import { LightweightChartView } from '@/features/market-chart';
 import type { Candle } from '@/features/market-chart';
 import { Text } from '@/shared/components/ui/text';
@@ -27,10 +23,16 @@ const CHART_MODES = [
 ];
 
 /** Tipo mínimo de un punto de performance para interpolación */
-type PerfPoint = { t: string; equity: number; cash: number; positions: number; invested: number };
+type PerfPoint = {
+  t: string;
+  equity: number;
+  cash: number;
+  positions: number;
+  invested: number;
+};
 
 function pointsToCandles(
-  points: Array<{ t: string }>,
+  points: { t: string }[],
   getValue: (p: { t: string; [k: string]: unknown }) => number,
 ): Candle[] {
   return points.map((p) => {
@@ -70,7 +72,10 @@ function expandToHourlyPoints(
   const startMs = endMs - 24 * ONE_HOUR_MS;
 
   const v0 = mode === 'equity' ? points[0].equity : points[0].invested;
-  const v1 = mode === 'equity' ? points[points.length - 1].equity : points[points.length - 1].invested;
+  const v1 =
+    mode === 'equity'
+      ? points[points.length - 1].equity
+      : points[points.length - 1].invested;
   const rangeMs = Math.max(last - first, 1);
 
   const result: PerfPoint[] = [];
@@ -82,7 +87,8 @@ function expandToHourlyPoints(
     const equity =
       mode === 'equity'
         ? value
-        : points[0].equity + (points[points.length - 1].equity - points[0].equity) * frac;
+        : points[0].equity +
+          (points[points.length - 1].equity - points[0].equity) * frac;
     const invested =
       mode === 'invested'
         ? value
@@ -115,13 +121,8 @@ export function PortfolioPerformanceChart({
   const [range, setRange] = useState<PerformanceRange>('1M');
   const [mode, setMode] = useState<'equity' | 'invested'>('equity');
 
-  const {
-    performance,
-    loading,
-    error,
-    fetchPerformance,
-    refetch,
-  } = usePortfolioAnalytics(token, range);
+  const { performance, loading, error, fetchPerformance, refetch } =
+    usePortfolioAnalytics(token, range);
 
   useEffect(() => {
     if (mode === 'equity' || mode === 'invested') fetchPerformance();
@@ -144,10 +145,12 @@ export function PortfolioPerformanceChart({
   }, [token]);
 
   const candles = useMemo((): Candle[] => {
-    if ((mode === 'equity' || mode === 'invested') && performance?.points?.length) {
+    if (
+      (mode === 'equity' || mode === 'invested') &&
+      performance?.points?.length
+    ) {
       const raw = performance.points as PerfPoint[];
-      const points =
-        range === '1D' ? expandToHourlyPoints(raw, mode) : raw;
+      const points = range === '1D' ? expandToHourlyPoints(raw, mode) : raw;
       return pointsToCandles(
         points,
         mode === 'equity'
@@ -163,8 +166,17 @@ export function PortfolioPerformanceChart({
 
   if (!token) {
     return (
-      <View style={{ minHeight: height, justifyContent: 'center', alignItems: 'center' }}>
-        <Text variant="muted" style={[Hierarchy.bodySmall, { color: palette.icon }]}>
+      <View
+        style={{
+          minHeight: height,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <Text
+          variant="muted"
+          style={[Hierarchy.bodySmall, { color: palette.icon }]}
+        >
           Inicia sesión para ver la evolución de tu cartera
         </Text>
       </View>
@@ -173,7 +185,15 @@ export function PortfolioPerformanceChart({
 
   return (
     <View style={{ paddingHorizontal: 0 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 6, marginBottom: 6 }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingVertical: 8,
+          gap: 6,
+          marginBottom: 6,
+        }}
+      >
         {RANGE_OPTIONS.map((opt) => (
           <Pressable
             key={opt.value}
@@ -185,13 +205,20 @@ export function PortfolioPerformanceChart({
               justifyContent: 'center',
               alignItems: 'center',
               backgroundColor:
-                range === opt.value ? palette.primary : palette.surfaceMuted ?? '#f0f0f0',
+                range === opt.value
+                  ? palette.primary
+                  : (palette.surfaceMuted ?? '#f0f0f0'),
             }}
           >
             <Text
               style={[
                 Hierarchy.action,
-                { color: range === opt.value ? palette.primaryText ?? '#FFF' : palette.text },
+                {
+                  color:
+                    range === opt.value
+                      ? (palette.primaryText ?? '#FFF')
+                      : palette.text,
+                },
               ]}
             >
               {opt.label}
@@ -201,24 +228,61 @@ export function PortfolioPerformanceChart({
       </View>
 
       {isLoading && candles.length === 0 && (
-        <View style={{ justifyContent: 'center', alignItems: 'center', minHeight: height }}>
+        <View
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: height,
+          }}
+        >
           <ActivityIndicator size="large" color={palette.primary} />
-          <Text variant="muted" style={[Hierarchy.bodySmall, { marginTop: 12, color: palette.icon }]}>
+          <Text
+            variant="muted"
+            style={[
+              Hierarchy.bodySmall,
+              { marginTop: 12, color: palette.icon },
+            ]}
+          >
             Cargando gráfico...
           </Text>
         </View>
       )}
 
       {errMsg && candles.length === 0 && !isLoading && (
-        <View style={{ justifyContent: 'center', alignItems: 'center', minHeight: height }}>
-          <Text variant="muted" style={[Hierarchy.bodySmall, { textAlign: 'center', color: palette.icon }]}>
+        <View
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: height,
+          }}
+        >
+          <Text
+            variant="muted"
+            style={[
+              Hierarchy.bodySmall,
+              { textAlign: 'center', color: palette.icon },
+            ]}
+          >
             {errMsg}
           </Text>
           <Pressable
             onPress={() => refetch(mode)}
-            style={{ marginTop: 16, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8, backgroundColor: palette.primary }}
+            style={{
+              marginTop: 16,
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderRadius: 8,
+              backgroundColor: palette.primary,
+            }}
           >
-            <Text style={[Hierarchy.action, { color: palette.primaryText ?? '#FFF' }]}>Reintentar</Text>
+            <Text
+              style={[
+                Hierarchy.action,
+                { color: palette.primaryText ?? '#FFF' },
+              ]}
+            >
+              Reintentar
+            </Text>
           </Pressable>
         </View>
       )}
@@ -232,14 +296,22 @@ export function PortfolioPerformanceChart({
             seriesType="line"
             intraday={range === '1D'}
             theme={{
-              layoutBackgroundColor: palette.mainBackground ?? palette.background,
+              layoutBackgroundColor:
+                palette.mainBackground ?? palette.background,
               textColor: palette.text,
               gridColor: palette.surfaceBorder ?? '#CBD5E1',
               upColor: palette.primary,
               fontSize: Hierarchy.captionSmall?.fontSize ?? 11,
             }}
           />
-          <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 8, gap: 6 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingTop: 8,
+              gap: 6,
+            }}
+          >
             {CHART_MODES.map((m) => (
               <Pressable
                 key={m.id}
@@ -251,13 +323,20 @@ export function PortfolioPerformanceChart({
                   justifyContent: 'center',
                   alignItems: 'center',
                   backgroundColor:
-                    mode === m.id ? palette.primary : palette.surfaceMuted ?? '#f0f0f0',
+                    mode === m.id
+                      ? palette.primary
+                      : (palette.surfaceMuted ?? '#f0f0f0'),
                 }}
               >
                 <Text
                   style={[
                     Hierarchy.action,
-                    { color: mode === m.id ? palette.primaryText ?? '#FFF' : palette.text },
+                    {
+                      color:
+                        mode === m.id
+                          ? (palette.primaryText ?? '#FFF')
+                          : palette.text,
+                    },
                   ]}
                   numberOfLines={1}
                 >
@@ -270,8 +349,17 @@ export function PortfolioPerformanceChart({
       )}
 
       {!isLoading && candles.length === 0 && !errMsg && token && (
-        <View style={{ minHeight: height, justifyContent: 'center', alignItems: 'center' }}>
-          <Text variant="muted" style={[Hierarchy.bodySmall, { color: palette.icon }]}>
+        <View
+          style={{
+            minHeight: height,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Text
+            variant="muted"
+            style={[Hierarchy.bodySmall, { color: palette.icon }]}
+          >
             No hay datos para este período
           </Text>
         </View>

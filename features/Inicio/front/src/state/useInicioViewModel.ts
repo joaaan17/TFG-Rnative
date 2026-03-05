@@ -37,9 +37,8 @@ export function useInicioViewModel(): UseInicioViewModelResult {
 
   const [typewriterKey, setTypewriterKey] = React.useState(0);
   const [news, setNews] = React.useState<NewsPreview[]>([]);
-  const [selectedNews, setSelectedNews] = React.useState<EducationalNews | null>(
-    null,
-  );
+  const [selectedNews, setSelectedNews] =
+    React.useState<EducationalNews | null>(null);
   const [isNewsModalOpen, setIsNewsModalOpen] = React.useState(false);
   const [isQuizModalOpen, setIsQuizModalOpen] = React.useState(false);
   const [quiz, setQuiz] = React.useState<NewsQuiz | null>(null);
@@ -65,16 +64,24 @@ export function useInicioViewModel(): UseInicioViewModelResult {
   const token = session?.token;
 
   const fetchHeadlines = React.useCallback(async () => {
-    console.log('[iaNoticias FRONT] ViewModel: fetchHeadlines, token=', !!token);
+    console.log(
+      '[iaNoticias FRONT] ViewModel: fetchHeadlines, token=',
+      !!token,
+    );
     if (!token) {
-      console.log('[iaNoticias FRONT] ViewModel: fetchHeadlines SKIP - sin token');
+      console.log(
+        '[iaNoticias FRONT] ViewModel: fetchHeadlines SKIP - sin token',
+      );
       return;
     }
     setLoading(true);
     setError(null);
     try {
       const headlines = await loadHeadlines(token);
-      console.log('[iaNoticias FRONT] ViewModel: fetchHeadlines OK, count=', headlines?.length ?? 0);
+      console.log(
+        '[iaNoticias FRONT] ViewModel: fetchHeadlines OK, count=',
+        headlines?.length ?? 0,
+      );
       setNews(headlines);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al cargar noticias';
@@ -88,7 +95,12 @@ export function useInicioViewModel(): UseInicioViewModelResult {
 
   const openNews = React.useCallback(
     async (item: NewsPreview) => {
-      console.log('[iaNoticias FRONT] ViewModel: openNews item.id=', item?.id?.slice(0, 50), 'token=', !!token);
+      console.log(
+        '[iaNoticias FRONT] ViewModel: openNews item.id=',
+        item?.id?.slice(0, 50),
+        'token=',
+        !!token,
+      );
       if (!token) {
         console.log('[iaNoticias FRONT] ViewModel: openNews SKIP - sin token');
         return;
@@ -102,7 +114,8 @@ export function useInicioViewModel(): UseInicioViewModelResult {
         console.log('[iaNoticias FRONT] ViewModel: openNews OK');
         setSelectedNews(educational);
       } catch (e) {
-        const msg = e instanceof Error ? e.message : 'Error al procesar la noticia';
+        const msg =
+          e instanceof Error ? e.message : 'Error al procesar la noticia';
         console.log('[iaNoticias FRONT] ViewModel: openNews ERROR', msg);
         setError(msg);
       } finally {
@@ -169,7 +182,10 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     (qIndex: number, optionIndex: number) => {
       const newsId = currentQuizNewsIdRef.current ?? selectedNews?.id;
       if (!newsId) return;
-      const next = { ...(answersStoreRef.current.get(newsId) ?? {}), [qIndex]: optionIndex };
+      const next = {
+        ...(answersStoreRef.current.get(newsId) ?? {}),
+        [qIndex]: optionIndex,
+      };
       answersStoreRef.current.set(newsId, next);
       setQuizAnswers(next);
     },

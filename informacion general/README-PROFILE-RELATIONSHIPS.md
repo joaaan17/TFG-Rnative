@@ -109,19 +109,19 @@ features/profile/
 
 #### Casos de uso
 
-| Caso de uso      | Descripción                         |
-|------------------|-------------------------------------|
-| `GetProfile`     | Obtiene el perfil por `userId`.     |
-| `CreateProfile`  | Crea/actualiza perfil (upsert).     |
-| `DeleteProfile`  | Elimina perfil por `id`.            |
+| Caso de uso      | Descripción                                                                   |
+| ---------------- | ----------------------------------------------------------------------------- |
+| `GetProfile`     | Obtiene el perfil por `userId`.                                               |
+| `CreateProfile`  | Crea/actualiza perfil (upsert).                                               |
+| `DeleteProfile`  | Elimina perfil por `id`.                                                      |
 | `SearchProfiles` | Busca perfiles por nombre/username con prefijo, excluyendo al usuario actual. |
 
 #### API Profile
 
-| Método | Ruta           | Auth | Descripción                                      |
-|--------|----------------|------|--------------------------------------------------|
-| GET    | `/api/profile/:id`     | No   | Obtener perfil por ID.                          |
-| GET    | `/api/profile/search?q=&page=&limit=` | Sí  | Buscar perfiles (excluye al usuario autenticado). |
+| Método | Ruta                                  | Auth | Descripción                                       |
+| ------ | ------------------------------------- | ---- | ------------------------------------------------- |
+| GET    | `/api/profile/:id`                    | No   | Obtener perfil por ID.                            |
+| GET    | `/api/profile/search?q=&page=&limit=` | Sí   | Buscar perfiles (excluye al usuario autenticado). |
 
 #### Modelo MongoDB (Profile)
 
@@ -234,25 +234,25 @@ features/relationships/
 
 #### Casos de uso
 
-| Caso de uso              | Descripción                                                                 |
-|--------------------------|-----------------------------------------------------------------------------|
-| `requestFriendship`      | Envía solicitud. No permite auto-solicitud ni duplicados.                   |
-| `acceptFriendship`       | Acepta solicitud. Solo el receptor puede aceptar.                           |
-| `rejectFriendship`       | Rechaza o cancela solicitud pendiente.                                      |
-| `deleteFriend`           | Elimina amistad (solo si `status === "accepted"`).                          |
-| `listFriends`            | Lista amigos paginado, con búsqueda opcional por username/name.             |
-| `listPendingRequests`    | Lista usuarios que han enviado solicitud al usuario actual.                 |
+| Caso de uso           | Descripción                                                     |
+| --------------------- | --------------------------------------------------------------- |
+| `requestFriendship`   | Envía solicitud. No permite auto-solicitud ni duplicados.       |
+| `acceptFriendship`    | Acepta solicitud. Solo el receptor puede aceptar.               |
+| `rejectFriendship`    | Rechaza o cancela solicitud pendiente.                          |
+| `deleteFriend`        | Elimina amistad (solo si `status === "accepted"`).              |
+| `listFriends`         | Lista amigos paginado, con búsqueda opcional por username/name. |
+| `listPendingRequests` | Lista usuarios que han enviado solicitud al usuario actual.     |
 
 #### API Relationships (todas con auth)
 
-| Método | Ruta                               | Descripción                    |
-|--------|------------------------------------|--------------------------------|
-| POST   | `/api/relationships/request`       | Enviar solicitud (`targetUserId`). |
-| POST   | `/api/relationships/accept`        | Aceptar (`fromUserId`).        |
-| POST   | `/api/relationships/reject`        | Rechazar (`fromUserId`).       |
-| DELETE | `/api/relationships/friend/:friendUserId` | Eliminar amigo.          |
-| GET    | `/api/relationships/friends?search=&page=&limit=` | Listar/buscar amigos. |
-| GET    | `/api/relationships/pending-requests`    | Listar solicitudes recibidas.  |
+| Método | Ruta                                              | Descripción                        |
+| ------ | ------------------------------------------------- | ---------------------------------- |
+| POST   | `/api/relationships/request`                      | Enviar solicitud (`targetUserId`). |
+| POST   | `/api/relationships/accept`                       | Aceptar (`fromUserId`).            |
+| POST   | `/api/relationships/reject`                       | Rechazar (`fromUserId`).           |
+| DELETE | `/api/relationships/friend/:friendUserId`         | Eliminar amigo.                    |
+| GET    | `/api/relationships/friends?search=&page=&limit=` | Listar/buscar amigos.              |
+| GET    | `/api/relationships/pending-requests`             | Listar solicitudes recibidas.      |
 
 ### Frontend Relationships
 
@@ -357,4 +357,4 @@ app.use('/api/relationships', relationshipsRoutes);
 
 ---
 
-*Última actualización: Febrero 2026.*
+_Última actualización: Febrero 2026._

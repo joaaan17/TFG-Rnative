@@ -14,7 +14,10 @@ import type { DashboardSummaryApiResponse } from '@/features/investments/front/s
 
 const CURRENCY_DISPLAY = 'EUR';
 
-function formatCurrency(value: number, currency: string = CURRENCY_DISPLAY): string {
+function formatCurrency(
+  value: number,
+  currency: string = CURRENCY_DISPLAY,
+): string {
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency,
@@ -38,7 +41,8 @@ function getTimeAgo(isoDate: string): string {
   const diffMinutes = Math.floor(diffMs / (60 * 1000));
 
   if (diffDays >= 1) return `hace ${diffDays} día${diffDays !== 1 ? 's' : ''}`;
-  if (diffHours >= 1) return `hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
+  if (diffHours >= 1)
+    return `hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
   if (diffMinutes >= 1) return `hace ${diffMinutes} min`;
   return 'ahora';
 }

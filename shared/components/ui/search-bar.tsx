@@ -67,19 +67,19 @@ export function SearchBar({
     borderWidth: 1,
     borderColor: isTranslucent
       ? `${palette.primary}30`
-      : palette.surfaceBorder ?? palette.text,
+      : (palette.surfaceBorder ?? palette.text),
     backgroundColor: isInputStyle
       ? palette.inputBackground
       : isTranslucent
         ? `${palette.primary}15`
-        : palette.surfaceMuted ?? palette.inputBackground,
+        : (palette.surfaceMuted ?? palette.inputBackground),
     ...(isInputStyle ? inputLikeShadow : {}),
   };
 
   const iconColor = isTranslucent ? palette.primary : palette.icon;
   const placeholderColor = isInputStyle
     ? `${palette.text}80`
-    : palette.icon ?? `${palette.text}99`;
+    : (palette.icon ?? `${palette.text}99`);
 
   return (
     <View style={[containerStyle, style]}>

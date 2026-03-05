@@ -6,10 +6,7 @@
  */
 
 import { profileClient } from '../api/profileClient';
-import type {
-  ProfileUser,
-  ProfileSearchItem,
-} from '../types/profile.types';
+import type { ProfileUser, ProfileSearchItem } from '../types/profile.types';
 
 function extractErrorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback;

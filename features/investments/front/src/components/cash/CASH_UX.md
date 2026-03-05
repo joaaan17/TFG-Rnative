@@ -1,6 +1,7 @@
 # Pantalla Efectivo — Justificación UX
 
 ## Objetivo
+
 Mostrar el efectivo disponible y el historial de movimientos con un diseño minimalista tipo neobanco, fácil de escanear y con detalle bajo demanda.
 
 ## Decisiones de diseño

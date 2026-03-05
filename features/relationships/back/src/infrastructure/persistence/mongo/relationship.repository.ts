@@ -8,7 +8,10 @@ function toObjectId(id: string): mongoose.Types.ObjectId {
 }
 
 export class MongoRelationshipRepository implements RelationshipRepository {
-  async findByPair(userAId: string, userBId: string): Promise<Relationship | null> {
+  async findByPair(
+    userAId: string,
+    userBId: string,
+  ): Promise<Relationship | null> {
     const doc = await RelationshipModel.findOne({
       userAId: toObjectId(userAId),
       userBId: toObjectId(userBId),

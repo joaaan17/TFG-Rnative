@@ -1,5 +1,7 @@
-import type { RelationshipRepository } from '../../domain/relationship.ports';
-import type { ProfileReaderPort } from '../../domain/relationship.ports';
+import type {
+  RelationshipRepository,
+  ProfileReaderPort,
+} from '../../domain/relationship.ports';
 import type { ProfileSummary } from '../../domain/relationship.types';
 
 export interface ListPendingRequestsInput {

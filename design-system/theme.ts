@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tema centralizado
  * Combina todos los tokens del design system
  */

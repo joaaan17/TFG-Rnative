@@ -41,7 +41,13 @@ export function RegisterScreen() {
     const cleanUsername = username.trim();
     const cleanEmail = email.trim();
 
-    if (!cleanName || !cleanUsername || !cleanEmail || !password || !confirmPassword) {
+    if (
+      !cleanName ||
+      !cleanUsername ||
+      !cleanEmail ||
+      !password ||
+      !confirmPassword
+    ) {
       return;
     }
 

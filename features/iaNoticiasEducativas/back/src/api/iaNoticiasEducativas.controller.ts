@@ -4,10 +4,7 @@ import {
   explainNews,
 } from '../config/iaNoticiasEducativas.wiring';
 import { getQuiz } from '../config/quiz-store';
-import {
-  getExplainCached,
-  setExplainCached,
-} from '../config/explain-cache';
+import { getExplainCached, setExplainCached } from '../config/explain-cache';
 
 export async function getHeadlinesController(_req: Request, res: Response) {
   console.log('[iaNoticias] 1. Controller: getHeadlines recibida');
@@ -67,7 +64,10 @@ export async function generateNewsQuizController(
   res: Response,
 ): Promise<void> {
   const { newsId } = req.body;
-  console.log('[iaNoticias] Controller: quiz recibida, newsId:', newsId?.slice(0, 50));
+  console.log(
+    '[iaNoticias] Controller: quiz recibida, newsId:',
+    newsId?.slice(0, 50),
+  );
 
   if (!newsId || typeof newsId !== 'string') {
     res.status(400).json({ error: 'newsId requerido' });

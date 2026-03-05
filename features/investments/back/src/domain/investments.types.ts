@@ -39,12 +39,12 @@ export interface Transaction {
 export interface PortfolioResponse {
   cashBalance: number;
   currency: string;
-  holdings: Array<{
+  holdings: {
     symbol: string;
     shares: number;
     avgBuyPrice: number;
     lastUpdatedAt: string;
-  }>;
+  }[];
 }
 
 /** Body de POST orders/buy. */
@@ -141,4 +141,6 @@ export interface DashboardContextDTO {
 export interface DashboardSummaryResponse {
   summary: DashboardSummaryDTO;
   context: DashboardContextDTO;
+  /** Distribución por acciones (sin CASH ni OTHERS) para el donut "Acciones". */
+  allocationStocks: AllocationItem[];
 }

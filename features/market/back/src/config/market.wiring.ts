@@ -17,9 +17,13 @@ const marketOverviewAdapter = new YahooFinanceMarketOverviewAdapter();
 
 export const searchMarketUseCase = new SearchMarketUseCase(marketSearchAdapter);
 export const getCandlesUseCase = new GetCandlesUseCase(marketCandlesAdapter);
-export const getCandlesByTimeframeUseCase = new GetCandlesByTimeframeUseCase(marketCandlesAdapter);
+export const getCandlesByTimeframeUseCase = new GetCandlesByTimeframeUseCase(
+  marketCandlesAdapter,
+);
 export const getQuotesUseCase = new GetQuotesUseCase(marketQuotesAdapter);
-export const getMarketOverviewUseCase = new GetMarketOverviewUseCase(marketOverviewAdapter);
+export const getMarketOverviewUseCase = new GetMarketOverviewUseCase(
+  marketOverviewAdapter,
+);
 
 export const priceCacheService = new PriceCacheService({
   fetchQuotes: (symbols) => getQuotesUseCase.execute(symbols),

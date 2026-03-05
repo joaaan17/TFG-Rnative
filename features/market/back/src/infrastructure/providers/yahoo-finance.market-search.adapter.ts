@@ -9,12 +9,16 @@ import type {
  * e instanciarla. El default export del paquete principal puede estar en caché como
  * clase sin prototype correcto en algunos entornos (tsx/esm); esta vía es fiable.
  */
-function getYahooFinanceClient(): { search: (query: string) => Promise<{ quotes: unknown[] }> } {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const createYahooFinance = require('yahoo-finance2/createYahooFinance').default;
+function getYahooFinanceClient(): {
+  search: (query: string) => Promise<{ quotes: unknown[] }>;
+} {
+  const createYahooFinance =
+    require('yahoo-finance2/createYahooFinance').default;
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const searchModule = require('yahoo-finance2/modules/search').default;
-  const YahooFinanceClass = createYahooFinance({ modules: { search: searchModule } });
+  const YahooFinanceClass = createYahooFinance({
+    modules: { search: searchModule },
+  });
   return new YahooFinanceClass();
 }
 
@@ -80,13 +84,12 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 export class YahooFinanceMarketSearchAdapter implements MarketSearchPort {
   async search(query: string, limit: number): Promise<MarketSearchResult[]> {
     const client = getYahooFinanceClient();
-    const raw = await withTimeout(
-      client.search(query),
-      NETWORK_TIMEOUT_MS,
-    );
+    const raw = await withTimeout(client.search(query), NETWORK_TIMEOUT_MS);
 
     const quotes: YahooSearchQuote[] =
-      raw && typeof raw === 'object' && Array.isArray((raw as { quotes: YahooSearchQuote[] }).quotes)
+      raw &&
+      typeof raw === 'object' &&
+      Array.isArray((raw as { quotes: YahooSearchQuote[] }).quotes)
         ? (raw as { quotes: YahooSearchQuote[] }).quotes
         : [];
 

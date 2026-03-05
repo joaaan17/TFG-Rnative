@@ -44,7 +44,9 @@ export function FriendProfileModal({
   loading,
   error,
 }: FriendProfileModalProps) {
-  const [contentHeight, setContentHeight] = React.useState<number | undefined>();
+  const [contentHeight, setContentHeight] = React.useState<
+    number | undefined
+  >();
   const displayName = profile?.name ?? 'Usuario';
   const joinedText = formatJoinedText(profile?.username, profile?.joinedAt);
 
@@ -57,7 +59,12 @@ export function FriendProfileModal({
       contentHeight={contentHeight}
       contentNoPaddingTop
     >
-      <ModalHeader title={displayName} onBack={onClose} onClose={onClose} backAccessibilityLabel="Volver" />
+      <ModalHeader
+        title={displayName}
+        onBack={onClose}
+        onClose={onClose}
+        backAccessibilityLabel="Volver"
+      />
       {loading ? (
         <View style={[profileStyles.loadingContainer, { paddingVertical: 48 }]}>
           <ActivityIndicator size="large" />

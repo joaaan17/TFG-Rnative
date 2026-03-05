@@ -9,9 +9,11 @@ export { ContextCard } from './components/ContextCard';
 export { IncomeLineChart } from './components/IncomeLineChart';
 export { DonutChart } from './components/DonutChart';
 export { PortfolioDonutChart } from './components/PortfolioDonutChart';
-export type { DonutSegment, PortfolioDonutChartProps } from './types/portfolio-chart.types';
 export type {
-  ContextCard,
+  DonutSegment,
+  PortfolioDonutChartProps,
+} from './types/portfolio-chart.types';
+export type {
   ContextCardBestWorst,
   ContextCardMetric,
   DashboardStatCard,

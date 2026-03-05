@@ -1,9 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, View } from 'react-native';
 import { CardModal } from '@/shared/components/card-modal';
 import { ModalHeader } from '@/shared/components/modal-header';
 import { SearchBar } from '@/shared/components/ui/search-bar';
@@ -69,11 +65,11 @@ export function TransactionsHistoryModal({
 }: TransactionsHistoryModalProps) {
   const palette = usePalette();
   const { session } = useAuthSession();
-  const { data: transactions, loading, error } = useTransactions(
-    session?.token ?? null,
-    open,
-    200,
-  );
+  const {
+    data: transactions,
+    loading,
+    error,
+  } = useTransactions(session?.token ?? null, open, 200);
   const { data: portfolioData } = usePortfolio(session?.token ?? null, open);
   const { totalValue: holdingsTotalValue } = useHoldingsWithPrices(
     portfolioData?.holdings,
@@ -91,9 +87,7 @@ export function TransactionsHistoryModal({
   const renderItem = ({ item }: { item: TransactionResponse }) => {
     const isBuy = item.type === 'BUY';
     const label = isBuy ? 'C' : 'V';
-    const badgeBg = isBuy
-      ? (palette.primary + '22')
-      : (palette.destructive + '22');
+    const badgeBg = isBuy ? palette.primary + '22' : palette.destructive + '22';
     const badgeColor = isBuy ? palette.primary : palette.destructive;
     const borderColor = palette.surfaceBorder ?? 'rgba(0,0,0,0.06)';
     const labelColor = palette.icon ?? palette.text;
@@ -141,13 +135,11 @@ export function TransactionsHistoryModal({
               {item.symbol}
             </Text>
             <Text
-              style={[
-                Hierarchy.caption,
-                { marginTop: 2, color: labelColor },
-              ]}
+              style={[Hierarchy.caption, { marginTop: 2, color: labelColor }]}
               numberOfLines={1}
             >
-              {item.shares} × {item.price.toFixed(2)} $ = {formatTotal(item.total)} $
+              {item.shares} × {item.price.toFixed(2)} $ ={' '}
+              {formatTotal(item.total)} $
             </Text>
           </View>
           <Text
@@ -172,34 +164,65 @@ export function TransactionsHistoryModal({
           }}
         >
           <Text
-            style={[
-              Hierarchy.caption,
-              { color: labelColor, marginBottom: 4 },
-            ]}
+            style={[Hierarchy.caption, { color: labelColor, marginBottom: 4 }]}
           >
             Detalle de la operación
           </Text>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             <Text style={[Hierarchy.bodySmall, { color: labelColor }]}>
               Acciones
             </Text>
-            <Text style={[Hierarchy.action, { color: palette.text, fontWeight: '600' }]}>
-              {item.shares.toLocaleString('es-ES', { maximumFractionDigits: 4 })}
+            <Text
+              style={[
+                Hierarchy.action,
+                { color: palette.text, fontWeight: '600' },
+              ]}
+            >
+              {item.shares.toLocaleString('es-ES', {
+                maximumFractionDigits: 4,
+              })}
             </Text>
           </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             <Text style={[Hierarchy.bodySmall, { color: labelColor }]}>
               {isBuy ? 'Precio de compra' : 'Precio de venta'}
             </Text>
             <Text style={[Hierarchy.action, { color: palette.text }]}>
-              {item.price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $
+              {item.price.toLocaleString('es-ES', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}{' '}
+              $
             </Text>
           </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             <Text style={[Hierarchy.bodySmall, { color: labelColor }]}>
               Total operación
             </Text>
-            <Text style={[Hierarchy.action, { color: palette.text, fontWeight: '600' }]}>
+            <Text
+              style={[
+                Hierarchy.action,
+                { color: palette.text, fontWeight: '600' },
+              ]}
+            >
               {formatTotal(item.total)} $
             </Text>
           </View>
@@ -216,28 +239,64 @@ export function TransactionsHistoryModal({
                     }}
                   >
                     <Text
-                      style={[Hierarchy.caption, { color: labelColor, marginBottom: 6 }]}
+                      style={[
+                        Hierarchy.caption,
+                        { color: labelColor, marginBottom: 6 },
+                      ]}
                     >
                       Beneficio / Pérdida
                     </Text>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={[Hierarchy.bodySmall, { color: labelColor }]}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Text
+                        style={[Hierarchy.bodySmall, { color: labelColor }]}
+                      >
                         Precio medio compra
                       </Text>
                       <Text style={[Hierarchy.action, { color: palette.text }]}>
-                        {item.avgBuyPrice.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $
+                        {item.avgBuyPrice.toLocaleString('es-ES', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}{' '}
+                        $
                       </Text>
                     </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={[Hierarchy.bodySmall, { color: labelColor }]}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Text
+                        style={[Hierarchy.bodySmall, { color: labelColor }]}
+                      >
                         Precio de venta
                       </Text>
                       <Text style={[Hierarchy.action, { color: palette.text }]}>
-                        {item.price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $
+                        {item.price.toLocaleString('es-ES', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}{' '}
+                        $
                       </Text>
                     </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-                      <Text style={[Hierarchy.bodySmall, { color: labelColor }]}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginTop: 4,
+                      }}
+                    >
+                      <Text
+                        style={[Hierarchy.bodySmall, { color: labelColor }]}
+                      >
                         Diferencia por acción
                       </Text>
                       <Text
@@ -252,13 +311,24 @@ export function TransactionsHistoryModal({
                           },
                         ]}
                       >
-                        {(item.price >= item.avgBuyPrice ? '+' : '')}
+                        {item.price >= item.avgBuyPrice ? '+' : ''}
                         {formatTotal(item.price - item.avgBuyPrice)} $
                       </Text>
                     </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-                      <Text style={[Hierarchy.bodySmall, { color: labelColor }]}>
-                        {item.price >= item.avgBuyPrice ? 'Beneficio total' : 'Pérdida total'}
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginTop: 4,
+                      }}
+                    >
+                      <Text
+                        style={[Hierarchy.bodySmall, { color: labelColor }]}
+                      >
+                        {item.price >= item.avgBuyPrice
+                          ? 'Beneficio total'
+                          : 'Pérdida total'}
                       </Text>
                       <Text
                         style={[
@@ -272,8 +342,11 @@ export function TransactionsHistoryModal({
                           },
                         ]}
                       >
-                        {(item.price >= item.avgBuyPrice ? '+' : '')}
-                        {formatTotal((item.price - item.avgBuyPrice) * item.shares)} $
+                        {item.price >= item.avgBuyPrice ? '+' : ''}
+                        {formatTotal(
+                          (item.price - item.avgBuyPrice) * item.shares,
+                        )}{' '}
+                        $
                       </Text>
                     </View>
                   </View>
@@ -287,10 +360,9 @@ export function TransactionsHistoryModal({
                     borderTopColor: borderColor,
                   }}
                 >
-                  <Text
-                    style={[Hierarchy.caption, { color: labelColor }]}
-                  >
-                    Beneficio/pérdida no disponible para esta venta (operación anterior al registro).
+                  <Text style={[Hierarchy.caption, { color: labelColor }]}>
+                    Beneficio/pérdida no disponible para esta venta (operación
+                    anterior al registro).
                   </Text>
                 </View>
               )}
@@ -372,12 +444,32 @@ export function TransactionsHistoryModal({
               >
                 Tu situación actual
               </Text>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={[Hierarchy.bodySmall, { color: palette.icon ?? palette.text }]}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <Text
+                  style={[
+                    Hierarchy.bodySmall,
+                    { color: palette.icon ?? palette.text },
+                  ]}
+                >
                   Efectivo disponible
                 </Text>
-                <Text style={[Hierarchy.action, { color: palette.text, fontWeight: '600' }]}>
-                  {cashBalance.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $
+                <Text
+                  style={[
+                    Hierarchy.action,
+                    { color: palette.text, fontWeight: '600' },
+                  ]}
+                >
+                  {cashBalance.toLocaleString('es-ES', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}{' '}
+                  $
                 </Text>
               </View>
               <View
@@ -391,11 +483,25 @@ export function TransactionsHistoryModal({
                   borderTopColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.08)',
                 }}
               >
-                <Text style={[Hierarchy.bodySmall, { color: palette.icon ?? palette.text }]}>
+                <Text
+                  style={[
+                    Hierarchy.bodySmall,
+                    { color: palette.icon ?? palette.text },
+                  ]}
+                >
                   Patrimonio total
                 </Text>
-                <Text style={[Hierarchy.action, { color: palette.text, fontWeight: '600' }]}>
-                  {patrimonioTotal.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $
+                <Text
+                  style={[
+                    Hierarchy.action,
+                    { color: palette.text, fontWeight: '600' },
+                  ]}
+                >
+                  {patrimonioTotal.toLocaleString('es-ES', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}{' '}
+                  $
                 </Text>
               </View>
             </View>

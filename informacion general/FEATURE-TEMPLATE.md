@@ -150,13 +150,13 @@ Regla: **El ViewModel nunca habla HTTP directamente.**
 
 ## Reglas de arquitectura
 
-| Regla | Significado |
-|-------|-------------|
-| **ViewModel nunca habla HTTP** | Solo usa el Service. |
-| **Client nunca fuera del Service** | Solo el Service importa el Client. |
-| **Dominio puro (backend)** | Sin imports de Express/Mongo en domain/ y application/. |
-| **Controladores delgados** | Solo parsean `req.body`, llaman al caso de uso y devuelven respuesta. |
-| **Screen "tonta"** | Solo renderiza y conecta props/handlers del ViewModel. |
+| Regla                              | Significado                                                           |
+| ---------------------------------- | --------------------------------------------------------------------- |
+| **ViewModel nunca habla HTTP**     | Solo usa el Service.                                                  |
+| **Client nunca fuera del Service** | Solo el Service importa el Client.                                    |
+| **Dominio puro (backend)**         | Sin imports de Express/Mongo en domain/ y application/.               |
+| **Controladores delgados**         | Solo parsean `req.body`, llaman al caso de uso y devuelven respuesta. |
+| **Screen "tonta"**                 | Solo renderiza y conecta props/handlers del ViewModel.                |
 
 ---
 
@@ -193,4 +193,4 @@ Regla: **El ViewModel nunca habla HTTP directamente.**
 
 ---
 
-*Basado en la estructura de `features/auth`. Última actualización: Febrero 2026.*
+_Basado en la estructura de `features/auth`. Última actualización: Febrero 2026._

@@ -16,7 +16,10 @@ export class InMemoryProfileRepository implements ProfileRepository {
   async updateCashBalance(userId: string, cashBalance: number): Promise<void> {
     const profile = InMemoryProfileRepository.profilesById.get(userId);
     if (profile) {
-      InMemoryProfileRepository.profilesById.set(userId, { ...profile, cashBalance });
+      InMemoryProfileRepository.profilesById.set(userId, {
+        ...profile,
+        cashBalance,
+      });
     }
   }
 

@@ -19,7 +19,10 @@ export function createAcceptFriendship(repo: RelationshipRepository) {
   return async function acceptFriendship(
     input: AcceptFriendshipInput,
   ): Promise<AcceptFriendshipOutput> {
-    const { userAId, userBId } = normalizePair(input.currentUserId, input.fromUserId);
+    const { userAId, userBId } = normalizePair(
+      input.currentUserId,
+      input.fromUserId,
+    );
     const existing = await repo.findByPair(userAId, userBId);
     if (!existing) {
       throw new RelationshipNotFoundError('Relationship not found');
@@ -28,7 +31,9 @@ export function createAcceptFriendship(repo: RelationshipRepository) {
       throw new RelationshipForbiddenError('Request is not pending');
     }
     if (existing.requesterId === input.currentUserId) {
-      throw new RelationshipForbiddenError('Only the receiver can accept the request');
+      throw new RelationshipForbiddenError(
+        'Only the receiver can accept the request',
+      );
     }
     const rel = await repo.updateStatus(userAId, userBId, 'accepted');
     return { id: rel.id, status: rel.status };

@@ -11,7 +11,10 @@ export function createHistoricalHourlyAdapter(
     range: string,
     strategy?: 'swr' | 'cache-first' | 'network-first',
     requestId?: string,
-  ) => Promise<{ data: { candles: Array<{ t: number; c: number }> }; cacheStatus: string }>,
+  ) => Promise<{
+    data: { candles: { t: number; c: number }[] };
+    cacheStatus: string;
+  }>,
 ): GetHistoricalHourlyPort {
   return {
     async getHistoricalHourly(symbol, range, requestId) {

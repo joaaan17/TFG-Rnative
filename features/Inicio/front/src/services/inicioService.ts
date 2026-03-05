@@ -3,7 +3,11 @@ import {
   getEducationalNews,
   getQuiz,
 } from '../api/iaNoticiasClient';
-import type { NewsPreview, EducationalNews, NewsQuiz } from '../types/inicio.types';
+import type {
+  NewsPreview,
+  EducationalNews,
+  NewsQuiz,
+} from '../types/inicio.types';
 
 export type { NewsPreview, EducationalNews, NewsQuiz };
 

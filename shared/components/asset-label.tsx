@@ -61,8 +61,7 @@ export function AssetLabel({
           style={[
             styles.iconWrap,
             {
-              backgroundColor:
-                iconBackgroundColor ?? palette.surfaceMuted,
+              backgroundColor: iconBackgroundColor ?? palette.surfaceMuted,
               borderColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.08)',
             },
           ]}

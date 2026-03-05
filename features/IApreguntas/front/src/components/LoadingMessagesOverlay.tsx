@@ -69,10 +69,7 @@ export function LoadingMessagesOverlay({
         chatMessageBubbleStyles.bubbleAssistant,
         { opacity: fadeAnim },
       ]
-    : [
-        loadingOverlayStyles.messageBox,
-        { opacity: fadeAnim },
-      ];
+    : [loadingOverlayStyles.messageBox, { opacity: fadeAnim }];
 
   return (
     <View

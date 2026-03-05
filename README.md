@@ -367,9 +367,9 @@ En la pantalla **Inversiones**, el gráfico principal muestra la **curva de valo
 
 ### Endpoint (requiere autenticación `Authorization: Bearer <token>`)
 
-| Método | Ruta | Query | Descripción |
-|--------|------|-------|-------------|
-| GET | `/api/investments/portfolio/performance` | `range=1D\|1W\|1M\|3M\|6M\|1Y` | Equity curve: puntos `{ t, equity, cash, positions, invested }` |
+| Método | Ruta                                     | Query                          | Descripción                                                     |
+| ------ | ---------------------------------------- | ------------------------------ | --------------------------------------------------------------- |
+| GET    | `/api/investments/portfolio/performance` | `range=1D\|1W\|1M\|3M\|6M\|1Y` | Equity curve: puntos `{ t, equity, cash, positions, invested }` |
 
 ### Ejemplo curl (reemplaza `TOKEN` y base URL si aplica)
 

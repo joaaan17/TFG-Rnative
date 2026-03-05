@@ -88,27 +88,30 @@ export function VenderSheet({
     });
   }, []);
 
-  const handleKey = useCallback((key: string) => {
-    if (key === 'backspace') {
+  const handleKey = useCallback(
+    (key: string) => {
+      if (key === 'backspace') {
+        setSharesStr((prev) => {
+          if (prev.length <= 1) return '0';
+          const next = prev.slice(0, -1);
+          return next === '' ? '0' : next;
+        });
+        return;
+      }
       setSharesStr((prev) => {
-        if (prev.length <= 1) return '0';
-        const next = prev.slice(0, -1);
-        return next === '' ? '0' : next;
+        if (prev === '0' && key !== ',') return key;
+        if (key === ',' && prev.includes(',')) return prev;
+        if (key === ',' && !prev.includes(',')) return prev + ',';
+        const next = prev + key;
+        const num = parseFloat(next.replace(',', '.')) || 0;
+        if (num > sharesAvailable) return prev;
+        const parts = next.split(',');
+        if (parts[1]?.length > 4) return prev;
+        return next;
       });
-      return;
-    }
-    setSharesStr((prev) => {
-      if (prev === '0' && key !== ',') return key;
-      if (key === ',' && prev.includes(',')) return prev;
-      if (key === ',' && !prev.includes(',')) return prev + ',';
-      const next = prev + key;
-      const num = parseFloat(next.replace(',', '.')) || 0;
-      if (num > sharesAvailable) return prev;
-      const parts = next.split(',');
-      if (parts[1]?.length > 4) return prev;
-      return next;
-    });
-  }, [sharesAvailable]);
+    },
+    [sharesAvailable],
+  );
 
   const handleVender = useCallback(async () => {
     if (!canSell || !symbol || !onSell) return;
@@ -139,17 +142,25 @@ export function VenderSheet({
           backAccessibilityLabel="Volver atrás"
         />
         <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 24 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+          <View
+            style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}
+          >
             <Text
               variant="muted"
-              style={[Hierarchy.bodySmall, { color: palette.icon ?? palette.text }]}
+              style={[
+                Hierarchy.bodySmall,
+                { color: palette.icon ?? palette.text },
+              ]}
             >
-              Tienes {formattedAvailable} {sharesAvailable === 1 ? 'acción' : 'acciones'}
+              Tienes {formattedAvailable}{' '}
+              {sharesAvailable === 1 ? 'acción' : 'acciones'}
               {symbol ? ` (${symbol})` : ''}
             </Text>
           </View>
 
-          <View style={{ alignItems: 'center', marginTop: 28, marginBottom: 16 }}>
+          <View
+            style={{ alignItems: 'center', marginTop: 28, marginBottom: 16 }}
+          >
             <View
               style={{
                 flexDirection: 'row',
@@ -175,12 +186,24 @@ export function VenderSheet({
               >
                 <Minus
                   size={24}
-                  color={sharesNum <= 0 ? palette.icon ?? palette.text : palette.primary}
+                  color={
+                    sharesNum <= 0
+                      ? (palette.icon ?? palette.text)
+                      : palette.primary
+                  }
                   strokeWidth={2.5}
                 />
               </Pressable>
               <Text
-                style={[Hierarchy.value, { color: palette.text, fontSize: 32, minWidth: 120, textAlign: 'center' }]}
+                style={[
+                  Hierarchy.value,
+                  {
+                    color: palette.text,
+                    fontSize: 32,
+                    minWidth: 120,
+                    textAlign: 'center',
+                  },
+                ]}
               >
                 {sharesStr} {sharesNum === 1 ? 'acción' : 'acciones'}
               </Text>
@@ -194,28 +217,33 @@ export function VenderSheet({
                   backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  opacity: pressed || sellLoading || sharesNum >= sharesAvailable ? 0.85 : 1,
+                  opacity:
+                    pressed || sellLoading || sharesNum >= sharesAvailable
+                      ? 0.85
+                      : 1,
                 })}
                 accessibilityRole="button"
                 accessibilityLabel="Añadir una acción"
               >
-                <Plus
-                  size={24}
-                  color={palette.primary}
-                  strokeWidth={2.5}
-                />
+                <Plus size={24} color={palette.primary} strokeWidth={2.5} />
               </Pressable>
             </View>
             <Text
               variant="muted"
-              style={[Hierarchy.bodySmall, { marginTop: 8, color: palette.icon }]}
+              style={[
+                Hierarchy.bodySmall,
+                { marginTop: 8, color: palette.icon },
+              ]}
             >
               Precio: {formattedPrice} ${symbol ? ` · ${symbol}` : ''}
             </Text>
             {sharesNum > 0 && (
               <Text
                 variant="muted"
-                style={[Hierarchy.bodySmall, { marginTop: 4, color: palette.primary }]}
+                style={[
+                  Hierarchy.bodySmall,
+                  { marginTop: 4, color: palette.primary },
+                ]}
               >
                 Importe a recibir: {formattedProceeds} $
               </Text>
@@ -223,14 +251,35 @@ export function VenderSheet({
           </View>
 
           {sellError ? (
-            <View style={{ marginBottom: 12, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, backgroundColor: `${palette.destructive ?? '#E5484D'}20` }}>
-              <Text style={[Hierarchy.bodySmall, { color: palette.destructive ?? '#E5484D' }]}>
+            <View
+              style={{
+                marginBottom: 12,
+                paddingVertical: 8,
+                paddingHorizontal: 12,
+                borderRadius: 8,
+                backgroundColor: `${palette.destructive ?? '#E5484D'}20`,
+              }}
+            >
+              <Text
+                style={[
+                  Hierarchy.bodySmall,
+                  { color: palette.destructive ?? '#E5484D' },
+                ]}
+              >
                 {sellError}
               </Text>
             </View>
           ) : null}
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, marginBottom: 24 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: 12,
+              marginBottom: 24,
+            }}
+          >
             {KEYPAD_KEYS.map((row) =>
               row.map((key) => (
                 <Pressable
@@ -250,9 +299,16 @@ export function VenderSheet({
                   accessibilityLabel={key === 'backspace' ? 'Borrar' : key}
                 >
                   {key === 'backspace' ? (
-                    <Text style={[Hierarchy.action, { color: palette.text }]}>←</Text>
+                    <Text style={[Hierarchy.action, { color: palette.text }]}>
+                      ←
+                    </Text>
                   ) : (
-                    <Text style={[Hierarchy.action, { color: palette.text, fontWeight: '600' }]}>
+                    <Text
+                      style={[
+                        Hierarchy.action,
+                        { color: palette.text, fontWeight: '600' },
+                      ]}
+                    >
                       {key}
                     </Text>
                   )}
@@ -261,7 +317,14 @@ export function VenderSheet({
             )}
           </View>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingTop: 12,
+            }}
+          >
             <Text style={[Hierarchy.captionSmall, { color: palette.icon }]}>
               Acciones
             </Text>
@@ -274,21 +337,30 @@ export function VenderSheet({
                 paddingHorizontal: 20,
                 paddingVertical: 12,
                 borderRadius: 12,
-                backgroundColor: canSell && !sellLoading ? palette.primary : (palette.surfaceMuted ?? '#EEF2F7'),
+                backgroundColor:
+                  canSell && !sellLoading
+                    ? palette.primary
+                    : (palette.surfaceMuted ?? '#EEF2F7'),
                 opacity: pressed ? 0.85 : 1,
               })}
               accessibilityRole="button"
               accessibilityLabel="Vender"
             >
               {sellLoading ? (
-                <ActivityIndicator size="small" color={palette.primaryText ?? '#FFF'} />
+                <ActivityIndicator
+                  size="small"
+                  color={palette.primaryText ?? '#FFF'}
+                />
               ) : (
                 <>
                   <Text
                     style={[
                       Hierarchy.action,
                       {
-                        color: canSell && !sellLoading ? (palette.primaryText ?? '#FFF') : palette.text,
+                        color:
+                          canSell && !sellLoading
+                            ? (palette.primaryText ?? '#FFF')
+                            : palette.text,
                         fontWeight: '600',
                       },
                     ]}
@@ -297,7 +369,11 @@ export function VenderSheet({
                   </Text>
                   <ChevronRight
                     size={18}
-                    color={canSell && !sellLoading ? palette.primaryText ?? '#FFF' : palette.text}
+                    color={
+                      canSell && !sellLoading
+                        ? (palette.primaryText ?? '#FFF')
+                        : palette.text
+                    }
                     style={{ marginLeft: 4 }}
                   />
                 </>

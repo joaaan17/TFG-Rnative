@@ -122,11 +122,7 @@ export function QuizModalContent({
         onContentSizeChange={(w, h) => onContentSizeChange?.(w, h)}
       >
         <Text
-          style={[
-            Hierarchy.titleModal,
-            styles.title,
-            { color: palette.text },
-          ]}
+          style={[Hierarchy.titleModal, styles.title, { color: palette.text }]}
         >
           Repasar pregunta {displayIndex + 1}
         </Text>
@@ -217,7 +213,11 @@ export function QuizModalContent({
         </View>
         <View style={styles.resultsScoreWrapper}>
           <Text
-            style={[Hierarchy.value, styles.resultsScore, { color: palette.text }]}
+            style={[
+              Hierarchy.value,
+              styles.resultsScore,
+              { color: palette.text },
+            ]}
           >
             {correctCount}/{total} ({Math.round((correctCount / total) * 100)}%)
           </Text>

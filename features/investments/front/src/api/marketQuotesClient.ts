@@ -18,7 +18,9 @@ export interface MarketQuotesResponse {
   quotes: QuoteItem[];
 }
 
-export async function getQuotes(symbols: string[]): Promise<MarketQuotesResponse> {
+export async function getQuotes(
+  symbols: string[],
+): Promise<MarketQuotesResponse> {
   if (symbols.length === 0) return { quotes: [] };
   const params = new URLSearchParams({
     symbols: symbols.join(','),

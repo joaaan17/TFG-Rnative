@@ -13,7 +13,10 @@ import { usePalette } from '@/shared/hooks/use-palette';
 import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
 
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
@@ -48,16 +51,15 @@ export function SegmentedTextTabs({
     const isActive = value === idx;
     const label = labels[idx];
 
-    const labelColor =
-      isMinimal
-        ? palette.primary
-        : isTranslucent
-          ? isActive
-            ? palette.primary
-            : palette.icon
-          : isActive
-            ? palette.text
-            : palette.icon;
+    const labelColor = isMinimal
+      ? palette.primary
+      : isTranslucent
+        ? isActive
+          ? palette.primary
+          : palette.icon
+        : isActive
+          ? palette.text
+          : palette.icon;
 
     return (
       <Pressable
@@ -77,14 +79,17 @@ export function SegmentedTextTabs({
           isMinimal && [
             styles.tabMinimal,
             isActive && {
-              backgroundColor: palette.chartAreaBackground ?? `${palette.primary}08`,
+              backgroundColor:
+                palette.chartAreaBackground ?? `${palette.primary}08`,
               borderRadius: 12,
             },
           ],
         ]}
         onPress={() => {
           if (value !== idx) {
-            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            LayoutAnimation.configureNext(
+              LayoutAnimation.Presets.easeInEaseOut,
+            );
             onValueChange(idx);
           }
         }}

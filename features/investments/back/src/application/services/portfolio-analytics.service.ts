@@ -71,7 +71,9 @@ export class PortfolioAnalyticsService {
       userId,
       end,
     );
-    const symbols = [...new Set(allTxs.map((t) => t.symbol.trim().toUpperCase()))].filter(Boolean);
+    const symbols = [
+      ...new Set(allTxs.map((t) => t.symbol.trim().toUpperCase())),
+    ].filter(Boolean);
     console.log(
       `${LOG_PREFIX} performance user=${userId} range=${range} symbols=${symbols.length}`,
     );
@@ -95,18 +97,20 @@ export class PortfolioAnalyticsService {
     const cacheRange = RANGE_TO_CACHE[range];
 
     for (const symbol of symbols) {
-      const { candles, cacheStatus } = await this.getHistoricalDaily.getHistoricalDaily(
-        symbol,
-        cacheRange,
-        requestId,
-      );
+      const { candles, cacheStatus } =
+        await this.getHistoricalDaily.getHistoricalDaily(
+          symbol,
+          cacheRange,
+          requestId,
+        );
       cacheStatuses.push(cacheStatus);
       console.log(
         `${LOG_PREFIX} priceHistory cache ${cacheStatus} por símbolo ${symbol}`,
       );
       const byDay = new Map<number, number>();
       for (const c of candles) {
-        const tMs = typeof c.t === 'number' && c.t < 1e12 ? c.t * 1000 : (c.t as number);
+        const tMs =
+          typeof c.t === 'number' && c.t < 1e12 ? c.t * 1000 : (c.t as number);
         const d = dayStart(new Date(tMs));
         byDay.set(d, c.c);
       }
@@ -174,15 +178,17 @@ export class PortfolioAnalyticsService {
     const priceBySymbolByHour = new Map<string, Map<number, number>>();
 
     for (const symbol of symbols) {
-      const { candles, cacheStatus } = await this.getHistoricalHourly!.getHistoricalHourly(
-        symbol,
-        '5d',
-        requestId,
-      );
+      const { candles, cacheStatus } =
+        await this.getHistoricalHourly!.getHistoricalHourly(
+          symbol,
+          '5d',
+          requestId,
+        );
       cacheStatuses.push(cacheStatus);
       const byHour = new Map<number, number>();
       for (const c of candles) {
-        const tMs = typeof c.t === 'number' && c.t < 1e12 ? c.t * 1000 : (c.t as number);
+        const tMs =
+          typeof c.t === 'number' && c.t < 1e12 ? c.t * 1000 : (c.t as number);
         const h = hourStart(tMs);
         byHour.set(h, c.c);
       }
@@ -195,7 +201,9 @@ export class PortfolioAnalyticsService {
     let cash = this.initialCash;
     const holdings = new Map<string, { shares: number; avgBuyPrice: number }>();
 
-    const txsBeforeFirst = allTxs.filter((tx) => new Date(tx.executedAt).getTime() < firstSlotMs);
+    const txsBeforeFirst = allTxs.filter(
+      (tx) => new Date(tx.executedAt).getTime() < firstSlotMs,
+    );
     for (const tx of txsBeforeFirst) {
       cash = this.applyTransaction(tx, holdings, cash);
     }
@@ -214,7 +222,9 @@ export class PortfolioAnalyticsService {
       for (const [sym, h] of holdings) {
         if (h.shares <= 0) continue;
         const byHour = priceBySymbolByHour.get(sym);
-        const price = byHour?.get(priceLookupMs) ?? byHour?.get(priceLookupMs - ONE_HOUR_MS);
+        const price =
+          byHour?.get(priceLookupMs) ??
+          byHour?.get(priceLookupMs - ONE_HOUR_MS);
         if (price != null && Number.isFinite(price)) {
           positionsValue += h.shares * price;
         }
@@ -231,7 +241,9 @@ export class PortfolioAnalyticsService {
     }
 
     const took = Date.now() - startTime;
-    console.log(`${LOG_PREFIX} 1D computed points=${points.length} took=${took}ms`);
+    console.log(
+      `${LOG_PREFIX} 1D computed points=${points.length} took=${took}ms`,
+    );
     return { points, symbolsUsed: symbols, cacheStatuses };
   }
 

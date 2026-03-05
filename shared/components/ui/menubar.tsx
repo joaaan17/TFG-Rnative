@@ -1,4 +1,3 @@
-/* eslint-disable */
 // @ts-nocheck
 import { Icon } from '@/shared/components/ui/icon';
 import NativeOnlyAnimatedView from '@/shared/components/ui/native-only-animated-view';

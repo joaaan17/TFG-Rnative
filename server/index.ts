@@ -9,7 +9,10 @@ import iapreguntasRoutes from '../features/IApreguntas/back/src/api/api.routes';
 import iaNoticiasRoutes from '../features/iaNoticiasEducativas/back/src/api/api.routes';
 import investmentsRoutes from '../features/investments/back/src/api/api.routes';
 import marketChartRoutes from '../features/market-chart/back/src/api/api.routes';
-import { marketRouter, startPriceCacheWarmup } from '../features/market/back/src';
+import {
+  marketRouter,
+  startPriceCacheWarmup,
+} from '../features/market/back/src';
 
 const app = express();
 app.use(cors());

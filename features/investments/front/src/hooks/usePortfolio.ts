@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  getPortfolio,
-  type PortfolioResponse,
-} from '../api/investmentsClient';
+import { getPortfolio, type PortfolioResponse } from '../api/investmentsClient';
 
 export function usePortfolio(token: string | null, enabled: boolean) {
   const [data, setData] = useState<PortfolioResponse | null>(null);
@@ -22,7 +19,9 @@ export function usePortfolio(token: string | null, enabled: boolean) {
       if (mountedRef.current) setData(result);
     } catch (err) {
       if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : 'Error al cargar la cartera');
+        setError(
+          err instanceof Error ? err.message : 'Error al cargar la cartera',
+        );
       }
     } finally {
       if (mountedRef.current) setLoading(false);

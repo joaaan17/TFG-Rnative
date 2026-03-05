@@ -6,12 +6,12 @@ Gráfico tipo donut para distribución por sector/geografía en la app de invers
 
 ## 1) Librerías para donut en React Native (gratuitas / open source)
 
-| Librería | Ventajas | Inconvenientes | Uso fintech |
-|----------|----------|----------------|-------------|
-| **react-native-gifted-charts** | Pie/donut, bar, line, animaciones, TypeScript, muy mantenido | Dependencias (gifted-charts-core), bundle más grande | Muy adecuado si se quieren más tipos de gráficos y animaciones out-of-the-box |
-| **@figliolia/rn-donut-chart** | Solo donut, animaciones, cero deps, ligero | Menos customizable que una implementación propia | Bueno para un donut simple y animado |
-| **react-native-chart-kit** | Pie chart, sencillo | Poco mantenido (años sin actualizaciones), sin donut nativo | No recomendado para producción |
-| **react-native-svg** (enfoque actual) | Sin deps de charts, control total, donut correcto, ligero | Hay que implementar arcos y leyenda a mano | **Recomendado** para una app financiera: control total, sin sorpresas de versiones |
+| Librería                              | Ventajas                                                     | Inconvenientes                                              | Uso fintech                                                                        |
+| ------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **react-native-gifted-charts**        | Pie/donut, bar, line, animaciones, TypeScript, muy mantenido | Dependencias (gifted-charts-core), bundle más grande        | Muy adecuado si se quieren más tipos de gráficos y animaciones out-of-the-box      |
+| **@figliolia/rn-donut-chart**         | Solo donut, animaciones, cero deps, ligero                   | Menos customizable que una implementación propia            | Bueno para un donut simple y animado                                               |
+| **react-native-chart-kit**            | Pie chart, sencillo                                          | Poco mantenido (años sin actualizaciones), sin donut nativo | No recomendado para producción                                                     |
+| **react-native-svg** (enfoque actual) | Sin deps de charts, control total, donut correcto, ligero    | Hay que implementar arcos y leyenda a mano                  | **Recomendado** para una app financiera: control total, sin sorpresas de versiones |
 
 **Recomendación para app financiera:** Implementación propia con **react-native-svg** (como en este feature): máxima control sobre diseño, accesibilidad y rendimiento; sin dependencias de librerías de charts que puedan romper con actualizaciones de RN/Expo.
 
@@ -81,7 +81,7 @@ const SECTOR_DATA: DonutSegment[] = [
   centerLabel="1.769 €"
   centerSublabel="Valor por sector"
   showLegend
-/>
+/>;
 ```
 
 - Centro: valor total + sublabel.
@@ -113,10 +113,10 @@ La implementación actual es estática y sin tooltip; está pensada para extende
 
 ## 7) Integración en arquitectura modular por feature
 
-- **Dónde vive:**  
-  - Componente: `features/dashboard/front/src/components/PortfolioDonutChart.tsx`  
+- **Dónde vive:**
+  - Componente: `features/dashboard/front/src/components/PortfolioDonutChart.tsx`
   - Tipos: `features/dashboard/front/src/types/portfolio-chart.types.ts`  
-  Si varias features necesitan el mismo donut, mover a `shared/components/` (o a un módulo `charts`) y que el dashboard lo importe desde ahí.
+    Si varias features necesitan el mismo donut, mover a `shared/components/` (o a un módulo `charts`) y que el dashboard lo importe desde ahí.
 
 - **Qué no debe depender:**  
   El componente no debe importar servicios, API ni estado global. Solo recibe `segments` y props de presentación; la capa de datos queda en la pantalla o en un ViewModel (por ejemplo `useDashboardViewModel`).

@@ -1,11 +1,19 @@
 import { useCallback, useState } from 'react';
-import type { PerformanceRange } from '../api/investmentsClient';
-import { getPerformance, type PerformanceResponse } from '../api/investmentsClient';
+import {
+  getPerformance,
+  type PerformanceRange,
+  type PerformanceResponse,
+} from '../api/investmentsClient';
 
 type ChartMode = 'equity' | 'invested';
 
-export function usePortfolioAnalytics(token: string | null, range: PerformanceRange) {
-  const [performance, setPerformance] = useState<PerformanceResponse | null>(null);
+export function usePortfolioAnalytics(
+  token: string | null,
+  range: PerformanceRange,
+) {
+  const [performance, setPerformance] = useState<PerformanceResponse | null>(
+    null,
+  );
   const [loading, setLoading] = useState<Record<ChartMode, boolean>>({
     equity: false,
     invested: false,

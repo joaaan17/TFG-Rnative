@@ -16,7 +16,10 @@ export class GetMarketOverviewUseCase {
     if (!symbol) {
       throw new Error('symbol is required');
     }
-    if (symbol.length < MIN_SYMBOL_LENGTH || symbol.length > MAX_SYMBOL_LENGTH) {
+    if (
+      symbol.length < MIN_SYMBOL_LENGTH ||
+      symbol.length > MAX_SYMBOL_LENGTH
+    ) {
       throw new Error(
         `symbol must be between ${MIN_SYMBOL_LENGTH} and ${MAX_SYMBOL_LENGTH} characters`,
       );

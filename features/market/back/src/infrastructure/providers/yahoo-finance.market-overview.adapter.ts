@@ -111,7 +111,9 @@ export class YahooFinanceMarketOverviewAdapter implements MarketOverviewPort {
         marketCap: toNum(
           (quoteResult as { marketCap?: number } | null)?.marketCap,
         ),
-        currency: toStr((quoteResult as { currency?: string } | null)?.currency),
+        currency: toStr(
+          (quoteResult as { currency?: string } | null)?.currency,
+        ),
       };
 
       const summary = summaryResult as {
@@ -164,7 +166,8 @@ export class YahooFinanceMarketOverviewAdapter implements MarketOverviewPort {
     try {
       return await withTimeout(run(), OVERVIEW_TIMEOUT_MS);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Overview provider error';
+      const msg =
+        err instanceof Error ? err.message : 'Overview provider error';
       throw new Error(msg);
     }
   }

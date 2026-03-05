@@ -56,7 +56,12 @@ export function CashSummary({ monthly, styles: s }: CashSummaryProps) {
           <Text style={[Hierarchy.caption, { color: palette.icon }]}>
             Comisiones
           </Text>
-          <Text style={[Hierarchy.bodySmallSemibold, { color: palette.destructive }]}>
+          <Text
+            style={[
+              Hierarchy.bodySmallSemibold,
+              { color: palette.destructive },
+            ]}
+          >
             {formatShort(-monthly.fees)}
           </Text>
         </View>

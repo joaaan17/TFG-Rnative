@@ -11,8 +11,13 @@ export interface RejectFriendshipInput {
 }
 
 export function createRejectFriendship(repo: RelationshipRepository) {
-  return async function rejectFriendship(input: RejectFriendshipInput): Promise<void> {
-    const { userAId, userBId } = normalizePair(input.currentUserId, input.fromUserId);
+  return async function rejectFriendship(
+    input: RejectFriendshipInput,
+  ): Promise<void> {
+    const { userAId, userBId } = normalizePair(
+      input.currentUserId,
+      input.fromUserId,
+    );
     const existing = await repo.findByPair(userAId, userBId);
     if (!existing) {
       throw new RelationshipNotFoundError('Relationship not found');

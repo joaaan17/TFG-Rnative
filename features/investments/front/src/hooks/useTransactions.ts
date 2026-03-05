@@ -4,7 +4,11 @@ import {
   type TransactionResponse,
 } from '../api/investmentsClient';
 
-export function useTransactions(token: string | null, enabled: boolean, limit: number = 50) {
+export function useTransactions(
+  token: string | null,
+  enabled: boolean,
+  limit: number = 50,
+) {
   const [data, setData] = useState<TransactionResponse[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +23,9 @@ export function useTransactions(token: string | null, enabled: boolean, limit: n
       if (mountedRef.current) setData(result.transactions);
     } catch (err) {
       if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : 'Error al cargar transacciones');
+        setError(
+          err instanceof Error ? err.message : 'Error al cargar transacciones',
+        );
       }
     } finally {
       if (mountedRef.current) setLoading(false);
@@ -28,7 +34,9 @@ export function useTransactions(token: string | null, enabled: boolean, limit: n
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {

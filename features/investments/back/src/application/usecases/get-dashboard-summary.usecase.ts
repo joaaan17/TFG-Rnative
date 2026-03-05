@@ -103,7 +103,69 @@ export class GetDashboardSummaryUseCase {
       transactions,
     );
 
-    return { summary, context };
+    const allocationStocks = this.buildAllocationStocks(
+      portfolio.holdings,
+      totalInvested,
+    );
+
+    // DEBUG: logs para diagnosticar por qué allocationStocks podría estar vacío
+    console.log(
+      `${LOG} holdings count=${portfolio.holdings?.length ?? 0}`,
+      JSON.stringify(
+        portfolio.holdings?.map((h) => ({
+          symbol: h.symbol,
+          shares: h.shares,
+          avgBuyPrice: h.avgBuyPrice,
+        })),
+      ),
+    );
+    console.log(
+      `${LOG} totalInvested=${totalInvested} allocationStocks.length=${allocationStocks.length}`,
+      JSON.stringify(allocationStocks),
+    );
+
+    return { summary, context, allocationStocks };
+  }
+
+  private buildAllocationStocks(
+    holdings: Holding[],
+    totalInvested: number,
+  ): AllocationItem[] {
+    // Robustez: normalizar números por si MongoDB devuelve strings
+    const safeHoldings = (holdings ?? []).map((h) => ({
+      ...h,
+      shares: Number(h.shares) || 0,
+      avgBuyPrice: Number(h.avgBuyPrice) || 0,
+    }));
+    const withShares = safeHoldings.filter((h) => h.shares > 0);
+
+    if (withShares.length === 0) {
+      console.log(
+        `${LOG} buildAllocationStocks: sin holdings con shares>0 (total=${holdings?.length ?? 0})`,
+      );
+      return [];
+    }
+    if (totalInvested <= 0) {
+      console.log(
+        `${LOG} buildAllocationStocks: totalInvested<=0 (${totalInvested}), retorno vacío`,
+      );
+      return [];
+    }
+
+    const items = withShares.map((h) => {
+      const value = Math.round(h.shares * h.avgBuyPrice * 100) / 100;
+      const weight = value / totalInvested;
+      const sym = String(h.symbol ?? '')
+        .trim()
+        .toUpperCase();
+      return {
+        symbol: sym,
+        name: sym,
+        value,
+        weight: Math.round(weight * 10000) / 10000,
+      };
+    });
+    return items;
   }
 
   private emptyResponse(): DashboardSummaryResponse {
@@ -123,6 +185,7 @@ export class GetDashboardSummaryUseCase {
         operationsCount: 0,
         lastOperation: null,
       },
+      allocationStocks: [],
     };
   }
 

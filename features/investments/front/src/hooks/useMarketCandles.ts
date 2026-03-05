@@ -27,7 +27,10 @@ export function useMarketCandles(
     setError(null);
     setData((prev) => {
       if (!prev) return null;
-      if (prev.symbol !== symbol.trim().toUpperCase() || prev.timeframe !== timeframe) {
+      if (
+        prev.symbol !== symbol.trim().toUpperCase() ||
+        prev.timeframe !== timeframe
+      ) {
         return null;
       }
       return prev;

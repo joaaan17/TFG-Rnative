@@ -45,9 +45,7 @@ function PendingRequestCard({
           <Text variant="default" style={{ fontWeight: '600' }}>
             {item.name}
           </Text>
-          {item.username ? (
-            <Text variant="muted">@{item.username}</Text>
-          ) : null}
+          {item.username ? <Text variant="muted">@{item.username}</Text> : null}
         </View>
         <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
           <Button
@@ -85,8 +83,18 @@ export function PendingRequestsModal({
   processingIds,
 }: PendingRequestsModalProps) {
   return (
-    <CardModal open={open} onClose={onClose} maxHeightPct={0.7} contentNoPaddingTop>
-      <ModalHeader title="Solicitudes de amistad" onBack={onClose} onClose={onClose} backAccessibilityLabel="Volver" />
+    <CardModal
+      open={open}
+      onClose={onClose}
+      maxHeightPct={0.7}
+      contentNoPaddingTop
+    >
+      <ModalHeader
+        title="Solicitudes de amistad"
+        onBack={onClose}
+        onClose={onClose}
+        backAccessibilityLabel="Volver"
+      />
       <View style={{ paddingHorizontal: 16, gap: 16, flex: 1 }}>
         {loading ? (
           <View style={{ paddingVertical: 24, alignItems: 'center' }}>

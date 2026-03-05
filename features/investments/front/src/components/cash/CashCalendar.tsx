@@ -93,10 +93,7 @@ export function CashCalendar({
   const palette = usePalette();
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
-  const grid = React.useMemo(
-    () => buildMonthGrid(year, month),
-    [year, month],
-  );
+  const grid = React.useMemo(() => buildMonthGrid(year, month), [year, month]);
 
   const goPrev = () => onMonthChange(new Date(year, month - 1, 1));
   const goNext = () => onMonthChange(new Date(year, month + 1, 1));
@@ -113,20 +110,30 @@ export function CashCalendar({
       <View style={s.calendarHeader}>
         <Pressable
           onPress={goPrev}
-          style={({ pressed }) => [s.calendarNavButton, pressed && { opacity: 0.7 }]}
+          style={({ pressed }) => [
+            s.calendarNavButton,
+            pressed && { opacity: 0.7 },
+          ]}
           accessibilityLabel="Mes anterior"
         >
           <ArrowLeftIcon width={24} height={24} fill={CALENDAR_TEXT} />
         </Pressable>
         <Text
-          style={[Hierarchy.bodySmallSemibold, s.calendarMonthTitle, { color: CALENDAR_TEXT }]}
+          style={[
+            Hierarchy.bodySmallSemibold,
+            s.calendarMonthTitle,
+            { color: CALENDAR_TEXT },
+          ]}
           numberOfLines={1}
         >
           {monthYearLabel}
         </Text>
         <Pressable
           onPress={goNext}
-          style={({ pressed }) => [s.calendarNavButton, pressed && { opacity: 0.7 }]}
+          style={({ pressed }) => [
+            s.calendarNavButton,
+            pressed && { opacity: 0.7 },
+          ]}
           accessibilityLabel="Mes siguiente"
         >
           <ArrowRightIcon width={24} height={24} fill={CALENDAR_TEXT} />
@@ -136,7 +143,9 @@ export function CashCalendar({
       <View style={s.weekdaysRow}>
         {WEEKDAYS.map((letter) => (
           <View key={letter} style={s.weekdayCell}>
-            <Text style={[Hierarchy.captionSmall, { color: CALENDAR_TEXT_FADED }]}>
+            <Text
+              style={[Hierarchy.captionSmall, { color: CALENDAR_TEXT_FADED }]}
+            >
               {letter}
             </Text>
           </View>
@@ -186,7 +195,12 @@ export function CashCalendar({
                 </Text>
                 {hasActivity && (
                   <View style={s.dayDots}>
-                    <View style={[s.dayDot, { backgroundColor: CALENDAR_TEXT_FADED }]} />
+                    <View
+                      style={[
+                        s.dayDot,
+                        { backgroundColor: CALENDAR_TEXT_FADED },
+                      ]}
+                    />
                   </View>
                 )}
               </Pressable>

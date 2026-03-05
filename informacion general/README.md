@@ -40,13 +40,13 @@ features/auth/
 
 Estos principios deben conservarse al escalar:
 
-| Principio | Significado |
-|-----------|-------------|
-| **Dominio puro** | `domain/` y `application/` no importan Express, Mongo ni librerías de infra. |
+| Principio                | Significado                                                                                       |
+| ------------------------ | ------------------------------------------------------------------------------------------------- |
+| **Dominio puro**         | `domain/` y `application/` no importan Express, Mongo ni librerías de infra.                      |
 | **Puertos (interfaces)** | El dominio define contratos (`AuthRepository`, `PasswordService`, etc.); la infra los implementa. |
-| **Casos de uso** | Lógica de negocio en clases inyectables que reciben dependencias por constructor. |
-| **Wiring centralizado** | `config/auth.wiring.ts` instancia repos, servicios y casos de uso. |
-| **Rutas delgadas** | Los controladores solo parsean `req.body`, llaman al caso de uso y devuelven la respuesta. |
+| **Casos de uso**         | Lógica de negocio en clases inyectables que reciben dependencias por constructor.                 |
+| **Wiring centralizado**  | `config/auth.wiring.ts` instancia repos, servicios y casos de uso.                                |
+| **Rutas delgadas**       | Los controladores solo parsean `req.body`, llaman al caso de uso y devuelven la respuesta.        |
 
 ---
 
@@ -212,14 +212,14 @@ app.use('/api/news', newsRoutes);
 
 ## Infraestructura compartida vs. por feature
 
-| Elemento | Recomendación | Motivo |
-|----------|---------------|--------|
-| **MongoDB** | Conexión única en orquestador | Una sola conexión por proceso. |
-| **JWT / TokenService** | Compartir o duplicar | Si varias features validan JWT, puede haber un `shared/tokens/`; si solo Auth, mantener en Auth. |
-| **Bcrypt / PasswordService** | En Auth | Solo Auth hashea contraseñas. |
-| **MailService** | En Auth | Solo Auth envía emails de verificación. |
-| **Modelos Mongoose** | Por feature | Cada feature tiene sus modelos en `infrastructure/persistence/mongo/`. |
-| **Variables de entorno** | Por feature + globales | `AUTH_DB_URI` puede ser `DB_URI` global; `AUTH_JWT_SECRET` en Auth. |
+| Elemento                     | Recomendación                 | Motivo                                                                                           |
+| ---------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------ |
+| **MongoDB**                  | Conexión única en orquestador | Una sola conexión por proceso.                                                                   |
+| **JWT / TokenService**       | Compartir o duplicar          | Si varias features validan JWT, puede haber un `shared/tokens/`; si solo Auth, mantener en Auth. |
+| **Bcrypt / PasswordService** | En Auth                       | Solo Auth hashea contraseñas.                                                                    |
+| **MailService**              | En Auth                       | Solo Auth envía emails de verificación.                                                          |
+| **Modelos Mongoose**         | Por feature                   | Cada feature tiene sus modelos en `infrastructure/persistence/mongo/`.                           |
+| **Variables de entorno**     | Por feature + globales        | `AUTH_DB_URI` puede ser `DB_URI` global; `AUTH_JWT_SECRET` en Auth.                              |
 
 ### Carpeta `shared/` en el backend (opcional)
 
@@ -260,4 +260,4 @@ Mientras tanto, puedes seguir arrancando Auth como hasta ahora y diseñar las nu
 
 ---
 
-*Última actualización: Febrero 2026*
+_Última actualización: Febrero 2026_

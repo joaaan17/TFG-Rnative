@@ -11,10 +11,10 @@ Feature backend que integra **NewsAPI** y **ChatGPT** para mostrar noticias con 
 
 ## Endpoints
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| GET | `/api/ia-noticias/headlines` | Lista de titulares (con imagen y excerpt) |
-| POST | `/api/ia-noticias/explain` | Body: `{ newsId }` → noticia educativa completa |
+| Método | Ruta                         | Descripción                                     |
+| ------ | ---------------------------- | ----------------------------------------------- |
+| GET    | `/api/ia-noticias/headlines` | Lista de titulares (con imagen y excerpt)       |
+| POST   | `/api/ia-noticias/explain`   | Body: `{ newsId }` → noticia educativa completa |
 
 Requieren autenticación (Bearer token).
 

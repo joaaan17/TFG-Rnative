@@ -10,7 +10,10 @@ export function useBuyOrder(token: string | null) {
     async (
       symbol: string,
       shares: number,
-      options?: { onSuccess?: (result: BuyOrderResponse) => void; price?: number },
+      options?: {
+        onSuccess?: (result: BuyOrderResponse) => void;
+        price?: number;
+      },
     ): Promise<BuyOrderResponse | null> => {
       if (!token?.trim()) {
         setError('Debes iniciar sesión para comprar');
@@ -32,7 +35,9 @@ export function useBuyOrder(token: string | null) {
         return null;
       } catch (err) {
         if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : 'Error al ejecutar la compra');
+          setError(
+            err instanceof Error ? err.message : 'Error al ejecutar la compra',
+          );
         }
         return null;
       } finally {

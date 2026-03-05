@@ -16,25 +16,28 @@ import type {
 import type { DonutSegment } from '../types/portfolio-chart.types';
 
 /**
- * Paleta azul del dashboard: de más oscuro a más claro.
- * Cuanto más peso (más acciones/%), más oscuro el azul; menos peso = más claro.
+ * Paleta para donut: colores bien diferenciados (azules + cyan/violeta).
+ * Índices espaciados evitan que segmentos consecutivos sean similares.
  */
-const BLUE_PALETTE_DARK_TO_LIGHT = [
-  '#0f172a', // blue-950 — más oscuro (mayor peso)
-  '#1e3a5f', // blue-900
-  '#1d4ed8', // primary
-  '#2563eb', // blue-600
-  '#3b82f6', // blue-500
-  '#60a5fa', // blue-400
-  '#93c5fd', // blue-300 — más claro (menor peso)
+const DONUT_PALETTE = [
+  '#0f172a', // navy oscuro
+  '#1e40af', // azul profundo
+  '#0891b2', // cyan
+  '#2563eb', // azul medio
+  '#7c3aed', // violeta
+  '#06b6d4', // turquesa
+  '#60a5fa', // azul claro
 ] as const;
 
-/** Ordena segmentos por value descendente y asigna azules: mayor % = más oscuro. */
-function segmentsWithBlueScale(segments: Omit<DonutSegment, 'color'>[]): DonutSegment[] {
+/** Ordena por value descendente y asigna colores bien diferenciados (índices espaciados). */
+function segmentsWithBlueScale(
+  segments: Omit<DonutSegment, 'color'>[],
+): DonutSegment[] {
   const sorted = [...segments].sort((a, b) => b.value - a.value);
+  const n = DONUT_PALETTE.length;
   return sorted.map((seg, i) => ({
     ...seg,
-    color: BLUE_PALETTE_DARK_TO_LIGHT[Math.min(i, BLUE_PALETTE_DARK_TO_LIGHT.length - 1)],
+    color: DONUT_PALETTE[(i * 2) % n] ?? DONUT_PALETTE[i % n],
   }));
 }
 
@@ -56,15 +59,23 @@ const GEO_SEGMENTS_RAW: Omit<DonutSegment, 'color'>[] = [
 /** Distribución por acciones/activos (mock). */
 const STOCKS_SEGMENTS_RAW: Omit<DonutSegment, 'color'>[] = [
   { label: 'Apple', value: 28 },
-  { label: 'Nvidia', value: 25 },
-  { label: 'Google', value: 22 },
+  {
+    label: 'Nvidia',
+    value: 25,
+  },
+  {
+    label: 'Google',
+    value: 22,
+  },
   { label: 'Microsoft', value: 15 },
   { label: 'Intel', value: 10 },
 ];
 
-const SECTOR_SEGMENTS: DonutSegment[] = segmentsWithBlueScale(SECTOR_SEGMENTS_RAW);
+const SECTOR_SEGMENTS: DonutSegment[] =
+  segmentsWithBlueScale(SECTOR_SEGMENTS_RAW);
 const GEO_SEGMENTS: DonutSegment[] = segmentsWithBlueScale(GEO_SEGMENTS_RAW);
-const STOCKS_SEGMENTS: DonutSegment[] = segmentsWithBlueScale(STOCKS_SEGMENTS_RAW);
+const STOCKS_SEGMENTS: DonutSegment[] =
+  segmentsWithBlueScale(STOCKS_SEGMENTS_RAW);
 
 /** Datos mock; reemplazar por llamadas a API cuando exista backend. */
 function getMockSummary(): PortfolioSummary {
@@ -180,11 +191,19 @@ export function useDashboardViewModel(): UseDashboardViewModelResult {
   const [loadingSummary, setLoadingSummary] = React.useState(true);
   const [summaryError, setSummaryError] = React.useState<string | null>(null);
 
-  const [selectedPeriod, setSelectedPeriod] = React.useState<IncomePeriod>('semanal');
-  const [activeChart, setActiveChart] = React.useState<'sector' | 'geo' | 'stocks'>('sector');
+  const [selectedPeriod, setSelectedPeriod] =
+    React.useState<IncomePeriod>('semanal');
+  const [activeChart, setActiveChart] = React.useState<
+    'sector' | 'geo' | 'stocks'
+  >('sector');
+
+  const [allocationStocks, setAllocationStocks] = React.useState<
+    { symbol: string; name: string; value: number; weight: number }[]
+  >([]);
 
   const fetchSummary = React.useCallback(async () => {
     if (!token) {
+      console.log('[Dashboard] fetchSummary: sin token, omitiendo fetch');
       setLoadingSummary(false);
       setSummaryError(null);
       return;
@@ -193,15 +212,35 @@ export function useDashboardViewModel(): UseDashboardViewModelResult {
     setSummaryError(null);
     try {
       const data = await getPortfolioSummary(token);
+      const stocks = data.allocationStocks ?? [];
+      // DEBUG: verificar qué devuelve la API para el donut de Acciones
+      const hasStocks = Array.isArray(stocks) && stocks.length > 0;
+      console.log(
+        '[Dashboard] getPortfolioSummary response: allocationStocks',
+        hasStocks ? `OK (${stocks.length} items)` : 'EMPTY or invalid',
+        hasStocks
+          ? JSON.stringify(
+              stocks.map((s) => ({
+                symbol: s.symbol,
+                value: s.value,
+                weight: s.weight,
+              })),
+            )
+          : JSON.stringify(data),
+      );
+      setAllocationStocks(stocks);
       setStats((prev) => ({
         ...prev,
         portfolioSummary: mapSummaryToPortfolioSummary(data.summary),
         contextCards: mapContextToContextCards(data.context),
       }));
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error al cargar el resumen';
+      const message =
+        err instanceof Error ? err.message : 'Error al cargar el resumen';
       const isNetworkError =
-        /fetch|network|failed to fetch|connection|econnrefused/i.test(message) || message === '';
+        /fetch|network|failed to fetch|connection|econnrefused/i.test(
+          message,
+        ) || message === '';
       if (!isNetworkError) setSummaryError(message);
     } finally {
       setLoadingSummary(false);
@@ -216,12 +255,45 @@ export function useDashboardViewModel(): UseDashboardViewModelResult {
     fetchSummary();
   }, [fetchSummary]);
 
+  const stocksDonutSegmentsFromApi = React.useMemo(() => {
+    if (!Array.isArray(allocationStocks) || allocationStocks.length === 0) {
+      console.log(
+        '[Dashboard] donut Acciones: usando mock (allocationStocks vacío)',
+      );
+      return STOCKS_SEGMENTS;
+    }
+    const totalStocksValue = allocationStocks.reduce(
+      (s, a) =>
+        s + (typeof a.value === 'number' ? a.value : Number(a.value) || 0),
+      0,
+    );
+    if (totalStocksValue <= 0) {
+      console.log(
+        '[Dashboard] donut Acciones: totalStocksValue<=0, usando mock',
+      );
+      return STOCKS_SEGMENTS;
+    }
+    const raw: Omit<DonutSegment, 'color'>[] = allocationStocks.map((a) => {
+      const val = typeof a.value === 'number' ? a.value : Number(a.value) || 0;
+      const pct = Math.round((val / totalStocksValue) * 1000) / 10;
+      return {
+        label: String(a.symbol ?? a.name ?? '').trim() || '?',
+        value: pct,
+      };
+    });
+    console.log(
+      '[Dashboard] donut Acciones: segmentos reales',
+      JSON.stringify(raw),
+    );
+    return segmentsWithBlueScale(raw);
+  }, [allocationStocks]);
+
   const donutSegments =
     activeChart === 'sector'
       ? SECTOR_SEGMENTS
       : activeChart === 'geo'
         ? GEO_SEGMENTS
-        : STOCKS_SEGMENTS;
+        : stocksDonutSegmentsFromApi;
 
   return {
     portfolioSummary: stats.portfolioSummary,

@@ -78,7 +78,10 @@ export function QuoteGrid({ quote, palette }: QuoteGridProps) {
               {label}
             </Text>
             <Text
-              style={[Hierarchy.bodySmallSemibold, { color: textColor, marginTop: 2 }]}
+              style={[
+                Hierarchy.bodySmallSemibold,
+                { color: textColor, marginTop: 2 },
+              ]}
               numberOfLines={1}
             >
               {getValue(quote)}

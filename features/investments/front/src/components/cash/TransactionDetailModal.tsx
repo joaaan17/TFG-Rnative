@@ -138,14 +138,14 @@ export function TransactionDetailModal({
 
   const t = transaction.raw;
   const isBuy = transaction.type === 'BUY';
-  const amountColor = transaction.amount >= 0 ? ENTRY_GREEN : palette.destructive;
+  const amountColor =
+    transaction.amount >= 0 ? ENTRY_GREEN : palette.destructive;
   const badge = getResultBadge(transaction);
-  const badgeBg =
-    badge.isLoss
-      ? 'rgba(220, 38, 38, 0.12)'
-      : badge.isGain
-        ? 'rgba(22, 163, 74, 0.12)'
-        : palette.surfaceMuted ?? 'rgba(0,0,0,0.04)';
+  const badgeBg = badge.isLoss
+    ? 'rgba(220, 38, 38, 0.12)'
+    : badge.isGain
+      ? 'rgba(22, 163, 74, 0.12)'
+      : (palette.surfaceMuted ?? 'rgba(0,0,0,0.04)');
   const badgeTitleColor = badge.isLoss
     ? palette.destructive
     : badge.isGain
@@ -238,16 +238,14 @@ export function TransactionDetailModal({
             }}
           >
             <Text
-              style={[Hierarchy.caption, { color: palette.icon, marginBottom: 4 }]}
+              style={[
+                Hierarchy.caption,
+                { color: palette.icon, marginBottom: 4 },
+              ]}
             >
               Importe total
             </Text>
-            <Text
-              style={[
-                Hierarchy.titleModal,
-                { color: amountColor },
-              ]}
-            >
+            <Text style={[Hierarchy.titleModal, { color: amountColor }]}>
               {transaction.amount >= 0 ? '+' : '−'}
               {formatMoney(Math.abs(transaction.amount))} $
             </Text>
@@ -255,10 +253,7 @@ export function TransactionDetailModal({
               label="Fecha y hora"
               value={formatDateHour(transaction.createdAt)}
             />
-            <DetailRow
-              label="ID"
-              value={transaction.id.slice(-8)}
-            />
+            <DetailRow label="ID" value={transaction.id.slice(-8)} />
           </View>
 
           <View
@@ -274,7 +269,10 @@ export function TransactionDetailModal({
             <Text
               style={[
                 Hierarchy.titleSection,
-                { color: palette.icon ?? palette.text, marginBottom: Spacing.sm },
+                {
+                  color: palette.icon ?? palette.text,
+                  marginBottom: Spacing.sm,
+                },
               ]}
             >
               Detalle de la operación
@@ -308,25 +306,29 @@ export function TransactionDetailModal({
                 valueColor={amountColor}
               />
             </View>
-            {!isBuy && t.avgBuyPrice != null && Number.isFinite(t.avgBuyPrice) && (
-              <>
-                <DetailRow
-                  label="Precio medio compra"
-                  value={`${formatMoney(t.avgBuyPrice)} $`}
-                />
-                <DetailRow
-                  label="Beneficio / Pérdida"
-                  value={(() => {
-                    const pnl = (t.price - t.avgBuyPrice) * t.shares;
-                    const sign = pnl >= 0 ? '+' : '−';
-                    return `${sign}${formatMoney(Math.abs(pnl))} $`;
-                  })()}
-                  valueColor={
-                    t.price >= t.avgBuyPrice ? ENTRY_GREEN : palette.destructive
-                  }
-                />
-              </>
-            )}
+            {!isBuy &&
+              t.avgBuyPrice != null &&
+              Number.isFinite(t.avgBuyPrice) && (
+                <>
+                  <DetailRow
+                    label="Precio medio compra"
+                    value={`${formatMoney(t.avgBuyPrice)} $`}
+                  />
+                  <DetailRow
+                    label="Beneficio / Pérdida"
+                    value={(() => {
+                      const pnl = (t.price - t.avgBuyPrice) * t.shares;
+                      const sign = pnl >= 0 ? '+' : '−';
+                      return `${sign}${formatMoney(Math.abs(pnl))} $`;
+                    })()}
+                    valueColor={
+                      t.price >= t.avgBuyPrice
+                        ? ENTRY_GREEN
+                        : palette.destructive
+                    }
+                  />
+                </>
+              )}
           </View>
         </View>
       </View>

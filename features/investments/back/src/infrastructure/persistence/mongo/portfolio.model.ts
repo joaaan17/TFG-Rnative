@@ -14,12 +14,12 @@ export type PortfolioDocument = mongoose.Document & {
   userId: string;
   cashBalance: number;
   currency: string;
-  holdings: Array<{
+  holdings: {
     symbol: string;
     shares: number;
     avgBuyPrice: number;
     lastUpdatedAt: Date;
-  }>;
+  }[];
 };
 
 const PortfolioSchema = new Schema<PortfolioDocument>(

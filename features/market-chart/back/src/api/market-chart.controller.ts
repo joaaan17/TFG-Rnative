@@ -1,10 +1,7 @@
 import type { Request, Response } from 'express';
 import { getMarketChartUseCase } from '../config/market-chart.wiring';
 
-export const getMarketChartController = async (
-  req: Request,
-  res: Response,
-) => {
+export const getMarketChartController = async (req: Request, res: Response) => {
   try {
     const symbol =
       typeof req.query.symbol === 'string' ? req.query.symbol : 'BTC';

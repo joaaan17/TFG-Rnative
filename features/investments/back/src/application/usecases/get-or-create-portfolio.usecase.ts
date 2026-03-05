@@ -10,7 +10,12 @@ export class GetOrCreatePortfolioUseCase {
   async execute(userId: string): Promise<{
     cashBalance: number;
     currency: string;
-    holdings: Array<{ symbol: string; shares: number; avgBuyPrice: number; lastUpdatedAt: string }>;
+    holdings: {
+      symbol: string;
+      shares: number;
+      avgBuyPrice: number;
+      lastUpdatedAt: string;
+    }[];
   }> {
     const raw = typeof userId === 'string' ? userId.trim() : '';
     if (!raw) {

@@ -55,7 +55,8 @@ export function InvertirSheet({
 
   const sharesNum = parseFloat(sharesStr.replace(',', '.')) || 0;
   const totalCost = Math.round(sharesNum * price * 100) / 100;
-  const canBuy = sharesNum > 0 && totalCost > 0 && totalCost <= availableAmount && !!symbol;
+  const canBuy =
+    sharesNum > 0 && totalCost > 0 && totalCost <= availableAmount && !!symbol;
   const formattedAvailable = availableAmount.toLocaleString('es-ES', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -140,14 +141,23 @@ export function InvertirSheet({
           >
             <Text
               variant="muted"
-              style={[Hierarchy.bodySmall, { color: palette.icon ?? palette.text }]}
+              style={[
+                Hierarchy.bodySmall,
+                { color: palette.icon ?? palette.text },
+              ]}
             >
               {formattedAvailable} $ disponible
             </Text>
-            <ChevronRight size={18} color={palette.icon ?? palette.text} style={{ marginLeft: 4 }} />
+            <ChevronRight
+              size={18}
+              color={palette.icon ?? palette.text}
+              style={{ marginLeft: 4 }}
+            />
           </Pressable>
 
-          <View style={{ alignItems: 'center', marginTop: 28, marginBottom: 16 }}>
+          <View
+            style={{ alignItems: 'center', marginTop: 28, marginBottom: 16 }}
+          >
             <View
               style={{
                 flexDirection: 'row',
@@ -173,12 +183,24 @@ export function InvertirSheet({
               >
                 <Minus
                   size={24}
-                  color={sharesNum <= 0 ? palette.icon ?? palette.text : palette.primary}
+                  color={
+                    sharesNum <= 0
+                      ? (palette.icon ?? palette.text)
+                      : palette.primary
+                  }
                   strokeWidth={2.5}
                 />
               </Pressable>
               <Text
-                style={[Hierarchy.value, { color: palette.text, fontSize: 32, minWidth: 120, textAlign: 'center' }]}
+                style={[
+                  Hierarchy.value,
+                  {
+                    color: palette.text,
+                    fontSize: 32,
+                    minWidth: 120,
+                    textAlign: 'center',
+                  },
+                ]}
               >
                 {sharesStr} {sharesNum === 1 ? 'acción' : 'acciones'}
               </Text>
@@ -197,23 +219,25 @@ export function InvertirSheet({
                 accessibilityRole="button"
                 accessibilityLabel="Añadir una acción"
               >
-                <Plus
-                  size={24}
-                  color={palette.primary}
-                  strokeWidth={2.5}
-                />
+                <Plus size={24} color={palette.primary} strokeWidth={2.5} />
               </Pressable>
             </View>
             <Text
               variant="muted"
-              style={[Hierarchy.bodySmall, { marginTop: 8, color: palette.icon }]}
+              style={[
+                Hierarchy.bodySmall,
+                { marginTop: 8, color: palette.icon },
+              ]}
             >
               Precio: {formattedPrice} ${symbol ? ` · ${symbol}` : ''}
             </Text>
             {sharesNum > 0 && (
               <Text
                 variant="muted"
-                style={[Hierarchy.bodySmall, { marginTop: 4, color: palette.primary }]}
+                style={[
+                  Hierarchy.bodySmall,
+                  { marginTop: 4, color: palette.primary },
+                ]}
               >
                 Coste total: {formattedCost} $
               </Text>
@@ -221,14 +245,35 @@ export function InvertirSheet({
           </View>
 
           {buyError ? (
-            <View style={{ marginBottom: 12, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, backgroundColor: `${palette.destructive ?? '#E5484D'}20` }}>
-              <Text style={[Hierarchy.bodySmall, { color: palette.destructive ?? '#E5484D' }]}>
+            <View
+              style={{
+                marginBottom: 12,
+                paddingVertical: 8,
+                paddingHorizontal: 12,
+                borderRadius: 8,
+                backgroundColor: `${palette.destructive ?? '#E5484D'}20`,
+              }}
+            >
+              <Text
+                style={[
+                  Hierarchy.bodySmall,
+                  { color: palette.destructive ?? '#E5484D' },
+                ]}
+              >
                 {buyError}
               </Text>
             </View>
           ) : null}
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, marginBottom: 24 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: 12,
+              marginBottom: 24,
+            }}
+          >
             {KEYPAD_KEYS.map((row) =>
               row.map((key) => (
                 <Pressable
@@ -248,9 +293,16 @@ export function InvertirSheet({
                   accessibilityLabel={key === 'backspace' ? 'Borrar' : key}
                 >
                   {key === 'backspace' ? (
-                    <Text style={[Hierarchy.action, { color: palette.text }]}>←</Text>
+                    <Text style={[Hierarchy.action, { color: palette.text }]}>
+                      ←
+                    </Text>
                   ) : (
-                    <Text style={[Hierarchy.action, { color: palette.text, fontWeight: '600' }]}>
+                    <Text
+                      style={[
+                        Hierarchy.action,
+                        { color: palette.text, fontWeight: '600' },
+                      ]}
+                    >
                       {key}
                     </Text>
                   )}
@@ -259,7 +311,14 @@ export function InvertirSheet({
             )}
           </View>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingTop: 12,
+            }}
+          >
             <Text style={[Hierarchy.captionSmall, { color: palette.icon }]}>
               Acciones
             </Text>
@@ -272,21 +331,30 @@ export function InvertirSheet({
                 paddingHorizontal: 20,
                 paddingVertical: 12,
                 borderRadius: 12,
-                backgroundColor: canBuy && !buyLoading ? palette.primary : (palette.surfaceMuted ?? '#EEF2F7'),
+                backgroundColor:
+                  canBuy && !buyLoading
+                    ? palette.primary
+                    : (palette.surfaceMuted ?? '#EEF2F7'),
                 opacity: pressed ? 0.85 : 1,
               })}
               accessibilityRole="button"
               accessibilityLabel="Comprar"
             >
               {buyLoading ? (
-                <ActivityIndicator size="small" color={palette.primaryText ?? '#FFF'} />
+                <ActivityIndicator
+                  size="small"
+                  color={palette.primaryText ?? '#FFF'}
+                />
               ) : (
                 <>
                   <Text
                     style={[
                       Hierarchy.action,
                       {
-                        color: canBuy && !buyLoading ? (palette.primaryText ?? '#FFF') : palette.text,
+                        color:
+                          canBuy && !buyLoading
+                            ? (palette.primaryText ?? '#FFF')
+                            : palette.text,
                         fontWeight: '600',
                       },
                     ]}
@@ -295,7 +363,11 @@ export function InvertirSheet({
                   </Text>
                   <ChevronRight
                     size={18}
-                    color={canBuy && !buyLoading ? palette.primaryText ?? '#FFF' : palette.text}
+                    color={
+                      canBuy && !buyLoading
+                        ? (palette.primaryText ?? '#FFF')
+                        : palette.text
+                    }
                     style={{ marginLeft: 4 }}
                   />
                 </>

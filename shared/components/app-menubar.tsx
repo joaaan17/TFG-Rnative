@@ -309,14 +309,16 @@ export function AppMenubar({
               />
             </Animated.View>
           ) : null}
-          {items.map((it, i) =>
-            renderItem({
-              Icon: it.Icon,
-              onPress: it.onPress,
-              label: it.label,
-              index: i,
-            }),
-          )}
+          {items.map((it, i) => (
+            <React.Fragment key={it.key}>
+              {renderItem({
+                Icon: it.Icon,
+                onPress: it.onPress,
+                label: it.label,
+                index: i,
+              })}
+            </React.Fragment>
+          ))}
         </View>
       </View>
     </View>

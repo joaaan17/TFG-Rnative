@@ -8,7 +8,9 @@ export interface HoldingWithPrice extends PortfolioHolding {
   changePercent?: number;
 }
 
-export function useHoldingsWithPrices(holdings: PortfolioHolding[] | undefined) {
+export function useHoldingsWithPrices(
+  holdings: PortfolioHolding[] | undefined,
+) {
   const [prices, setPrices] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -33,7 +35,8 @@ export function useHoldingsWithPrices(holdings: PortfolioHolding[] | undefined) 
         if (cancelled) return;
         const map: Record<string, number> = {};
         (res.quotes ?? []).forEach((q) => {
-          if (q.symbol && q.price != null) map[q.symbol.toUpperCase()] = q.price;
+          if (q.symbol && q.price != null)
+            map[q.symbol.toUpperCase()] = q.price;
         });
         setPrices(map);
       })
@@ -53,10 +56,14 @@ export function useHoldingsWithPrices(holdings: PortfolioHolding[] | undefined) 
     return holdings.map((h) => {
       const currentPrice = prices[h.symbol];
       const currentValue =
-        currentPrice != null ? Math.round(h.shares * currentPrice * 100) / 100 : undefined;
+        currentPrice != null
+          ? Math.round(h.shares * currentPrice * 100) / 100
+          : undefined;
       const changePercent =
         currentPrice != null && h.avgBuyPrice > 0
-          ? Math.round(((currentPrice - h.avgBuyPrice) / h.avgBuyPrice) * 10000) / 100
+          ? Math.round(
+              ((currentPrice - h.avgBuyPrice) / h.avgBuyPrice) * 10000,
+            ) / 100
           : undefined;
       return {
         ...h,
@@ -68,10 +75,7 @@ export function useHoldingsWithPrices(holdings: PortfolioHolding[] | undefined) 
   }, [holdings, prices]);
 
   const totalValue = useMemo(() => {
-    return holdingsWithPrice.reduce(
-      (sum, h) => sum + (h.currentValue ?? 0),
-      0,
-    );
+    return holdingsWithPrice.reduce((sum, h) => sum + (h.currentValue ?? 0), 0);
   }, [holdingsWithPrice]);
 
   return { holdingsWithPrice, totalValue, loading, refetch };

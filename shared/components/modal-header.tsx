@@ -76,7 +76,10 @@ export function ModalHeader({
         }}
       >
         <Text
-          style={[Hierarchy.titleModal, { color: palette.text, textAlign: 'center' }]}
+          style={[
+            Hierarchy.titleModal,
+            { color: palette.text, textAlign: 'center' },
+          ]}
           numberOfLines={1}
         >
           {title}
@@ -86,7 +89,11 @@ export function ModalHeader({
             variant="muted"
             style={[
               Hierarchy.bodySmall,
-              { marginTop: 4, color: palette.icon ?? palette.text, textAlign: 'center' },
+              {
+                marginTop: 4,
+                color: palette.icon ?? palette.text,
+                textAlign: 'center',
+              },
             ]}
             numberOfLines={1}
           >

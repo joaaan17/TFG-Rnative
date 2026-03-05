@@ -183,10 +183,7 @@ export async function verifyPasswordResetCode(
   return json as { message: string };
 }
 
-export async function deleteUser(
-  userId: string,
-  token: string,
-): Promise<void> {
+export async function deleteUser(userId: string, token: string): Promise<void> {
   const baseUrl = getBaseUrl();
   const response = await fetch(`${baseUrl}/users/${userId}`, {
     method: 'DELETE',

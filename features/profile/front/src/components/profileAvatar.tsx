@@ -66,11 +66,7 @@ export function ProfileAvatar({
             }}
           />
         ) : (
-          <ProfileIcon
-            width={iconSize}
-            height={iconSize}
-            fill={palette.text}
-          />
+          <ProfileIcon width={iconSize} height={iconSize} fill={palette.text} />
         )}
       </View>
     );

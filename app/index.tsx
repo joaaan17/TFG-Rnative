@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Pantalla inicial de la app - Login
  * Ruta delgada que delega en la feature auth
  */
