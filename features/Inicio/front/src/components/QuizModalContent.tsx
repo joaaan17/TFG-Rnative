@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import Animated, { SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import { Hierarchy } from '@/design-system/typography';
@@ -7,6 +7,7 @@ import { Button } from '@/shared/components/ui/button';
 import { usePalette } from '@/shared/hooks/use-palette';
 import type { NewsQuiz, QuizQuestion } from '../types/inicio.types';
 import { QUIZ_LOADING_MESSAGES } from '../types/inicio.types';
+import { getQuizXpForCorrectCount } from '@/shared/constants/xp-quiz';
 import { LoadingNewsOverlay } from './LoadingNewsOverlay';
 import { createQuizStyles } from './QuizModalContent.styles';
 
@@ -21,6 +22,8 @@ export type QuizModalContentProps = {
   loading: boolean;
   error: string | null;
   onClose: () => void;
+  /** Se llama una vez cuando el usuario completa el test (todas las preguntas respondidas). Recibe el nº de aciertos. */
+  onQuizComplete?: (correctCount: number) => void;
   /** Callback para reportar la altura del contenido (para ajustar el modal) */
   onContentSizeChange?: (width: number, height: number) => void;
 };
@@ -33,17 +36,38 @@ export function QuizModalContent({
   onAnswer,
   loading,
   error,
+  onQuizComplete,
   onContentSizeChange,
 }: QuizModalContentProps) {
   const palette = usePalette();
   const styles = useMemo(() => createQuizStyles(palette), [palette]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [reviewingIndex, setReviewingIndex] = useState<number | null>(null);
+  const quizCompleteCalledRef = useRef(false);
 
   useEffect(() => {
     setCurrentIndex(0);
     setReviewingIndex(null);
+    quizCompleteCalledRef.current = false;
   }, [quiz?.newsId]);
+
+  useEffect(() => {
+    if (!quiz?.questions?.length) return;
+    const total = quiz.questions.length;
+    const answeredCount = Object.keys(answers).length;
+    if (
+      answeredCount === total &&
+      onQuizComplete &&
+      !quizCompleteCalledRef.current
+    ) {
+      quizCompleteCalledRef.current = true;
+      const correctCount = Object.entries(answers).filter(
+        ([qIdx, opt]) =>
+          quiz.questions[Number(qIdx)]?.correctAnswerIndex === opt,
+      ).length;
+      onQuizComplete(correctCount);
+    }
+  }, [quiz, answers, onQuizComplete]);
 
   const handleSelectOption = (qIndex: number, optionIndex: number) => {
     if (answers[qIndex] !== undefined) return;
@@ -187,6 +211,7 @@ export function QuizModalContent({
   // Pantalla de resumen final
   if (allAnswered) {
     const passed = correctCount / total >= PASS_THRESHOLD;
+    const xpEarned = getQuizXpForCorrectCount(correctCount);
 
     return (
       <ScrollView
@@ -252,6 +277,27 @@ export function QuizModalContent({
           >
             {correctCount}/{total} ({Math.round((correctCount / total) * 100)}%)
           </Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginTop: 8,
+              paddingVertical: 6,
+              paddingHorizontal: 12,
+              borderRadius: 12,
+              alignSelf: 'center',
+              backgroundColor: `${palette.positive ?? '#16A34A'}18`,
+            }}
+          >
+            <Text
+              style={[
+                Hierarchy.bodySmallSemibold,
+                { color: palette.positive ?? '#16A34A' },
+              ]}
+            >
+              +{xpEarned} XP
+            </Text>
+          </View>
         </View>
 
         <View

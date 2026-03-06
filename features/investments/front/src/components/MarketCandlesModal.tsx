@@ -9,6 +9,7 @@ import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
 import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
+import { useAwardExperience } from '@/features/profile/front/src/hooks/useAwardExperience';
 import { useCurrentQuotePrice } from '../hooks/useCurrentQuotePrice';
 import { useMarketCandles } from '../hooks/useMarketCandles';
 import { useMarketOverview } from '../hooks/useMarketOverview';
@@ -57,6 +58,8 @@ export function MarketCandlesModal({
   const [comprarOpen, setComprarOpen] = useState(false);
   const [purchaseSuccessOpen, setPurchaseSuccessOpen] = useState(false);
   const [saleSuccessOpen, setSaleSuccessOpen] = useState(false);
+  const [purchaseXpAwarded, setPurchaseXpAwarded] = useState<number | null>(null);
+  const [saleXpAwarded, setSaleXpAwarded] = useState<number | null>(null);
 
   useEffect(() => {
     if (!visible) {
@@ -65,11 +68,14 @@ export function MarketCandlesModal({
       setComprarOpen(false);
       setPurchaseSuccessOpen(false);
       setSaleSuccessOpen(false);
+      setPurchaseXpAwarded(null);
+      setSaleXpAwarded(null);
     }
   }, [visible]);
 
   const symbol = asset?.symbol ?? '';
   const { session } = useAuthSession();
+  const { award } = useAwardExperience();
   const { data: portfolioData, refetch: refetchPortfolio } = usePortfolio(
     session?.token ?? null,
     visible,
@@ -605,6 +611,8 @@ export function MarketCandlesModal({
             price: lastClose ?? undefined,
           });
           if (result) {
+            const xp = await award('SELL_STOCK');
+            setSaleXpAwarded(xp);
             setVenderOpen(false);
             setSaleSuccessOpen(true);
           }
@@ -624,6 +632,8 @@ export function MarketCandlesModal({
             price: lastClose ?? undefined,
           });
           if (result) {
+            const xp = await award('BUY_STOCK');
+            setPurchaseXpAwarded(xp);
             setComprarOpen(false);
             setPurchaseSuccessOpen(true);
           }
@@ -635,6 +645,7 @@ export function MarketCandlesModal({
       <PurchaseSuccessModal
         visible={purchaseSuccessOpen}
         onClose={() => setPurchaseSuccessOpen(false)}
+        xpAwarded={purchaseXpAwarded}
         onGoToMain={() => {
           setPurchaseSuccessOpen(false);
           if (onGoToMainFromParent) {
@@ -648,6 +659,7 @@ export function MarketCandlesModal({
       <SaleSuccessModal
         visible={saleSuccessOpen}
         onClose={() => setSaleSuccessOpen(false)}
+        xpAwarded={saleXpAwarded}
         onGoToMain={() => {
           setSaleSuccessOpen(false);
           if (onGoToMainFromParent) {

@@ -14,6 +14,9 @@ export type ProfileDocument = mongoose.Document & {
   following?: number;
   followers?: number;
   cashBalance?: number;
+  experience?: number;
+  /** IDs de noticias ya reclamadas (1 XP por noticia y usuario, evita farm). */
+  claimedNewsIds?: string[];
 };
 
 const ProfileSchema = new Schema<ProfileDocument>(
@@ -31,6 +34,8 @@ const ProfileSchema = new Schema<ProfileDocument>(
     following: { type: Number, default: 0 },
     followers: { type: Number, default: 0 },
     cashBalance: { type: Number, default: 0 },
+    experience: { type: Number, default: 0 },
+    claimedNewsIds: { type: [String], default: [] },
   },
   { timestamps: true },
 );

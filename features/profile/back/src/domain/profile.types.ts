@@ -12,4 +12,6 @@ export interface Profile {
   followers?: number;
   /** Efectivo disponible (sincronizado desde la cartera de inversiones). */
   cashBalance?: number;
+  /** Experiencia acumulada (XP) por bonos: compra, venta, test, noticia. */
+  experience?: number;
 }

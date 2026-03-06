@@ -71,6 +71,8 @@ type NewsModalContentProps = {
   palette: ReturnType<typeof usePalette>;
   onBack: () => void;
   onQuiz: () => void;
+  /** XP otorgado al abrir la noticia (ej. 25). Si existe, se muestra "+N XP". */
+  xpAwarded?: number | null;
 };
 
 function NewsModalContent({
@@ -78,6 +80,7 @@ function NewsModalContent({
   palette,
   onBack,
   onQuiz,
+  xpAwarded,
 }: NewsModalContentProps) {
   const modalStyles = useMemo(() => createNewsModalStyles(palette), [palette]);
   const content = selectedNews.content ?? '';
@@ -170,6 +173,26 @@ function NewsModalContent({
               {nivel}
             </Text>
           </View>
+          {xpAwarded != null && xpAwarded > 0 ? (
+            <View
+              style={[
+                modalStyles.newsStatCard,
+                {
+                  backgroundColor: `${palette.positive ?? '#16A34A'}18`,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  Hierarchy.captionSmall,
+                  modalStyles.newsStatCardText,
+                  { color: palette.positive ?? '#16A34A', fontWeight: '600' },
+                ]}
+              >
+                +{xpAwarded} XP
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         {/* Área de lectura: card redondeada al estilo perfil, con divisores */}
@@ -283,6 +306,7 @@ export function InicioScreen() {
   const {
     news,
     selectedNews,
+    newsXpAwarded,
     isNewsModalOpen,
     isQuizModalOpen,
     quiz,
@@ -296,6 +320,7 @@ export function InicioScreen() {
     closeNewsModal,
     openQuiz,
     closeQuizModal,
+    onQuizComplete,
   } = useInicioViewModel();
 
   const [quizContentHeight, setQuizContentHeight] = useState(0);
@@ -421,6 +446,7 @@ export function InicioScreen() {
             palette={palette}
             onBack={closeNewsModal}
             onQuiz={handleOpenQuizFromNews}
+            xpAwarded={newsXpAwarded}
           />
         ) : null}
       </CardModal>
@@ -436,6 +462,7 @@ export function InicioScreen() {
           quiz={quiz}
           answers={quizAnswers}
           onAnswer={onQuizAnswer}
+          onQuizComplete={onQuizComplete}
           loading={loadingQuiz}
           error={error}
           onClose={closeQuizModal}

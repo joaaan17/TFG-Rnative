@@ -11,6 +11,8 @@ export type PurchaseSuccessModalProps = {
   onClose: () => void;
   /** Al pulsar "Ir a Inversiones": cerrar este modal y ejecutar (p. ej. refetch + cerrar modal padre). */
   onGoToMain: () => void;
+  /** XP otorgado por la compra (ej. 50). Si existe, se muestra "+N XP". */
+  xpAwarded?: number | null;
 };
 
 /**
@@ -21,6 +23,7 @@ export function PurchaseSuccessModal({
   visible,
   onClose,
   onGoToMain,
+  xpAwarded,
 }: PurchaseSuccessModalProps) {
   const palette = usePalette();
 
@@ -67,6 +70,29 @@ export function PurchaseSuccessModal({
         >
           ¡Compra realizada!
         </Text>
+        {xpAwarded != null && xpAwarded > 0 ? (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              marginBottom: 12,
+              paddingVertical: 6,
+              paddingHorizontal: 12,
+              borderRadius: 12,
+              backgroundColor: `${palette.positive ?? '#16A34A'}18`,
+            }}
+          >
+            <Text
+              style={[
+                Hierarchy.bodySmallSemibold,
+                { color: palette.positive ?? '#16A34A' },
+              ]}
+            >
+              +{xpAwarded} XP
+            </Text>
+          </View>
+        ) : null}
         <Text
           variant="muted"
           style={[

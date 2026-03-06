@@ -2,6 +2,7 @@ import React from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useWindowDimensions } from 'react-native';
 import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
+import { useAwardExperience } from '@/features/profile/front/src/hooks/useAwardExperience';
 import {
   loadHeadlines,
   loadEducationalNews,
@@ -15,6 +16,7 @@ export type UseInicioViewModelResult = {
   typewriterKey: number;
   news: NewsPreview[];
   selectedNews: EducationalNews | null;
+  newsXpAwarded: number | null;
   isNewsModalOpen: boolean;
   isQuizModalOpen: boolean;
   quiz: NewsQuiz | null;
@@ -28,17 +30,20 @@ export type UseInicioViewModelResult = {
   closeNewsModal: (opts?: { preserveQuiz?: boolean }) => void;
   openQuiz: () => Promise<void>;
   closeQuizModal: () => void;
+  onQuizComplete: (correctCount: number) => void;
   refreshHeadlines: () => Promise<void>;
 };
 
 export function useInicioViewModel(): UseInicioViewModelResult {
   const { session } = useAuthSession();
   const { height: windowHeight } = useWindowDimensions();
+  const { award } = useAwardExperience();
 
   const [typewriterKey, setTypewriterKey] = React.useState(0);
   const [news, setNews] = React.useState<NewsPreview[]>([]);
   const [selectedNews, setSelectedNews] =
     React.useState<EducationalNews | null>(null);
+  const [newsXpAwarded, setNewsXpAwarded] = React.useState<number | null>(null);
   const [isNewsModalOpen, setIsNewsModalOpen] = React.useState(false);
   const [isQuizModalOpen, setIsQuizModalOpen] = React.useState(false);
   const [quiz, setQuiz] = React.useState<NewsQuiz | null>(null);
@@ -113,6 +118,8 @@ export function useInicioViewModel(): UseInicioViewModelResult {
         const educational = await loadEducationalNews(item.id, token);
         console.log('[iaNoticias FRONT] ViewModel: openNews OK');
         setSelectedNews(educational);
+        const xp = await award('VIEW_NEWS', { newsId: item.id });
+        setNewsXpAwarded(xp);
       } catch (e) {
         const msg =
           e instanceof Error ? e.message : 'Error al procesar la noticia';
@@ -122,13 +129,14 @@ export function useInicioViewModel(): UseInicioViewModelResult {
         setLoadingNews(false);
       }
     },
-    [token],
+    [token, award],
   );
 
   const closeNewsModal = React.useCallback(
     (opts?: { preserveQuiz?: boolean }) => {
       setIsNewsModalOpen(false);
       setSelectedNews(null);
+      setNewsXpAwarded(null);
       if (!opts?.preserveQuiz) {
         setQuiz(null);
         setQuizAnswers({});
@@ -174,6 +182,13 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     currentQuizNewsIdRef.current = null;
   }, []);
 
+  const onQuizComplete = React.useCallback(
+    (correctCount: number) => {
+      award('COMPLETE_QUIZ', { correctCount: String(correctCount) });
+    },
+    [award],
+  );
+
   useFocusEffect(
     React.useCallback(() => {
       setTypewriterKey((k) => k + 1);
@@ -200,6 +215,7 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     typewriterKey,
     news,
     selectedNews,
+    newsXpAwarded,
     isNewsModalOpen,
     isQuizModalOpen,
     quiz,
@@ -213,6 +229,7 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     closeNewsModal,
     openQuiz,
     closeQuizModal,
+    onQuizComplete,
     refreshHeadlines: fetchHeadlines,
   };
 }

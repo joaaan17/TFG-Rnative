@@ -43,6 +43,12 @@ function formatPatrimonio(value: number): string {
   return value.toLocaleString('es-ES');
 }
 
+function formatExperience(xp: number): string {
+  if (xp >= 1_000_000) return `${(xp / 1_000_000).toFixed(1)}M`;
+  if (xp >= 1_000) return `${(xp / 1_000).toFixed(1)}K`;
+  return xp.toLocaleString('es-ES');
+}
+
 export function ProfileScreen() {
   const palette = usePalette();
   const styles = React.useMemo(() => createProfileStyles(palette), [palette]);
@@ -314,7 +320,7 @@ export function ProfileScreen() {
                       <ExpIcon width={16} height={16} />
                     </View>
                     <Text variant="h4" style={styles.summaryValue}>
-                      {formatPatrimonio(profile?.patrimonio ?? 0)}
+                      {formatExperience(profile?.experience ?? 0)} XP
                     </Text>
                   </View>
                 </View>

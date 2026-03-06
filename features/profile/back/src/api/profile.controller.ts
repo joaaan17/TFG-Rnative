@@ -1,8 +1,10 @@
 import type { Request, Response } from 'express';
 import {
+  awardExperienceUseCase,
   getProfileUseCase,
   searchProfilesUseCase,
 } from '../config/profile.wiring';
+import type { BonusType } from '../domain/experience.types';
 
 export const searchProfilesController = async (req: Request, res: Response) => {
   try {
@@ -26,6 +28,64 @@ export const searchProfilesController = async (req: Request, res: Response) => {
     const message =
       err instanceof Error ? err.message : 'Error al buscar perfiles';
     res.status(500).json({ message });
+  }
+};
+
+export const awardExperienceController = async (
+  req: Request<
+    Record<string, never>,
+    unknown,
+    { bonusType?: BonusType; metadata?: Record<string, string> }
+  >,
+  res: Response,
+) => {
+  try {
+    const userId = req.auth?.userId;
+    if (!userId) {
+      res.status(401).json({ message: 'No autenticado' });
+      return;
+    }
+    const bonusType = req.body?.bonusType;
+    const metadata = req.body?.metadata;
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[profile] awardExperience body:', {
+        bonusType,
+        hasMetadata: !!metadata,
+        metadataKeys: metadata ? Object.keys(metadata) : [],
+      });
+    }
+
+    if (
+      !bonusType ||
+      !['BUY_STOCK', 'SELL_STOCK', 'COMPLETE_QUIZ', 'VIEW_NEWS', 'ASK_CONSULTORIO'].includes(
+        bonusType,
+      )
+    ) {
+      console.warn(
+        '[profile] awardExperience 400: bonusType inválido',
+        { bonusType, hasMetadata: !!metadata },
+      );
+      res.status(400).json({
+        message:
+          'bonusType requerido: BUY_STOCK | SELL_STOCK | COMPLETE_QUIZ | VIEW_NEWS | ASK_CONSULTORIO',
+      });
+      return;
+    }
+    const result = await awardExperienceUseCase.execute(
+      userId,
+      bonusType,
+      metadata,
+    );
+    res.status(200).json(result);
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : 'Error al otorgar experiencia';
+    console.error('[profile] awardExperience error:', message);
+    const isValidation =
+      typeof message === 'string' &&
+      (message.includes('requiere') || message.includes('userId'));
+    res.status(isValidation ? 400 : 500).json({ message });
   }
 };
 

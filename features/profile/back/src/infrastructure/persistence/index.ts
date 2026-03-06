@@ -1,4 +1,7 @@
-import type { ProfileRepository } from '../../domain/ports';
+import type {
+  ProfileRepository,
+  ProfileSearchResult,
+} from '../../domain/ports';
 import type { Profile } from '../../domain/profile.types';
 
 export class InMemoryProfileRepository implements ProfileRepository {
@@ -21,6 +24,47 @@ export class InMemoryProfileRepository implements ProfileRepository {
         cashBalance,
       });
     }
+  }
+
+  async addExperience(userId: string, amount: number): Promise<number> {
+    const profile = InMemoryProfileRepository.profilesById.get(userId);
+    if (!profile) return 0;
+    const exp = (profile.experience ?? 0) + amount;
+    InMemoryProfileRepository.profilesById.set(userId, {
+      ...profile,
+      experience: exp,
+    });
+    return exp;
+  }
+
+  async addExperienceIfNewsNotClaimed(
+    userId: string,
+    newsId: string,
+    amount: number,
+  ): Promise<{ awarded: boolean; newTotal: number }> {
+    const profile = InMemoryProfileRepository.profilesById.get(userId);
+    if (!profile) return { awarded: false, newTotal: 0 };
+    const claimed = (profile as Profile & { claimedNewsIds?: string[] })
+      .claimedNewsIds ?? [];
+    if (claimed.includes(newsId)) {
+      return { awarded: false, newTotal: profile.experience ?? 0 };
+    }
+    const newTotal = (profile.experience ?? 0) + amount;
+    InMemoryProfileRepository.profilesById.set(userId, {
+      ...profile,
+      experience: newTotal,
+      claimedNewsIds: [...claimed, newsId],
+    } as Profile);
+    return { awarded: true, newTotal };
+  }
+
+  async searchProfiles(
+    _q: string,
+    _page: number,
+    _limit: number,
+    _excludeUserId?: string,
+  ): Promise<ProfileSearchResult[]> {
+    return [];
   }
 
   async deleteById(id: string): Promise<void> {

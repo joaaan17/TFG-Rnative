@@ -23,6 +23,52 @@ export class MongoProfileRepository implements ProfileRepository {
     }).exec();
   }
 
+  async addExperience(userId: string, amount: number): Promise<number> {
+    const doc = await ProfileModel.findByIdAndUpdate(
+      userId,
+      { $inc: { experience: amount } },
+      { new: true },
+    )
+      .select('experience')
+      .lean()
+      .exec();
+    return doc?.experience ?? 0;
+  }
+
+  async addExperienceIfNewsNotClaimed(
+    userId: string,
+    newsId: string,
+    amount: number,
+  ): Promise<{ awarded: boolean; newTotal: number }> {
+    const trimmed = (newsId || '').trim();
+    if (!trimmed) {
+      const doc = await ProfileModel.findById(userId)
+        .select('experience')
+        .lean()
+        .exec();
+      return { awarded: false, newTotal: doc?.experience ?? 0 };
+    }
+    const updated = await ProfileModel.findOneAndUpdate(
+      { _id: userId, claimedNewsIds: { $nin: [trimmed] } },
+      {
+        $addToSet: { claimedNewsIds: trimmed },
+        $inc: { experience: amount },
+      },
+      { new: true },
+    )
+      .select('experience')
+      .lean()
+      .exec();
+    if (updated) {
+      return { awarded: true, newTotal: updated.experience ?? 0 };
+    }
+    const existing = await ProfileModel.findById(userId)
+      .select('experience')
+      .lean()
+      .exec();
+    return { awarded: false, newTotal: existing?.experience ?? 0 };
+  }
+
   async deleteById(id: string): Promise<void> {
     await ProfileModel.findByIdAndDelete(id).exec();
   }
@@ -76,6 +122,7 @@ export class MongoProfileRepository implements ProfileRepository {
           following: profile.following ?? 0,
           followers: profile.followers ?? 0,
           cashBalance: profile.cashBalance ?? 0,
+          experience: profile.experience ?? 0,
         },
       },
       { upsert: true, new: true },
@@ -96,6 +143,7 @@ export class MongoProfileRepository implements ProfileRepository {
     following?: number;
     followers?: number;
     cashBalance?: number;
+    experience?: number;
   }): Profile {
     return {
       id: String(doc._id),
@@ -110,6 +158,7 @@ export class MongoProfileRepository implements ProfileRepository {
       following: doc.following,
       followers: doc.followers,
       cashBalance: doc.cashBalance,
+      experience: doc.experience,
     };
   }
 }

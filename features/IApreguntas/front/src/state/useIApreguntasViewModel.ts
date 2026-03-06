@@ -1,6 +1,7 @@
 import React from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
+import { useAwardExperience } from '@/features/profile/front/src/hooks/useAwardExperience';
 import { iapreguntasService } from '../services/iapreguntasService';
 import {
   IA_PREGUNTAS_WELCOME_MESSAGES,
@@ -24,6 +25,7 @@ function generateId() {
 
 export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
   const { session } = useAuthSession();
+  const { award } = useAwardExperience();
   const [typewriterKey, setTypewriterKey] = React.useState(0);
   const [questionText, setQuestionText] = React.useState('');
   const [welcomeText, setWelcomeText] = React.useState<string>(
@@ -72,12 +74,13 @@ export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
         content: res.answer,
       };
       setMessages((prev) => [...prev, assistantMsg]);
+      award('ASK_CONSULTORIO');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error al consultar la IA');
     } finally {
       setLoading(false);
     }
-  }, [questionText, session?.token]);
+  }, [questionText, session?.token, award]);
 
   return {
     typewriterKey,
