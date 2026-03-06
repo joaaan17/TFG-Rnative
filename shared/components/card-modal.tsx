@@ -446,8 +446,8 @@ const styles = StyleSheet.create({
   },
   /** Barra de arrastre en flujo (sin overlay): el header queda debajo y recibe toques correctamente. */
   dragHandleRow: {
-    paddingTop: 10,
-    paddingBottom: 6,
+    paddingTop: 6,
+    paddingBottom: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },

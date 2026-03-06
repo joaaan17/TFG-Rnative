@@ -51,6 +51,12 @@ export function createIApreguntasStyles(palette: Palette) {
     chatContent: {
       paddingBottom: Spacing.md,
     },
+    xpToastWrap: {
+      paddingHorizontal: 20,
+      paddingVertical: 6,
+      alignItems: 'center',
+      minHeight: 36,
+    },
     inputArea: {
       paddingHorizontal: 20,
       paddingBottom: 20,

@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { getNivelFromExperience } from '../../../../../../shared/constants/xp-level';
+import { getNivelFromExperience } from '../../../domain/level.utils';
 import type {
   ProfileRepository,
   ProfileSearchResult,
@@ -27,8 +27,11 @@ export class MongoProfileRepository implements ProfileRepository {
   async addExperience(userId: string, amount: number): Promise<number> {
     const doc = await ProfileModel.findByIdAndUpdate(
       userId,
-      { $inc: { experience: amount } },
-      { new: true },
+      {
+        $inc: { experience: amount },
+        $setOnInsert: { name: 'Usuario' },
+      },
+      { new: true, upsert: true },
     )
       .select('experience')
       .lean()
@@ -54,8 +57,9 @@ export class MongoProfileRepository implements ProfileRepository {
       {
         $addToSet: { claimedNewsIds: trimmed },
         $inc: { experience: amount },
+        $setOnInsert: { name: 'Usuario', claimedNewsIds: [] },
       },
-      { new: true },
+      { new: true, upsert: true },
     )
       .select('experience')
       .lean()

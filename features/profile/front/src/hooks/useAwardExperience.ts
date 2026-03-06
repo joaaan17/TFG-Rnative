@@ -1,5 +1,10 @@
 import { useCallback } from 'react';
 import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
+import { getNivelFromExperience } from '@/shared/constants/xp-level';
+import {
+  emitLevelUp,
+  emitProfileXpAwarded,
+} from '../events/profile-events';
 import { profileClient, type BonusType } from '../api/profileClient';
 
 /**
@@ -17,11 +22,21 @@ export function useAwardExperience() {
       const token = session?.token;
       if (!token) return null;
       try {
-        const { experienceAwarded } = await profileClient.awardExperience(
-          token,
-          bonusType,
-          metadata,
-        );
+        const { experienceAwarded, newTotal } =
+          await profileClient.awardExperience(
+            token,
+            bonusType,
+            metadata,
+          );
+        if (experienceAwarded != null && experienceAwarded > 0) {
+          emitProfileXpAwarded();
+          const previousTotal = newTotal - experienceAwarded;
+          const previousLevel = getNivelFromExperience(previousTotal);
+          const newLevel = getNivelFromExperience(newTotal);
+          if (newLevel > previousLevel) {
+            emitLevelUp(newLevel, newTotal);
+          }
+        }
         return experienceAwarded;
       } catch (err) {
         if (__DEV__) {

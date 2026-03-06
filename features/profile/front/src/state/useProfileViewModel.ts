@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
+import { onProfileXpAwarded } from '../events/profile-events';
 import { authService } from '@/features/auth/front/src/services/authService';
 import { relationshipsService } from '@/features/relationships/front/src/services/relationshipsService';
 import { profileService } from '../services/profileService';
@@ -197,6 +198,11 @@ export function useProfileViewModel() {
       .then((data) => setProfile(data))
       .catch(() => {});
   }, [session?.user?.id]);
+
+  React.useEffect(() => {
+    const unsubscribe = onProfileXpAwarded(refetchProfile);
+    return unsubscribe;
+  }, [refetchProfile]);
 
   const handleAcceptRequest = React.useCallback(
     (fromUserId: string) => {

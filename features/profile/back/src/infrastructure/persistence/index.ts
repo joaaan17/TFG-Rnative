@@ -1,4 +1,4 @@
-import { getNivelFromExperience } from '../../../../../shared/constants/xp-level';
+import { getNivelFromExperience } from '../../domain/level.utils';
 import type {
   ProfileRepository,
   ProfileSearchResult,

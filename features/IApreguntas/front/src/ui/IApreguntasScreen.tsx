@@ -15,9 +15,10 @@ import { Hierarchy } from '@/design-system/typography';
 
 import { createIApreguntasStyles } from './IApreguntas.styles';
 import { useIApreguntasViewModel } from '../state/useIApreguntasViewModel';
-import { ConsultorioComposer } from '../components/ConsultorioComposer';
 import { ChatMessageBubble } from '../components/ChatMessageBubble';
+import { ConsultorioComposer } from '../components/ConsultorioComposer';
 import { LoadingMessagesOverlay } from '../components/LoadingMessagesOverlay';
+import { XpToast } from '../components/XpToast';
 
 /**
  * Pantalla tonta, limpia, sin inteligencia.
@@ -36,6 +37,7 @@ export function IApreguntasScreen() {
     messages,
     error,
     ask,
+    lastAwardedXp,
   } = useIApreguntasViewModel();
 
   useEffect(() => {
@@ -105,6 +107,10 @@ export function IApreguntasScreen() {
       {error ? (
         <Text style={[Hierarchy.bodySmall, styles.errorText]}>{error}</Text>
       ) : null}
+
+      <View style={styles.xpToastWrap}>
+        <XpToast amount={lastAwardedXp} />
+      </View>
 
       <View style={styles.inputArea}>
         <View style={styles.inputRow}>

@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePathname, useRouter } from 'expo-router';
 
+import { LevelUpModalWrapper } from '@/features/profile/front/src/components/LevelUpModalWrapper';
 import { ThemedView } from '@/shared/components/themed-view';
 import AppMenubarComponent from '@/shared/components/app-menubar';
 import { usePalette } from '@/shared/hooks/use-palette';
@@ -21,20 +22,21 @@ export function AppShell({ children }: AppShellProps) {
   const [menubarHeight, setMenubarHeight] = React.useState(0);
 
   return (
-    <ThemedView style={appShellStyles.container}>
-      <View
-        style={[
-          appShellStyles.content,
-          {
-            paddingTop: insets.top,
-            paddingBottom: menubarHeight,
-          },
-        ]}
-      >
-        {children}
-      </View>
+    <LevelUpModalWrapper>
+      <ThemedView style={appShellStyles.container}>
+        <View
+          style={[
+            appShellStyles.content,
+            {
+              paddingTop: insets.top,
+              paddingBottom: menubarHeight,
+            },
+          ]}
+        >
+          {children}
+        </View>
 
-      <View
+        <View
         style={[
           appShellStyles.menubar,
           getAppShellMenubarStyle(insets.bottom),
@@ -65,6 +67,7 @@ export function AppShell({ children }: AppShellProps) {
         />
       </View>
     </ThemedView>
+    </LevelUpModalWrapper>
   );
 }
 

@@ -21,7 +21,9 @@ import { createProfileStyles } from './Profile.styles';
 import { AddFriendsModal } from '../components/add-friends-modal';
 import { FriendProfileModal } from '../components/friend-profile-modal';
 import { FriendsListModal } from '../components/friends-list-modal';
+import { LogrosModal } from '../components/LogrosModal';
 import { PendingRequestsModal } from '../components/pending-requests-modal';
+import { AchievementPreview } from '../components/AchievementPreview';
 import { ProfileAvatar } from '../components/profileAvatar';
 import { SettingsModal } from '../components/settings-modal';
 import { useProfileViewModel } from '../state/useProfileViewModel';
@@ -101,6 +103,7 @@ export function ProfileScreen() {
     refetchProfile,
   } = useProfileViewModel();
   const [typewriterKey, setTypewriterKey] = React.useState(0);
+  const [showLogrosModal, setShowLogrosModal] = React.useState(false);
   const { session } = useAuthSession();
   const { data: portfolioData, refetch: refetchPortfolio } = usePortfolio(
     session?.token ?? null,
@@ -330,41 +333,23 @@ export function ProfileScreen() {
           </View>
         </View>
 
-        <View style={styles.summaryWrapper}>
+        <Pressable
+          style={styles.summaryWrapper}
+          onPress={() => setShowLogrosModal(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Ver logros"
+        >
           <View style={styles.sectionTitleRow}>
             <View style={styles.sectionTitleAccent} />
             <Text variant="muted" style={styles.summaryTitle}>
-              LOGROS MENSUALES
+              LOGROS
             </Text>
           </View>
 
           <View style={styles.sectionCard}>
-            <View style={styles.logrosRow}>
-              <ProfileAvatar size={74} outerRingWidth={2} showInner={false} />
-              <ProfileAvatar size={74} outerRingWidth={2} showInner={false} />
-              <ProfileAvatar size={74} outerRingWidth={2} showInner={false} />
-              <ProfileAvatar size={74} outerRingWidth={2} showInner={false} />
-            </View>
+            <AchievementPreview experience={profile?.experience ?? 0} />
           </View>
-        </View>
-
-        <View style={styles.summaryWrapper}>
-          <View style={styles.sectionTitleRow}>
-            <View style={styles.sectionTitleAccent} />
-            <Text variant="muted" style={styles.summaryTitle}>
-              LOGROS TOTALES
-            </Text>
-          </View>
-
-          <View style={styles.sectionCard}>
-            <View style={styles.logrosRow}>
-              <ProfileAvatar size={74} outerRingWidth={2} showInner={false} />
-              <ProfileAvatar size={74} outerRingWidth={2} showInner={false} />
-              <ProfileAvatar size={74} outerRingWidth={2} showInner={false} />
-              <ProfileAvatar size={74} outerRingWidth={2} showInner={false} />
-            </View>
-          </View>
-        </View>
+        </Pressable>
       </ScrollView>
 
       <FriendsListModal
@@ -405,6 +390,12 @@ export function ProfileScreen() {
         searchError={searchError}
         requestedIds={requestedIds}
         onRequestFriend={handleRequestFriend}
+      />
+
+      <LogrosModal
+        open={showLogrosModal}
+        onClose={() => setShowLogrosModal(false)}
+        experience={profile?.experience ?? 0}
       />
 
       <SettingsModal

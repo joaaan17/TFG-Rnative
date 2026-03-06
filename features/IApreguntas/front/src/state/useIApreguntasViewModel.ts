@@ -17,6 +17,8 @@ export type UseIApreguntasViewModelResult = {
   messages: ChatMessage[];
   error: string | null;
   ask: () => Promise<void>;
+  /** XP otorgado en la última consulta (para mostrar notificación). Se limpia tras unos segundos. */
+  lastAwardedXp: number | null;
 };
 
 function generateId() {
@@ -34,6 +36,7 @@ export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
   const [loading, setLoading] = React.useState(false);
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [error, setError] = React.useState<string | null>(null);
+  const [lastAwardedXp, setLastAwardedXp] = React.useState<number | null>(null);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -74,13 +77,23 @@ export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
         content: res.answer,
       };
       setMessages((prev) => [...prev, assistantMsg]);
-      award('ASK_CONSULTORIO');
+      const xp = await award('ASK_CONSULTORIO');
+      if (xp != null && xp > 0) {
+        setLastAwardedXp(xp);
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error al consultar la IA');
     } finally {
       setLoading(false);
     }
   }, [questionText, session?.token, award]);
+
+  // Limpiar lastAwardedXp tras 3 segundos para ocultar la notificación
+  React.useEffect(() => {
+    if (lastAwardedXp == null) return;
+    const t = setTimeout(() => setLastAwardedXp(null), 3000);
+    return () => clearTimeout(t);
+  }, [lastAwardedXp]);
 
   return {
     typewriterKey,
@@ -91,5 +104,6 @@ export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
     messages,
     error,
     ask,
+    lastAwardedXp,
   };
 }

@@ -51,7 +51,7 @@ function HeaderButton({
   );
 }
 
-const HEADER_TOP_PADDING = 20;
+const HEADER_TOP_PADDING = 8;
 const ICON_COLUMN_WIDTH = 42;
 
 export type ModalHeaderProps = {
