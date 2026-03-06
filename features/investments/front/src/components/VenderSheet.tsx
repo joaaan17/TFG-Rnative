@@ -123,8 +123,6 @@ export function VenderSheet({
     }
   }, [canSell, symbol, sharesNum, onSell, onClose]);
 
-  if (!visible) return null;
-
   return (
     <CardModal
       open={visible}

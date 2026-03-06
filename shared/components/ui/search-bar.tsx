@@ -10,9 +10,10 @@ import { Search } from 'lucide-react-native';
 import { usePalette } from '@/shared/hooks/use-palette';
 import { Hierarchy } from '@/design-system/typography';
 
-/** Misma sombra sutil que el Input del Consultorio (shadow-sm) */
+/** Misma sombra sutil que el Input del Consultorio (shadow-sm). En web usar boxShadow. */
 const inputLikeShadow = Platform.select<ViewStyle>({
   android: { elevation: 2 },
+  web: { boxShadow: '0 1px 2px rgba(11, 18, 32, 0.05)' },
   default: {
     shadowColor: '#0B0A09',
     shadowOpacity: 0.05,
@@ -45,7 +46,7 @@ export function SearchBar({
   placeholder = 'Buscar...',
   autoFocus,
   style,
-  variant = 'default',
+  variant = 'input',
   inputProps,
 }: SearchBarProps) {
   const palette = usePalette();

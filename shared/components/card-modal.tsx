@@ -379,28 +379,23 @@ export function CardModal({
                 },
               ]}
             >
+              {/* Barra de arrastre en flujo, sin overlay: header queda libre para toques */}
               <View
                 style={[
-                  styles.dragHandleContainer,
+                  styles.dragHandleRow,
                   { pointerEvents: closeOnBackdropPress ? 'auto' : 'none' },
                 ]}
                 {...(closeOnBackdropPress ? panResponder.panHandlers : {})}
               >
-                <View style={[styles.dragHandle, { pointerEvents: 'none' }]} />
+                <View style={styles.dragHandle} />
               </View>
               <View
-                style={
+                style={[
+                  styles.contentWrap,
                   scrollable
-                    ? {
-                        flex: 1,
-                        minHeight: 0,
-                        paddingBottom,
-                      }
-                    : {
-                        maxHeight: maxHeight - 120,
-                        paddingBottom,
-                      }
-                }
+                    ? { flex: 1, minHeight: 0, paddingBottom }
+                    : { maxHeight: maxHeight - 120, paddingBottom },
+                ]}
               >
                 {children}
               </View>
@@ -449,18 +444,12 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 0,
     overflow: 'hidden',
   },
-  dragHandleContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    width: '100%',
-    minHeight: 44,
+  /** Barra de arrastre en flujo (sin overlay): el header queda debajo y recibe toques correctamente. */
+  dragHandleRow: {
     paddingTop: 10,
+    paddingBottom: 6,
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    zIndex: 10,
-    elevation: 10,
+    justifyContent: 'center',
   },
   dragHandle: {
     width: 64,
@@ -469,6 +458,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(128,128,128,0.35)',
     opacity: 0.95,
   },
+  contentWrap: {},
 });
 
 export default CardModal;

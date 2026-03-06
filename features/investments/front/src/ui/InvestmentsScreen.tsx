@@ -215,6 +215,7 @@ export function InvestmentsScreen() {
           value={tab}
           onValueChange={setTab}
           variant="minimal"
+          animatedPill
         />
       </View>
 

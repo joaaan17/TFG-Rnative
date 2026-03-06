@@ -1,10 +1,55 @@
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import { Animated, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, X } from 'lucide-react-native';
 import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
+
+/** Botón del header con animación de escala al pulsar para feedback táctil ágil. */
+function HeaderButton({
+  onPress,
+  accessibilityLabel,
+  children,
+}: {
+  onPress: () => void;
+  accessibilityLabel: string;
+  children: React.ReactNode;
+}) {
+  const scale = React.useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scale, {
+      toValue: 0.9,
+      useNativeDriver: true,
+      speed: 80,
+      bounciness: 4,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 100,
+      bounciness: 6,
+    }).start();
+  };
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={{ padding: 8 }}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+    >
+      <Animated.View style={{ transform: [{ scale }] }}>{children}</Animated.View>
+    </Pressable>
+  );
+}
 
 const HEADER_TOP_PADDING = 20;
 const ICON_COLUMN_WIDTH = 42;
@@ -54,17 +99,12 @@ export function ModalHeader({
     >
       <View style={{ minWidth: ICON_COLUMN_WIDTH, alignItems: 'flex-start' }}>
         {onBack != null ? (
-          <Pressable
+          <HeaderButton
             onPress={onBack}
-            style={({ pressed }) => ({
-              padding: 8,
-              opacity: pressed ? 0.7 : 1,
-            })}
-            accessibilityRole="button"
             accessibilityLabel={backAccessibilityLabel}
           >
             <ChevronLeft size={26} color={palette.text} strokeWidth={2} />
-          </Pressable>
+          </HeaderButton>
         ) : null}
       </View>
       <View
@@ -103,17 +143,12 @@ export function ModalHeader({
       </View>
       <View style={{ minWidth: ICON_COLUMN_WIDTH, alignItems: 'flex-end' }}>
         {onClose != null ? (
-          <Pressable
+          <HeaderButton
             onPress={onClose}
-            style={({ pressed }) => ({
-              padding: 8,
-              opacity: pressed ? 0.7 : 1,
-            })}
-            accessibilityRole="button"
             accessibilityLabel={closeAccessibilityLabel}
           >
             <X size={24} color={palette.text} />
-          </Pressable>
+          </HeaderButton>
         ) : null}
       </View>
     </View>

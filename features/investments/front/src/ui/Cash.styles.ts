@@ -7,7 +7,7 @@ export function createCashStyles(palette: Palette) {
   return StyleSheet.create({
     header: {
       paddingTop: 0,
-      paddingBottom: Spacing.xl,
+      paddingBottom: Spacing.md,
       paddingHorizontal: 0,
     },
     headerRow: {

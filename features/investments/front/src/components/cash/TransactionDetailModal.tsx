@@ -165,7 +165,9 @@ export function TransactionDetailModal({
         <ModalHeader
           title={getTypeTitle(transaction)}
           subtitle="Completada"
+          onBack={onClose}
           onClose={onClose}
+          backAccessibilityLabel="Volver"
           closeAccessibilityLabel="Cerrar"
         />
         <View

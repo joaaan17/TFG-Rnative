@@ -29,8 +29,6 @@ export function SaleSuccessModal({
     onGoToMain();
   };
 
-  if (!visible) return null;
-
   return (
     <CardModal
       open={visible}

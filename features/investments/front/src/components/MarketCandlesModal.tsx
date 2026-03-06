@@ -128,8 +128,6 @@ export function MarketCandlesModal({
           : (quote?.high ?? quote?.low ?? undefined);
   const positionAmount = (holdingForSymbol?.shares ?? 0) * (lastClose ?? 0);
 
-  if (!visible) return null;
-
   return (
     <>
       <CardModal

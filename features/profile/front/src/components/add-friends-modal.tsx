@@ -117,7 +117,7 @@ export function AddFriendsModal({
         <SearchBar
           value={searchValue}
           onChangeText={onSearchChange}
-          placeholder="Buscar por nombre o usuario..."
+          placeholder="ej. nombre, usuario"
           autoFocus={open}
         />
         {showResults ? (

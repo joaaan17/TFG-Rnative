@@ -115,8 +115,6 @@ export function InvertirSheet({
     }
   }, [canBuy, symbol, sharesNum, onBuy, onClose]);
 
-  if (!visible) return null;
-
   return (
     <CardModal
       open={visible}

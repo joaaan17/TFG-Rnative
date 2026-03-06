@@ -356,6 +356,7 @@ export function DashboardScreen() {
           </View>
           <Animated.View style={[styles.donutWrap, donutAnimatedStyle]}>
             <PortfolioDonutChart
+              key={activeChart}
               segments={donutSegments}
               size={220}
               strokeWidth={42}

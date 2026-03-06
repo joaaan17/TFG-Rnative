@@ -101,8 +101,7 @@ export function ContextCard({ card, styles: s }: ContextCardProps) {
       : s.contextCard;
     const hasProfitLoss =
       card.profitLossFormatted != null && card.profitLossFormatted !== '';
-    const isProfit =
-      hasProfitLoss && card.profitLossFormatted!.startsWith('+');
+    const isProfit = hasProfitLoss && card.profitLossFormatted!.startsWith('+');
     const resultColor = isProfit
       ? (palette.positive ?? ENTRY_GREEN)
       : (palette.destructive ?? ENTRY_RED);
@@ -120,7 +119,9 @@ export function ContextCard({ card, styles: s }: ContextCardProps) {
     ];
     const rowStyle = s.contextLastOpRow ?? { flexDirection: 'row' as const };
     const leftStyle = s.contextLastOpLeft ?? {};
-    const rightStyle = s.contextLastOpRight ?? { alignItems: 'flex-end' as const };
+    const rightStyle = s.contextLastOpRight ?? {
+      alignItems: 'flex-end' as const,
+    };
 
     return (
       <CardWithBlueBar style={lastOpStyle}>
@@ -139,10 +140,13 @@ export function ContextCard({ card, styles: s }: ContextCardProps) {
           <View style={rightStyle}>
             <Text style={detailStyle} numberOfLines={1}>
               {card.quantity} ·{' '}
-              <Text style={{ fontWeight: '600' }}>{card.priceFormatted}/acc</Text>
+              <Text style={{ fontWeight: '600' }}>
+                {card.priceFormatted}/acc
+              </Text>
             </Text>
             <Text style={detailStyle} numberOfLines={1}>
-              Total <Text style={{ fontWeight: '600' }}>{card.totalFormatted}</Text>
+              Total{' '}
+              <Text style={{ fontWeight: '600' }}>{card.totalFormatted}</Text>
             </Text>
             {card.avgBuyPriceFormatted != null && (
               <Text style={[detailStyle, { opacity: 0.9 }]} numberOfLines={1}>
