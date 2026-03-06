@@ -1,3 +1,4 @@
+import { getNivelFromExperience } from '../../../../../shared/constants/xp-level';
 import type {
   ProfileRepository,
   ProfileSearchResult,
@@ -8,7 +9,10 @@ export class InMemoryProfileRepository implements ProfileRepository {
   private static profilesById = new Map<string, Profile>();
 
   async findById(id: string): Promise<Profile | null> {
-    return InMemoryProfileRepository.profilesById.get(id) ?? null;
+    const profile = InMemoryProfileRepository.profilesById.get(id) ?? null;
+    if (!profile) return null;
+    const experience = profile.experience ?? 0;
+    return { ...profile, nivel: getNivelFromExperience(experience), experience };
   }
 
   async save(profile: Profile): Promise<Profile> {

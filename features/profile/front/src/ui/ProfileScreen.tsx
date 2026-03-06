@@ -16,6 +16,7 @@ import RachaIcon from '@/shared/icons/racha.svg';
 import SettingsIcon from '@/shared/icons/settings.svg';
 import { usePortfolio } from '@/features/investments/front/src/hooks/usePortfolio';
 
+import { getNivelFromExperience } from '@/shared/constants/xp-level';
 import { createProfileStyles } from './Profile.styles';
 import { AddFriendsModal } from '../components/add-friends-modal';
 import { FriendProfileModal } from '../components/friend-profile-modal';
@@ -298,7 +299,7 @@ export function ProfileScreen() {
                 </View>
                 <View style={styles.summaryItem}>
                   <Text variant="h4" style={styles.summaryValue}>
-                    {profile?.nivel ?? 1}
+                    {getNivelFromExperience(profile?.experience ?? 0)}
                   </Text>
                 </View>
               </View>

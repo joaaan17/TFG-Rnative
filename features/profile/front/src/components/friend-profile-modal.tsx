@@ -9,6 +9,7 @@ import { profileStyles } from '../ui/Profile.styles';
 import ExpIcon from '@/shared/icons/exp.svg';
 import LigaIcon from '@/shared/icons/liga.svg';
 import RachaIcon from '@/shared/icons/racha.svg';
+import { getNivelFromExperience } from '@/shared/constants/xp-level';
 import type { ProfileUser } from '../types/profile.types';
 
 export type FriendProfileModalProps = {
@@ -145,7 +146,7 @@ export function FriendProfileModal({
                 </View>
                 <View style={profileStyles.summaryItem}>
                   <Text variant="h4" style={profileStyles.summaryValue}>
-                    {profile.nivel ?? 1}
+                    {getNivelFromExperience(profile.experience ?? 0)}
                   </Text>
                 </View>
               </View>

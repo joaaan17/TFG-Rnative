@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { getNivelFromExperience } from '../../../../../../shared/constants/xp-level';
 import type {
   ProfileRepository,
   ProfileSearchResult,
@@ -145,6 +146,8 @@ export class MongoProfileRepository implements ProfileRepository {
     cashBalance?: number;
     experience?: number;
   }): Profile {
+    const experience = doc.experience ?? 0;
+    const nivel = getNivelFromExperience(experience);
     return {
       id: String(doc._id),
       name: doc.name,
@@ -152,13 +155,13 @@ export class MongoProfileRepository implements ProfileRepository {
       avatarUrl: doc.avatarUrl,
       joinedAt: doc.joinedAt,
       bf: doc.bf,
-      nivel: doc.nivel,
+      nivel,
       division: doc.division,
       patrimonio: doc.patrimonio,
       following: doc.following,
       followers: doc.followers,
       cashBalance: doc.cashBalance,
-      experience: doc.experience,
+      experience,
     };
   }
 }
