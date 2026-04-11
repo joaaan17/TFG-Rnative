@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { Minus, Plus } from 'lucide-react-native';
 import { CardModal } from '@/shared/components/card-modal';
 import { ModalHeader } from '@/shared/components/modal-header';
@@ -54,6 +53,9 @@ export function MarketCandlesModal({
   const palette = usePalette();
   const insets = useSafeAreaInsets();
   const [operarStep, setOperarStep] = useState<OperarStep>('chart');
+  const actionsOpacity = useRef(new Animated.Value(0)).current;
+  const comprarTranslateY = useRef(new Animated.Value(16)).current;
+  const venderTranslateY = useRef(new Animated.Value(16)).current;
   const [venderOpen, setVenderOpen] = useState(false);
   const [comprarOpen, setComprarOpen] = useState(false);
   const [purchaseSuccessOpen, setPurchaseSuccessOpen] = useState(false);
@@ -70,8 +72,47 @@ export function MarketCandlesModal({
       setSaleSuccessOpen(false);
       setPurchaseXpAwarded(null);
       setSaleXpAwarded(null);
+      actionsOpacity.setValue(0);
+      comprarTranslateY.setValue(16);
+      venderTranslateY.setValue(16);
     }
-  }, [visible]);
+  }, [visible, actionsOpacity, comprarTranslateY, venderTranslateY]);
+
+  useEffect(() => {
+    if (operarStep === 'actions') {
+      actionsOpacity.setValue(0);
+      comprarTranslateY.setValue(16);
+      venderTranslateY.setValue(16);
+      Animated.parallel([
+        Animated.timing(actionsOpacity, {
+          toValue: 1,
+          duration: 220,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease),
+        }),
+        Animated.sequence([
+          Animated.delay(80),
+          Animated.timing(comprarTranslateY, {
+            toValue: 0,
+            duration: 240,
+            useNativeDriver: true,
+            easing: Easing.out(Easing.ease),
+          }),
+        ]),
+        Animated.sequence([
+          Animated.delay(140),
+          Animated.timing(venderTranslateY, {
+            toValue: 0,
+            duration: 240,
+            useNativeDriver: true,
+            easing: Easing.out(Easing.ease),
+          }),
+        ]),
+      ]).start();
+    } else {
+      actionsOpacity.setValue(0);
+    }
+  }, [operarStep, actionsOpacity, comprarTranslateY, venderTranslateY]);
 
   const symbol = asset?.symbol ?? '';
   const { session } = useAuthSession();
@@ -169,6 +210,8 @@ export function MarketCandlesModal({
               }}
               showsVerticalScrollIndicator={true}
               keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
+              scrollEventThrottle={16}
             >
               {operarStep === 'chart' && (
                 <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
@@ -453,8 +496,7 @@ export function MarketCandlesModal({
                 gap: 12,
                 paddingHorizontal: 16,
                 paddingTop: 12,
-                paddingBottom: 16 + Math.max(insets.bottom, 0),
-                backgroundColor: 'transparent',
+                paddingBottom: Math.max(insets.bottom, 16),
                 borderTopWidth: 1,
                 borderTopColor:
                   (palette.surfaceBorder ?? palette.surfaceMuted) + '60',
@@ -462,96 +504,104 @@ export function MarketCandlesModal({
             >
               <Pressable
                 onPress={onOrdenes}
-                style={({ pressed }) => ({
-                  flex: 1,
-                  height: 48,
-                  borderRadius: 12,
-                  backgroundColor: palette.surfaceMuted ?? '#f0f0f0',
-                  borderWidth: 1,
-                  borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  opacity: pressed ? 0.85 : 1,
-                })}
                 accessibilityRole="button"
                 accessibilityLabel="Órdenes"
+                android_ripple={{ color: palette.surfaceBorder ?? 'rgba(0,0,0,0.1)', borderless: false }}
+                style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.85 : 1 })}
               >
-                <Text style={[Hierarchy.action, { color: palette.primary }]}>
-                  Órdenes
-                </Text>
+                <View
+                  style={{
+                    height: 48,
+                    borderRadius: 12,
+                    backgroundColor: palette.surfaceMuted ?? '#f0f0f0',
+                    borderWidth: 1,
+                    borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={[Hierarchy.action, { color: palette.primary }]}>
+                    Órdenes
+                  </Text>
+                </View>
               </Pressable>
               <Pressable
                 onPress={() => setOperarStep('actions')}
-                style={({ pressed }) => ({
-                  flex: 1,
-                  height: 48,
-                  borderRadius: 12,
-                  backgroundColor: palette.primary,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  opacity: pressed ? 0.85 : 1,
-                })}
                 accessibilityRole="button"
                 accessibilityLabel="Operar"
+                android_ripple={{ color: 'rgba(255,255,255,0.2)', borderless: false }}
+                style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.85 : 1 })}
               >
-                <Text
-                  style={[
-                    Hierarchy.action,
-                    { color: palette.primaryText ?? '#FFF', fontWeight: '600' },
-                  ]}
+                <View
+                  style={{
+                    height: 48,
+                    borderRadius: 12,
+                    backgroundColor: palette.primary,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
                 >
-                  Operar
-                </Text>
+                  <Text
+                    style={[
+                      Hierarchy.action,
+                      { color: palette.primaryText ?? '#FFF', fontWeight: '600' },
+                    ]}
+                  >
+                    Operar
+                  </Text>
+                </View>
               </Pressable>
             </View>
           )}
 
           {showActions && (
             <Animated.View
-              entering={FadeIn.duration(220)}
               style={{
                 flex: 1,
                 paddingHorizontal: 16,
                 paddingVertical: 20,
                 justifyContent: 'center',
+                opacity: actionsOpacity,
               }}
             >
               <Animated.View
-                entering={FadeInUp.delay(100).duration(260)}
-                style={{ marginTop: 24 }}
+                style={{ marginTop: 24, transform: [{ translateY: comprarTranslateY }] }}
               >
                 <Pressable
                   onPress={() => setComprarOpen(true)}
-                  style={({ pressed }) => ({
-                    width: '100%',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    height: 56,
-                    paddingHorizontal: 20,
-                    borderRadius: 14,
-                    backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
-                    borderWidth: 1,
-                    borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
-                    opacity: pressed ? 0.85 : 1,
-                  })}
                   accessibilityRole="button"
                   accessibilityLabel="Comprar"
+                  android_ripple={{ color: palette.surfaceBorder ?? 'rgba(0,0,0,0.08)', borderless: false }}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
                 >
-                  <Text
-                    style={[
-                      Hierarchy.action,
-                      { color: palette.text, fontWeight: '600' },
-                    ]}
+                  <View
+                    style={{
+                      width: '100%',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      height: 56,
+                      paddingHorizontal: 20,
+                      borderRadius: 14,
+                      backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
+                      borderWidth: 1,
+                      borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
+                    }}
                   >
-                    Comprar
-                  </Text>
-                  <Plus size={22} color={palette.text} strokeWidth={2.5} />
+                    <Text
+                      style={[
+                        Hierarchy.action,
+                        { color: palette.text, fontWeight: '600' },
+                      ]}
+                    >
+                      Comprar
+                    </Text>
+                    <Plus size={22} color={palette.text} strokeWidth={2.5} />
+                  </View>
                 </Pressable>
               </Animated.View>
               <Animated.View
-                entering={FadeInUp.delay(180).duration(260)}
-                style={{ marginTop: 12 }}
+                style={{ marginTop: 12, transform: [{ translateY: venderTranslateY }] }}
               >
                 <Pressable
                   onPress={() =>
@@ -560,39 +610,45 @@ export function MarketCandlesModal({
                   disabled={
                     !holdingForSymbol || (holdingForSymbol?.shares ?? 0) <= 0
                   }
-                  style={({ pressed }) => ({
-                    width: '100%',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    height: 56,
-                    paddingHorizontal: 20,
-                    borderRadius: 14,
-                    backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
-                    borderWidth: 1,
-                    borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
-                    opacity: pressed
-                      ? 0.85
-                      : (holdingForSymbol?.shares ?? 0) > 0
-                        ? 1
-                        : 0.5,
-                  })}
                   accessibilityRole="button"
                   accessibilityLabel={
                     (holdingForSymbol?.shares ?? 0) > 0
                       ? 'Vender'
                       : 'No tienes posición para vender'
                   }
+                  android_ripple={{ color: palette.surfaceBorder ?? 'rgba(0,0,0,0.08)', borderless: false }}
+                  style={({ pressed }) => ({
+                    opacity: pressed
+                      ? 0.85
+                      : (holdingForSymbol?.shares ?? 0) > 0
+                        ? 1
+                        : 0.5,
+                  })}
                 >
-                  <Text
-                    style={[
-                      Hierarchy.action,
-                      { color: palette.text, fontWeight: '600' },
-                    ]}
+                  <View
+                    style={{
+                      width: '100%',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      height: 56,
+                      paddingHorizontal: 20,
+                      borderRadius: 14,
+                      backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
+                      borderWidth: 1,
+                      borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
+                    }}
                   >
-                    Vender
-                  </Text>
-                  <Minus size={22} color={palette.text} strokeWidth={2.5} />
+                    <Text
+                      style={[
+                        Hierarchy.action,
+                        { color: palette.text, fontWeight: '600' },
+                      ]}
+                    >
+                      Vender
+                    </Text>
+                    <Minus size={22} color={palette.text} strokeWidth={2.5} />
+                  </View>
                 </Pressable>
               </Animated.View>
             </Animated.View>

@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Animated,
-  Dimensions,
   Modal,
   PanResponder,
   Platform,
@@ -82,9 +81,11 @@ export function CardModal({
   const sheetBg = contentBackgroundColor ?? palette.cardBackground;
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
-  // En Android, la pantalla puede tener barra de navegación; usamos screen para cubrir todo
-  const screenHeight =
-    Platform.OS === 'android' ? Dimensions.get('screen').height : windowHeight;
+  // Siempre usamos windowHeight (área visible) para dimensionar el sheet.
+  // Usar Dimensions.get('screen').height en Android incluía la barra de navegación
+  // del sistema, haciendo que el contenido del fondo quedase oculto detrás de ella.
+  // El android filler y paddingBottom ya manejan la cobertura visual de la nav bar.
+  const screenHeight = windowHeight;
 
   const [mounted, setMounted] = React.useState(open);
   const [blurOpacityValue, setBlurOpacityValue] = React.useState(0);
@@ -231,8 +232,9 @@ export function CardModal({
 
   if (!mounted) return null;
 
-  // Verificar si BlurView está disponible
-  const isBlurAvailable = Platform.OS !== 'web' && BlurViewComponent !== null;
+  // BlurView en iOS funciona bien; en Android con Expo Go el BlurView no bloquea el
+  // rendering pero rara vez blura visualmente → usamos overlay sólido en Android.
+  const isBlurAvailable = Platform.OS === 'ios' && BlurViewComponent !== null;
 
   return (
     <Modal
@@ -297,7 +299,7 @@ export function CardModal({
             }}
           />
         ) : (
-          // Fallback para móvil si BlurView no está disponible
+          // Fallback para móvil (Android) — overlay semitransparente sólido tipo scrim
           <Animated.View
             style={[
               StyleSheet.absoluteFill,
@@ -305,11 +307,11 @@ export function CardModal({
                 backgroundColor:
                   blurTint === 'dark'
                     ? closeOnBackdropPress
-                      ? 'rgba(0,0,0,0.60)'
-                      : 'rgba(0,0,0,0.78)'
+                      ? 'rgba(0,0,0,0.62)'
+                      : 'rgba(0,0,0,0.80)'
                     : closeOnBackdropPress
-                      ? 'rgba(10,14,24,0.26)'
-                      : 'rgba(10,14,24,0.36)',
+                      ? 'rgba(0,0,0,0.48)'
+                      : 'rgba(0,0,0,0.62)',
                 opacity: blurOpacity,
                 pointerEvents: 'none',
               },
@@ -363,7 +365,9 @@ export function CardModal({
                     height: fitContentHeight ?? maxHeight,
                     maxHeight,
                   }
-                : { maxHeight },
+                : Platform.OS === 'android'
+                  ? { height: maxHeight, maxHeight }
+                  : { maxHeight },
             ]}
           >
             <Card
@@ -371,7 +375,14 @@ export function CardModal({
               style={[
                 styles.card,
                 {
-                  ...(scrollable && { flex: 1 }),
+                  // En Android siempre usamos height explícita para que los hijos con
+                  // flex:1 (tanto scrollable como no scrollable) resuelvan su tamaño.
+                  // En iOS/web: scrollable → flex:1; no scrollable → solo maxHeight.
+                  ...(Platform.OS === 'android'
+                    ? { height: scrollable ? (fitContentHeight ?? maxHeight) : maxHeight }
+                    : scrollable
+                      ? { flex: 1 }
+                      : {}),
                   maxHeight,
                   backgroundColor: sheetBg,
                   borderColor: palette.surfaceBorder ?? palette.text,
@@ -392,7 +403,9 @@ export function CardModal({
               <View
                 style={[
                   styles.contentWrap,
-                  scrollable
+                  // En Android siempre flex:1 para que los hijos flex:1 funcionen.
+                  // En iOS/web: scrollable → flex:1; no scrollable → maxHeight limitado.
+                  Platform.OS === 'android' || scrollable
                     ? { flex: 1, minHeight: 0, paddingBottom }
                     : { maxHeight: maxHeight - 120, paddingBottom },
                 ]}
@@ -425,16 +438,18 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   backdropTouchable: {
-    zIndex: 10,
-    elevation: 10,
+    // Sin elevation en Android: el sheetWrapper viene después en el árbol JSX y
+    // tiene elevation mayor, por lo que recibe toques antes. Elevation aquí
+    // haría que el backdrop robase los gestos de scroll del sheet.
   },
   sheetWrapper: {
     width: '100%',
     alignItems: 'stretch',
+    ...Platform.select({ android: { elevation: 24 } }),
   },
   sheet: {
     width: '100%',
-    overflow: 'hidden',
+    ...Platform.select({ android: {}, default: { overflow: 'hidden' } }),
   },
   card: {
     width: '100%',
@@ -442,7 +457,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
-    overflow: 'hidden',
+    // En Android overflow:'hidden' sobre un View padre bloquea el scroll
+    // de los ScrollView hijos. En iOS es necesario para los bordes redondeados.
+    ...Platform.select({ android: {}, default: { overflow: 'hidden' } }),
   },
   /** Barra de arrastre en flujo (sin overlay): el header queda debajo y recibe toques correctamente. */
   dragHandleRow: {

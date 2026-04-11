@@ -68,35 +68,24 @@ export function useInicioViewModel(): UseInicioViewModelResult {
 
   const token = session?.token;
 
-  const fetchHeadlines = React.useCallback(async () => {
-    console.log(
-      '[iaNoticias FRONT] ViewModel: fetchHeadlines, token=',
-      !!token,
-    );
-    if (!token) {
-      console.log(
-        '[iaNoticias FRONT] ViewModel: fetchHeadlines SKIP - sin token',
-      );
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const headlines = await loadHeadlines(token);
-      console.log(
-        '[iaNoticias FRONT] ViewModel: fetchHeadlines OK, count=',
-        headlines?.length ?? 0,
-      );
-      setNews(headlines);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Error al cargar noticias';
-      console.log('[iaNoticias FRONT] ViewModel: fetchHeadlines ERROR', msg);
-      setError(msg);
-      setNews([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+  const fetchHeadlines = React.useCallback(
+    async (forceRefresh = false) => {
+      if (!token) return;
+      if (!forceRefresh) setLoading(true);
+      setError(null);
+      try {
+        const headlines = await loadHeadlines(token, { forceRefresh });
+        setNews(headlines);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'Error al cargar noticias';
+        setError(msg);
+        setNews([]);
+      } finally {
+        if (!forceRefresh) setLoading(false);
+      }
+    },
+    [token],
+  );
 
   const openNews = React.useCallback(
     async (item: NewsPreview) => {
@@ -189,10 +178,15 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     [award],
   );
 
+  const refreshHeadlines = React.useCallback(
+    () => fetchHeadlines(true),
+    [fetchHeadlines],
+  );
+
   useFocusEffect(
     React.useCallback(() => {
       setTypewriterKey((k) => k + 1);
-      fetchHeadlines();
+      fetchHeadlines(false); // usa cache si está fresco
       return undefined;
     }, [fetchHeadlines]),
   );
@@ -230,6 +224,6 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     openQuiz,
     closeQuizModal,
     onQuizComplete,
-    refreshHeadlines: fetchHeadlines,
+    refreshHeadlines,
   };
 }

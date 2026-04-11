@@ -1,6 +1,6 @@
 import type { EducationalNews } from '../domain/iaNoticiasEducativas.types';
 
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hora
+const CACHE_TTL_MS = 2 * 24 * 60 * 60 * 1000; // 2 días
 const MAX_CACHE_SIZE = 50;
 
 type CacheEntry = { educationalNews: EducationalNews; expiresAt: number };

@@ -6,10 +6,12 @@
     "start": "expo start",
     "server": "npx tsx server/index.ts",
     "s": "npx tsx server/index.ts",
+    "start:server": "tsx server/index.ts",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
+    "build:web": "expo export -p web",
     "lint": "expo lint",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -73,6 +75,7 @@
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^3.4.19",
     "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.19.2",
     "yahoo-finance2": "^3.13.2"
   },
   "devDependencies": {

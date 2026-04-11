@@ -167,27 +167,24 @@ export function InvertirSheet({
               <Pressable
                 onPress={handleMinusOne}
                 disabled={buyLoading || sharesNum <= 0}
-                style={({ pressed }) => ({
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  opacity: pressed || buyLoading || sharesNum <= 0 ? 0.6 : 1,
-                })}
                 accessibilityRole="button"
                 accessibilityLabel="Quitar una acción"
+                android_ripple={{ color: 'rgba(0,0,0,0.08)', borderless: true }}
+                style={({ pressed }) => ({
+                  opacity: pressed || buyLoading || sharesNum <= 0 ? 0.6 : 1,
+                })}
               >
-                <Minus
-                  size={24}
-                  color={
-                    sharesNum <= 0
-                      ? (palette.icon ?? palette.text)
-                      : palette.primary
-                  }
-                  strokeWidth={2.5}
-                />
+                <View style={{
+                  width: 48, height: 48, borderRadius: 24,
+                  backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
+                  justifyContent: 'center', alignItems: 'center',
+                }}>
+                  <Minus
+                    size={24}
+                    color={sharesNum <= 0 ? (palette.icon ?? palette.text) : palette.primary}
+                    strokeWidth={2.5}
+                  />
+                </View>
               </Pressable>
               <Text
                 style={[
@@ -205,19 +202,20 @@ export function InvertirSheet({
               <Pressable
                 onPress={handlePlusOne}
                 disabled={buyLoading}
-                style={({ pressed }) => ({
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  opacity: pressed || buyLoading ? 0.85 : 1,
-                })}
                 accessibilityRole="button"
                 accessibilityLabel="Añadir una acción"
+                android_ripple={{ color: 'rgba(0,0,0,0.08)', borderless: true }}
+                style={({ pressed }) => ({
+                  opacity: pressed || buyLoading ? 0.85 : 1,
+                })}
               >
-                <Plus size={24} color={palette.primary} strokeWidth={2.5} />
+                <View style={{
+                  width: 48, height: 48, borderRadius: 24,
+                  backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
+                  justifyContent: 'center', alignItems: 'center',
+                }}>
+                  <Plus size={24} color={palette.primary} strokeWidth={2.5} />
+                </View>
               </Pressable>
             </View>
             <Text
@@ -278,32 +276,33 @@ export function InvertirSheet({
                   key={key === 'backspace' ? 'back' : key}
                   onPress={() => handleKey(key)}
                   disabled={buyLoading}
-                  style={({ pressed }) => ({
-                    width: key === '0' ? 72 : 64,
-                    height: 56,
-                    borderRadius: 12,
-                    backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    opacity: pressed || buyLoading ? 0.85 : 1,
-                  })}
                   accessibilityRole="button"
                   accessibilityLabel={key === 'backspace' ? 'Borrar' : key}
+                  android_ripple={{ color: 'rgba(0,0,0,0.08)', borderless: false }}
+                  style={({ pressed }) => ({
+                    opacity: pressed || buyLoading ? 0.85 : 1,
+                  })}
                 >
-                  {key === 'backspace' ? (
-                    <Text style={[Hierarchy.action, { color: palette.text }]}>
-                      ←
-                    </Text>
-                  ) : (
-                    <Text
-                      style={[
-                        Hierarchy.action,
-                        { color: palette.text, fontWeight: '600' },
-                      ]}
-                    >
-                      {key}
-                    </Text>
-                  )}
+                  <View
+                    style={{
+                      width: key === '0' ? 72 : 64,
+                      height: 56,
+                      borderRadius: 12,
+                      backgroundColor: palette.surfaceMuted ?? '#EEF2F7',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {key === 'backspace' ? (
+                      <Text style={[Hierarchy.action, { color: palette.text }]}>
+                        ←
+                      </Text>
+                    ) : (
+                      <Text style={[Hierarchy.action, { color: palette.text, fontWeight: '600' }]}>
+                        {key}
+                      </Text>
+                    )}
+                  </View>
                 </Pressable>
               )),
             )}
@@ -323,53 +322,57 @@ export function InvertirSheet({
             <Pressable
               onPress={handleComprar}
               disabled={!canBuy || buyLoading}
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingHorizontal: 20,
-                paddingVertical: 12,
-                borderRadius: 12,
-                backgroundColor:
-                  canBuy && !buyLoading
-                    ? palette.primary
-                    : (palette.surfaceMuted ?? '#EEF2F7'),
-                opacity: pressed ? 0.85 : 1,
-              })}
               accessibilityRole="button"
               accessibilityLabel="Comprar"
+              android_ripple={{ color: 'rgba(255,255,255,0.25)', borderless: false }}
+              style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
             >
-              {buyLoading ? (
-                <ActivityIndicator
-                  size="small"
-                  color={palette.primaryText ?? '#FFF'}
-                />
-              ) : (
-                <>
-                  <Text
-                    style={[
-                      Hierarchy.action,
-                      {
-                        color:
-                          canBuy && !buyLoading
-                            ? (palette.primaryText ?? '#FFF')
-                            : palette.text,
-                        fontWeight: '600',
-                      },
-                    ]}
-                  >
-                    Comprar
-                  </Text>
-                  <ChevronRight
-                    size={18}
-                    color={
-                      canBuy && !buyLoading
-                        ? (palette.primaryText ?? '#FFF')
-                        : palette.text
-                    }
-                    style={{ marginLeft: 4 }}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingHorizontal: 20,
+                  paddingVertical: 12,
+                  borderRadius: 12,
+                  backgroundColor:
+                    canBuy && !buyLoading
+                      ? palette.primary
+                      : (palette.surfaceMuted ?? '#EEF2F7'),
+                }}
+              >
+                {buyLoading ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={palette.primaryText ?? '#FFF'}
                   />
-                </>
-              )}
+                ) : (
+                  <>
+                    <Text
+                      style={[
+                        Hierarchy.action,
+                        {
+                          color:
+                            canBuy && !buyLoading
+                              ? (palette.primaryText ?? '#FFF')
+                              : palette.text,
+                          fontWeight: '600',
+                        },
+                      ]}
+                    >
+                      Comprar
+                    </Text>
+                    <ChevronRight
+                      size={18}
+                      color={
+                        canBuy && !buyLoading
+                          ? (palette.primaryText ?? '#FFF')
+                          : palette.text
+                      }
+                      style={{ marginLeft: 4 }}
+                    />
+                  </>
+                )}
+              </View>
             </Pressable>
           </View>
         </View>

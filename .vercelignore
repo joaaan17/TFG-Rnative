@@ -1,0 +1,5 @@
+# No incluir el backend ni archivos sensibles en el deploy
+server
+.env
+.env.local
+.env.*.local

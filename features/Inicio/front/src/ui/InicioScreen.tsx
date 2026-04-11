@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
   Pressable,
+  RefreshControl,
   ScrollView,
   useWindowDimensions,
   View,
@@ -99,6 +100,8 @@ function NewsModalContent({
         style={modalStyles.newsScroll}
         contentContainerStyle={modalStyles.newsScrollContent}
         showsVerticalScrollIndicator={false}
+        nestedScrollEnabled
+        scrollEventThrottle={16}
       >
         {/* Hero: solo imagen y scrim (botones fuera del scroll para que reciban toques) */}
         <View style={modalStyles.newsHeroWrap}>
@@ -321,8 +324,10 @@ export function InicioScreen() {
     openQuiz,
     closeQuizModal,
     onQuizComplete,
+    refreshHeadlines,
   } = useInicioViewModel();
 
+  const [refreshing, setRefreshing] = useState(false);
   const [quizContentHeight, setQuizContentHeight] = useState(0);
   const handleQuizContentSize = useCallback((_w: number, h: number) => {
     setQuizContentHeight(h);
@@ -332,6 +337,12 @@ export function InicioScreen() {
     openQuiz();
     setTimeout(() => closeNewsModal({ preserveQuiz: true }), 100);
   }, [openQuiz, closeNewsModal]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refreshHeadlines();
+    setRefreshing(false);
+  }, [refreshHeadlines]);
 
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const cardGap = 16;
@@ -401,6 +412,13 @@ export function InicioScreen() {
             style={{ flex: 1 }}
             showsVerticalScrollIndicator={true}
             scrollEnabled={true}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor={palette.primary}
+              />
+            }
             contentContainerStyle={{
               paddingHorizontal: 20,
               paddingBottom: 24,

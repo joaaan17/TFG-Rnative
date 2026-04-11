@@ -57,7 +57,7 @@ export class MongoProfileRepository implements ProfileRepository {
       {
         $addToSet: { claimedNewsIds: trimmed },
         $inc: { experience: amount },
-        $setOnInsert: { name: 'Usuario', claimedNewsIds: [] },
+        $setOnInsert: { name: 'Usuario' },
       },
       { new: true, upsert: true },
     )

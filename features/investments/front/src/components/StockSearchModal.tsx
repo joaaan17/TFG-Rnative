@@ -237,42 +237,46 @@ export function StockSearchModal({
   const renderSearchItem = useCallback(
     ({ item }: { item: MarketSearchResultItem }) => (
       <Pressable
-        style={({ pressed }) => ({
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingVertical: 14,
-          paddingHorizontal: 16,
-          borderBottomWidth: 1,
-          borderBottomColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.06)',
-          opacity: pressed ? 0.7 : 1,
-        })}
         onPress={() => handleSelect(item)}
         accessibilityRole="button"
         accessibilityLabel={`${item.name} ${item.symbol}`}
+        android_ripple={{ color: palette.surfaceBorder ?? 'rgba(0,0,0,0.08)', borderless: false }}
+        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
       >
-        <AssetAvatar
-          logoUrl={getLogoUrlForSymbol(item.symbol)}
-          name={item.name}
-          palette={palette}
-        />
-        <View style={{ marginLeft: 12, flex: 1, minWidth: 0 }}>
-          <Text
-            style={[Hierarchy.bodySmallSemibold, { color: palette.text }]}
-            numberOfLines={1}
-          >
-            {item.name}
-          </Text>
-          <Text
-            style={[
-              Hierarchy.caption,
-              { marginTop: 2, color: palette.icon ?? palette.text },
-            ]}
-            numberOfLines={1}
-          >
-            {item.symbol}
-            {item.exchange ? ` · ${item.exchange}` : ''}
-            {item.currency ? ` · ${item.currency}` : ''}
-          </Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.06)',
+          }}
+        >
+          <AssetAvatar
+            logoUrl={getLogoUrlForSymbol(item.symbol)}
+            name={item.name}
+            palette={palette}
+          />
+          <View style={{ marginLeft: 12, flex: 1, minWidth: 0 }}>
+            <Text
+              style={[Hierarchy.bodySmallSemibold, { color: palette.text }]}
+              numberOfLines={1}
+            >
+              {item.name}
+            </Text>
+            <Text
+              style={[
+                Hierarchy.caption,
+                { marginTop: 2, color: palette.icon ?? palette.text },
+              ]}
+              numberOfLines={1}
+            >
+              {item.symbol}
+              {item.exchange ? ` · ${item.exchange}` : ''}
+              {item.currency ? ` · ${item.currency}` : ''}
+            </Text>
+          </View>
         </View>
       </Pressable>
     ),
@@ -303,42 +307,46 @@ export function StockSearchModal({
       const logoUrl = item.logoUrl ?? getLogoUrlForSymbol(item.symbol);
       return (
         <Pressable
-          style={({ pressed }) => ({
-            flexDirection: 'row',
-            alignItems: 'center',
-            paddingVertical: 14,
-            paddingHorizontal: 16,
-            borderBottomWidth: 1,
-            borderBottomColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.06)',
-            opacity: pressed ? 0.7 : 1,
-          })}
           onPress={() => handleSelect(item)}
           accessibilityRole="button"
           accessibilityLabel={`${displayName} ${item.symbol}`}
+          android_ripple={{ color: palette.surfaceBorder ?? 'rgba(0,0,0,0.08)', borderless: false }}
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
         >
-          <AssetAvatar logoUrl={logoUrl} name={displayName} palette={palette} />
-          <View style={{ marginLeft: 12, flex: 1, minWidth: 0 }}>
-            <Text
-              style={[Hierarchy.bodySmallSemibold, { color: palette.text }]}
-              numberOfLines={1}
-            >
-              {displayName}
-            </Text>
-            <Text
-              style={[
-                Hierarchy.caption,
-                { marginTop: 2, color: palette.icon ?? palette.text },
-              ]}
-              numberOfLines={1}
-            >
-              {item.symbol}
-            </Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingVertical: 14,
+              paddingHorizontal: 16,
+              borderBottomWidth: 1,
+              borderBottomColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.06)',
+            }}
+          >
+            <AssetAvatar logoUrl={logoUrl} name={displayName} palette={palette} />
+            <View style={{ marginLeft: 12, flex: 1, minWidth: 0 }}>
+              <Text
+                style={[Hierarchy.bodySmallSemibold, { color: palette.text }]}
+                numberOfLines={1}
+              >
+                {displayName}
+              </Text>
+              <Text
+                style={[
+                  Hierarchy.caption,
+                  { marginTop: 2, color: palette.icon ?? palette.text },
+                ]}
+                numberOfLines={1}
+              >
+                {item.symbol}
+              </Text>
+            </View>
+            {item.price != null && (
+              <Text style={[Hierarchy.action, { color: palette.text }]}>
+                {formatPrice(item)}
+              </Text>
+            )}
           </View>
-          {item.price != null && (
-            <Text style={[Hierarchy.action, { color: palette.text }]}>
-              {formatPrice(item)}
-            </Text>
-          )}
         </Pressable>
       );
     },
@@ -358,7 +366,7 @@ export function StockSearchModal({
       scrollable
       contentNoPaddingTop
     >
-      <View style={{ flex: 1, minHeight: 0 }}>
+      <View style={{ flex: 1, minHeight: 0, alignSelf: 'stretch', width: '100%' }}>
         <ModalHeader
           title="Buscador"
           onBack={onClose}
@@ -368,6 +376,8 @@ export function StockSearchModal({
         <View
           style={{
             flex: 1,
+            alignSelf: 'stretch',
+            width: '100%',
             paddingHorizontal: 16,
             paddingBottom: 24,
             minHeight: 200,
@@ -401,9 +411,11 @@ export function StockSearchModal({
                 keyExtractor={(item) => item.symbol}
                 renderItem={renderDefaultItem}
                 scrollEnabled={true}
-                style={{ flex: 1, marginTop: 8 }}
+                style={{ flex: 1, marginTop: 8, width: '100%' }}
                 contentContainerStyle={{ paddingBottom: 24 }}
                 showsVerticalScrollIndicator={true}
+                nestedScrollEnabled
+                removeClippedSubviews={false}
               />
             )}
 
@@ -445,9 +457,11 @@ export function StockSearchModal({
               keyExtractor={(item) => item.symbol}
               renderItem={renderSearchItem}
               scrollEnabled={true}
-              style={{ flex: 1, marginTop: 8 }}
+              style={{ flex: 1, marginTop: 8, width: '100%' }}
               contentContainerStyle={{ paddingBottom: 24 }}
               showsVerticalScrollIndicator={true}
+              nestedScrollEnabled
+              removeClippedSubviews={false}
             />
           )}
         </View>

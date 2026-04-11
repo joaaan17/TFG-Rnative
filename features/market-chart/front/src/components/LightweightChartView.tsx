@@ -66,6 +66,7 @@ function buildChartHtml(
   theme: ChartTheme = {},
   seriesType: ChartSeriesType = 'candlestick',
   intraday = false,
+  height = 280,
 ): string {
   const t = { ...DEFAULT_CHART_THEME, ...theme };
   const candleData = candles.map((c) => ({
@@ -86,21 +87,27 @@ function buildChartHtml(
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; background: ${t.layoutBackgroundColor}; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: ${t.layoutBackgroundColor}; }
     #chart { width: 100%; height: 100%; min-height: 280px; }
   </style>
 </head>
 <body>
   <div id="chart"></div>
   <script>
-    (function() {
+    function initChart() {
+      if (typeof LightweightCharts === 'undefined') {
+        setTimeout(initChart, 100);
+        return;
+      }
       var data = ${dataJson};
       if (!data || data.length === 0) return;
       var container = document.getElementById('chart');
+      var w = container.offsetWidth || window.innerWidth || document.documentElement.clientWidth || 320;
+      var h = container.offsetHeight || ${height};
       var fontSize = ${t.fontSize ?? 11};
       var chart = LightweightCharts.createChart(container, {
         layout: {
@@ -117,13 +124,13 @@ function buildChartHtml(
           borderColor: 'transparent',
           scaleMargins: { top: 0.1, bottom: 0.15 },
         },
-      timeScale: Object.assign({
-        timeVisible: true,
-        secondsVisible: false,
-        borderColor: 'transparent',
-      }, ${intraday ? "{ tickMarkFormatter: function(time) { var d = new Date(time * 1000); var h = d.getUTCHours(); var m = d.getUTCMinutes(); var day = ('0' + d.getUTCDate()).slice(-2); var mon = ('0' + (d.getUTCMonth()+1)).slice(-2); if (h === 0 && m === 0) return day + '/' + mon + ' 00:00'; return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m; } }" : '{}'}),
-        width: container.clientWidth,
-        height: container.clientHeight || 280,
+        timeScale: Object.assign({
+          timeVisible: true,
+          secondsVisible: false,
+          borderColor: 'transparent',
+        }, ${intraday ? "{ tickMarkFormatter: function(time) { var d = new Date(time * 1000); var h = d.getUTCHours(); var m = d.getUTCMinutes(); var day = ('0' + d.getUTCDate()).slice(-2); var mon = ('0' + (d.getUTCMonth()+1)).slice(-2); if (h === 0 && m === 0) return day + '/' + mon + ' 00:00'; return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m; } }" : '{}'}),
+        width: w,
+        height: h,
         crosshair: {
           vertLine: { color: '${t.textColor}', labelBackgroundColor: '${t.textColor}' },
           horzLine: { color: '${t.gridColor}' },
@@ -163,8 +170,8 @@ function buildChartHtml(
           series.createPriceLine({
             price: pl.price,
             color: pl.color || '#ff0000',
-            lineWidth: pl.lineWidth ?? 2,
-            lineStyle: pl.lineStyle ?? 2,
+            lineWidth: pl.lineWidth != null ? pl.lineWidth : 2,
+            lineStyle: pl.lineStyle != null ? pl.lineStyle : 2,
             axisLabelVisible: pl.axisLabelVisible !== false,
             title: pl.title || '',
           });
@@ -182,7 +189,24 @@ function buildChartHtml(
         }));
       }
       chart.timeScale().fitContent();
-    })();
+      if (window.ResizeObserver) {
+        new ResizeObserver(function(entries) {
+          var entry = entries[0];
+          if (entry) {
+            var newW = entry.contentRect.width;
+            var newH = entry.contentRect.height;
+            if (newW > 0 && newH > 0) { chart.resize(newW, newH); }
+          }
+        }).observe(container);
+      }
+    }
+    if (document.readyState === 'complete') {
+      requestAnimationFrame(function() { requestAnimationFrame(initChart); });
+    } else {
+      window.addEventListener('load', function() {
+        requestAnimationFrame(function() { requestAnimationFrame(initChart); });
+      });
+    }
   </script>
 </body>
 </html>`;
@@ -244,18 +268,26 @@ function LightweightChartWebView({
         theme ?? {},
         seriesType,
         intraday,
+        height ?? 280,
       ),
-    [candles, priceLines, markers, theme, seriesType, intraday],
+    [candles, priceLines, markers, theme, seriesType, intraday, height],
   );
 
   return (
     <View style={[styles.container, styles.responsive, { height }]}>
       <WebView
-        source={{ html }}
+        source={{ html, baseUrl: 'https://unpkg.com' }}
         style={styles.webview}
         scrollEnabled={intraday}
         originWhitelist={['*']}
         nestedScrollEnabled={intraday}
+        javaScriptEnabled
+        domStorageEnabled
+        cacheEnabled
+        androidLayerType="hardware"
+        mixedContentMode="always"
+        allowFileAccess
+        onError={(e) => console.warn('[LightweightChartView] WebView error', e.nativeEvent)}
       />
     </View>
   );
