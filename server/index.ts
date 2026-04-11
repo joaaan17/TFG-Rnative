@@ -17,6 +17,14 @@ import {
 
 const app = express();
 
+// Evitar que promesas no capturadas o excepciones inesperadas maten el proceso
+process.on('unhandledRejection', (reason) => {
+  console.error('⚠️ [Server] unhandledRejection (ignorado):', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('⚠️ [Server] uncaughtException (ignorado):', err);
+});
+
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
   : [];
@@ -29,7 +37,8 @@ app.use(
       // En desarrollo, permitir todo
       if (process.env.NODE_ENV !== 'production') return callback(null, true);
       // Aceptar cualquier subdominio de vercel.app automáticamente
-      if (/^https:\/\/.*\.vercel\.app$/.test(origin)) return callback(null, true);
+      if (/^https:\/\/.*\.vercel\.app$/.test(origin))
+        return callback(null, true);
       // Aceptar orígenes explícitos de ALLOWED_ORIGINS
       if (allowedOrigins.includes(origin)) return callback(null, true);
       callback(new Error(`CORS bloqueado para origen: ${origin}`));
