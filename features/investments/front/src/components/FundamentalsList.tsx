@@ -1,9 +1,11 @@
-import React from 'react';
-import { View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Pressable, View } from 'react-native';
 import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
 import type { FundamentalsSnapshot } from '../api/marketOverviewClient';
 import type { Palette } from '@/shared/hooks/use-palette';
+import { FINANCIAL_TERMS } from '../constants/financialTerms';
+import { FinancialTooltipModal } from './FinancialTooltipModal';
 
 const EMPTY = '—';
 
@@ -53,6 +55,12 @@ export function FundamentalsList({
   const mutedColor = palette.icon ?? palette.text;
   const borderColor = palette.surfaceBorder ?? palette.surfaceMuted;
 
+  const [tooltip, setTooltip] = useState<{ title: string; desc: string } | null>(null);
+  const openTooltip = useCallback((label: string) => {
+    const desc = FINANCIAL_TERMS[label];
+    if (desc) setTooltip({ title: label, desc });
+  }, []);
+
   return (
     <View style={{ paddingBottom: 16 }}>
       <Text
@@ -65,9 +73,12 @@ export function FundamentalsList({
       </Text>
       <View style={{ gap: 8 }}>
         {ROWS.map(({ label, hint, getValue }) => (
-          <View
+          <Pressable
             key={label}
-            style={{
+            onLongPress={() => openTooltip(label)}
+            delayLongPress={400}
+            accessibilityHint="Mantén pulsado para ver la explicación"
+            style={({ pressed }) => ({
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -77,7 +88,8 @@ export function FundamentalsList({
               backgroundColor: palette.surfaceMuted ?? `${palette.primary}06`,
               borderWidth: 1,
               borderColor: borderColor + '30',
-            }}
+              opacity: pressed ? 0.85 : 1,
+            })}
           >
             <View
               style={{
@@ -111,9 +123,17 @@ export function FundamentalsList({
             >
               {getValue(fundamentals)}
             </Text>
-          </View>
+          </Pressable>
         ))}
       </View>
+
+      <FinancialTooltipModal
+        visible={!!tooltip}
+        title={tooltip?.title ?? ''}
+        description={tooltip?.desc ?? ''}
+        palette={palette}
+        onClose={() => setTooltip(null)}
+      />
     </View>
   );
 }

@@ -38,9 +38,10 @@ try {
 const INDICATOR_DURATION_MS = 280;
 const INDICATOR_EASING = Easing.out(Easing.cubic);
 const ITEM_COUNT = 5;
-const HALO_SIZE = 20;
-// Espacio reservado encima de los iconos para el indicador.
-const INDICATOR_AREA = 14;
+/** Línea inferior minimalista (sin halo ni punto). */
+const INDICATOR_LINE_WIDTH = 22;
+const INDICATOR_LINE_HEIGHT = 2;
+const INDICATOR_BOTTOM = 6;
 
 export type AppMenubarProps = {
   activePath?: string;
@@ -190,17 +191,15 @@ export function AppMenubar({
     [activeIndex, centerXSv, indexSv],
   );
 
-  const dotWrapAnimatedStyle = useAnimatedStyle(() => {
+  const lineIndicatorAnimatedStyle = useAnimatedStyle(() => {
     'worklet';
     return {
       position: 'absolute' as const,
-      // El indicador se posiciona centrado horizontalmente sobre el ítem.
-      left: centerXSv.value - HALO_SIZE / 2,
-      // Verticalmente: centrado en el área reservada encima de los iconos.
-      top: (INDICATOR_AREA - HALO_SIZE) / 2,
-      width: HALO_SIZE,
-      height: HALO_SIZE,
-      borderRadius: HALO_SIZE / 2,
+      left: centerXSv.value - INDICATOR_LINE_WIDTH / 2,
+      bottom: INDICATOR_BOTTOM,
+      width: INDICATOR_LINE_WIDTH,
+      height: INDICATOR_LINE_HEIGHT,
+      borderRadius: INDICATOR_LINE_HEIGHT / 2,
     };
   });
 
@@ -208,42 +207,28 @@ export function AppMenubar({
     Platform.OS === 'web'
       ? withAlpha(palette.background, 0.92)
       : withAlpha(palette.background, 0.88);
-  const haloBorderColor = palette.surfaceBorder ?? palette.icon ?? palette.text;
+  const primary = palette.primary ?? '#2563eb';
 
+  /** Transición suave entre pestañas: solo opacidad (más minimalista que escala). */
   const iconWrapStyle0 = useAnimatedStyle(() => {
     const t = Math.max(0, 1 - Math.abs(indexSv.value - 0));
-    return {
-      transform: [{ scale: interpolate(t, [0, 1], [1, 1.06]) }],
-      opacity: interpolate(t, [0, 1], [0.78, 1]),
-    };
+    return { opacity: interpolate(t, [0, 1], [0.55, 1]) };
   }, []);
   const iconWrapStyle1 = useAnimatedStyle(() => {
     const t = Math.max(0, 1 - Math.abs(indexSv.value - 1));
-    return {
-      transform: [{ scale: interpolate(t, [0, 1], [1, 1.06]) }],
-      opacity: interpolate(t, [0, 1], [0.78, 1]),
-    };
+    return { opacity: interpolate(t, [0, 1], [0.55, 1]) };
   }, []);
   const iconWrapStyle2 = useAnimatedStyle(() => {
     const t = Math.max(0, 1 - Math.abs(indexSv.value - 2));
-    return {
-      transform: [{ scale: interpolate(t, [0, 1], [1, 1.06]) }],
-      opacity: interpolate(t, [0, 1], [0.78, 1]),
-    };
+    return { opacity: interpolate(t, [0, 1], [0.55, 1]) };
   }, []);
   const iconWrapStyle3 = useAnimatedStyle(() => {
     const t = Math.max(0, 1 - Math.abs(indexSv.value - 3));
-    return {
-      transform: [{ scale: interpolate(t, [0, 1], [1, 1.06]) }],
-      opacity: interpolate(t, [0, 1], [0.78, 1]),
-    };
+    return { opacity: interpolate(t, [0, 1], [0.55, 1]) };
   }, []);
   const iconWrapStyle4 = useAnimatedStyle(() => {
     const t = Math.max(0, 1 - Math.abs(indexSv.value - 4));
-    return {
-      transform: [{ scale: interpolate(t, [0, 1], [1, 1.06]) }],
-      opacity: interpolate(t, [0, 1], [0.78, 1]),
-    };
+    return { opacity: interpolate(t, [0, 1], [0.55, 1]) };
   }, []);
   const iconWrapStyles = [
     iconWrapStyle0,
@@ -265,15 +250,22 @@ export function AppMenubar({
     index: number;
   }) {
     const isActive = index === activeIndex;
-    const iconColor = isActive
-      ? (palette.primary ?? '#2563eb')
-      : (palette.icon ?? palette.text);
+    const iconColor = isActive ? primary : (palette.icon ?? palette.text);
 
     return (
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label}
-        style={({ pressed }) => [styles.item, pressed && { opacity: 0.7 }]}
+        android_ripple={
+          Platform.OS === 'android'
+            ? { color: withAlpha(primary, 0.12), borderless: true }
+            : undefined
+        }
+        style={({ pressed }) => [
+          styles.item,
+          Platform.OS === 'web' && pressed ? { opacity: 0.88 } : null,
+          Platform.OS === 'ios' && pressed ? { opacity: 0.92 } : null,
+        ]}
         onPress={() => onPress?.()}
         onLayout={(e) => onItemLayout(index, e)}
       >
@@ -300,32 +292,15 @@ export function AppMenubar({
           style={[StyleSheet.absoluteFill, { backgroundColor: barBg, pointerEvents: 'none' }]}
         />
 
-        {/* Row: paddingTop = INDICATOR_AREA reserva espacio para el punto */}
         <View style={styles.row}>
           {indicatorReady ? (
             <Animated.View
+              pointerEvents="none"
               style={[
-                dotWrapAnimatedStyle,
-                { alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' },
+                lineIndicatorAnimatedStyle,
+                { backgroundColor: primary },
               ]}
-            >
-              <View
-                style={[
-                  styles.dotHalo,
-                  {
-                    backgroundColor: withAlpha(haloBorderColor, 0.45),
-                    borderWidth: 1,
-                    borderColor: withAlpha(haloBorderColor, 0.45),
-                  },
-                ]}
-              />
-              <View
-                style={[
-                  styles.dot,
-                  { backgroundColor: palette.primary ?? '#2563eb' },
-                ]}
-              />
-            </Animated.View>
+            />
           ) : null}
 
           {items.map((it, i) => (
@@ -369,21 +344,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    // INDICATOR_AREA px de espacio sobre los iconos para el punto animado.
-    paddingTop: INDICATOR_AREA,
-    paddingBottom: 9,
+    paddingTop: 10,
+    paddingBottom: 12,
     position: 'relative',
-  },
-  dotHalo: {
-    position: 'absolute',
-    width: HALO_SIZE,
-    height: HALO_SIZE,
-    borderRadius: HALO_SIZE / 2,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
   },
   item: {
     flex: 1,

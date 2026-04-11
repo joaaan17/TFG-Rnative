@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -18,6 +18,9 @@ import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
 import { useMarketCandles } from '../hooks/useMarketCandles';
 import type { CandleRange, CandleTimeframe } from '../api/marketCandlesClient';
+import { AnimatedPillSelector } from '@/shared/components/ui/animated-pill-selector';
+import { FINANCIAL_TERMS } from '../constants/financialTerms';
+import { FinancialTooltipModal } from './FinancialTooltipModal';
 
 const RANGE_OPTIONS: { value: CandleRange; label: string }[] = [
   { value: '1wk', label: '1 s' },
@@ -85,6 +88,12 @@ export function PortfolioChart({
   const [timeframe, setTimeframe] = useState<CandleTimeframe>('1d');
   const [chartMode, setChartMode] = useState<ChartSeriesType>('candlestick');
 
+  const [tooltip, setTooltip] = useState<{ title: string; desc: string } | null>(null);
+  const openTooltip = useCallback((label: string) => {
+    const desc = FINANCIAL_TERMS[label];
+    if (desc) setTooltip({ title: label, desc });
+  }, []);
+
   const { data, loading, error, refetch } = useMarketCandles(
     symbol,
     timeframe,
@@ -128,48 +137,14 @@ export function PortfolioChart({
       ]}
     >
       {/* Selector de rango (parte superior) */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingVertical: 10,
-          gap: 6,
-          marginBottom: 8,
-        }}
-      >
-        <View style={{ flex: 1, flexDirection: 'row', gap: 6 }}>
-          {RANGE_OPTIONS.map((opt) => (
-            <Pressable
-              key={opt.value}
-              onPress={() => setRange(opt.value)}
-              style={{
-                flex: 1,
-                paddingVertical: 10,
-                borderRadius: 8,
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor:
-                  range === opt.value
-                    ? palette.primary
-                    : (palette.surfaceMuted ?? '#f0f0f0'),
-              }}
-            >
-              <Text
-                style={[
-                  Hierarchy.action,
-                  {
-                    color:
-                      range === opt.value
-                        ? (palette.primaryText ?? '#FFF')
-                        : palette.text,
-                  },
-                ]}
-              >
-                {opt.label}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+      <View style={{ paddingVertical: 10, marginBottom: 8 }}>
+        <AnimatedPillSelector
+          options={RANGE_OPTIONS}
+          value={range}
+          onChange={setRange}
+          palette={palette}
+          onLongPress={openTooltip}
+        />
       </View>
 
       {/* Loading */}
@@ -284,38 +259,14 @@ export function PortfolioChart({
               gap: 6,
             }}
           >
-            <View style={{ flex: 1, flexDirection: 'row', gap: 6 }}>
-              {TIMEFRAME_OPTIONS.map((opt) => (
-                <Pressable
-                  key={opt.value}
-                  onPress={() => setTimeframe(opt.value)}
-                  style={{
-                    flex: 1,
-                    paddingVertical: 10,
-                    borderRadius: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor:
-                      timeframe === opt.value
-                        ? palette.primary
-                        : (palette.surfaceMuted ?? '#f0f0f0'),
-                  }}
-                >
-                  <Text
-                    style={[
-                      Hierarchy.action,
-                      {
-                        color:
-                          timeframe === opt.value
-                            ? (palette.primaryText ?? '#FFF')
-                            : palette.text,
-                      },
-                    ]}
-                  >
-                    {opt.label}
-                  </Text>
-                </Pressable>
-              ))}
+            <View style={{ flex: 1 }}>
+              <AnimatedPillSelector
+                options={TIMEFRAME_OPTIONS}
+                value={timeframe}
+                onChange={setTimeframe}
+                palette={palette}
+                onLongPress={openTooltip}
+              />
             </View>
             <View
               style={{
@@ -327,6 +278,8 @@ export function PortfolioChart({
             >
               <Pressable
                 onPress={() => setChartMode('candlestick')}
+                onLongPress={() => openTooltip('Gráfico de velas')}
+                delayLongPress={400}
                 style={({ pressed }) => ({
                   width: 36,
                   height: 36,
@@ -350,6 +303,8 @@ export function PortfolioChart({
               </Pressable>
               <Pressable
                 onPress={() => setChartMode('line')}
+                onLongPress={() => openTooltip('Gráfico de línea')}
+                delayLongPress={400}
                 style={({ pressed }) => ({
                   width: 36,
                   height: 36,
@@ -375,6 +330,14 @@ export function PortfolioChart({
           </View>
         </>
       )}
+
+      <FinancialTooltipModal
+        visible={!!tooltip}
+        title={tooltip?.title ?? ''}
+        description={tooltip?.desc ?? ''}
+        palette={palette}
+        onClose={() => setTooltip(null)}
+      />
     </View>
   );
 }

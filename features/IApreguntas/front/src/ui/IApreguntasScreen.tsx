@@ -57,21 +57,15 @@ export function IApreguntasScreen() {
     >
       <View style={styles.header}>
         <View style={styles.headerAccent} />
-        <TypewriterTextComponent
-          key={typewriterKey}
-          text="CONSULTORIO"
-          speed={40}
-          useDefaultFontFamily={false}
-          suppressVariant
+        <Text
           style={[
             Hierarchy.titleSection,
-            {
-              fontSize: 11,
-              letterSpacing: 1.4,
-              color: palette.icon ?? palette.text,
-            },
+            styles.sectionTitle,
+            { color: palette.icon ?? palette.text },
           ]}
-        />
+        >
+          Consultorio
+        </Text>
       </View>
 
       <View style={styles.welcomeArea}>

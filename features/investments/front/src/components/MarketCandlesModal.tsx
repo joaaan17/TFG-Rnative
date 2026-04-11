@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Minus, Plus } from 'lucide-react-native';
@@ -22,6 +22,8 @@ import { VenderSheet } from './VenderSheet';
 import { PurchaseSuccessModal } from './PurchaseSuccessModal';
 import { SaleSuccessModal } from './SaleSuccessModal';
 import { PortfolioChart } from './PortfolioChart';
+import { FinancialTooltipModal } from './FinancialTooltipModal';
+import { FINANCIAL_TERMS } from '../constants/financialTerms';
 
 export type MarketCandlesModalAsset = { symbol: string; name: string };
 
@@ -62,6 +64,11 @@ export function MarketCandlesModal({
   const [saleSuccessOpen, setSaleSuccessOpen] = useState(false);
   const [purchaseXpAwarded, setPurchaseXpAwarded] = useState<number | null>(null);
   const [saleXpAwarded, setSaleXpAwarded] = useState<number | null>(null);
+  const [posTooltip, setPosTooltip] = useState<{ title: string; desc: string } | null>(null);
+  const openPosTooltip = useCallback((label: string) => {
+    const desc = FINANCIAL_TERMS[label];
+    if (desc) setPosTooltip({ title: label, desc });
+  }, []);
 
   useEffect(() => {
     if (!visible) {
@@ -253,12 +260,15 @@ export function MarketCandlesModal({
                         Valores en tiempo real (beneficio no realizado)
                       </Text>
                       <View style={{ gap: 8 }}>
-                        <View
-                          style={{
+                        <Pressable
+                          onLongPress={() => openPosTooltip('Acciones')}
+                          delayLongPress={400}
+                          style={({ pressed }) => ({
                             flexDirection: 'row',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                          }}
+                            opacity: pressed ? 0.85 : 1,
+                          })}
                         >
                           <Text
                             style={[
@@ -278,13 +288,16 @@ export function MarketCandlesModal({
                               maximumFractionDigits: 4,
                             })}
                           </Text>
-                        </View>
-                        <View
-                          style={{
+                        </Pressable>
+                        <Pressable
+                          onLongPress={() => openPosTooltip('Precio medio compra')}
+                          delayLongPress={400}
+                          style={({ pressed }) => ({
                             flexDirection: 'row',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                          }}
+                            opacity: pressed ? 0.85 : 1,
+                          })}
                         >
                           <Text
                             style={[
@@ -306,13 +319,16 @@ export function MarketCandlesModal({
                             )}{' '}
                             $
                           </Text>
-                        </View>
-                        <View
-                          style={{
+                        </Pressable>
+                        <Pressable
+                          onLongPress={() => openPosTooltip('Valor actual')}
+                          delayLongPress={400}
+                          style={({ pressed }) => ({
                             flexDirection: 'row',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                          }}
+                            opacity: pressed ? 0.85 : 1,
+                          })}
                         >
                           <Text
                             style={[
@@ -334,10 +350,12 @@ export function MarketCandlesModal({
                             })}{' '}
                             $
                           </Text>
-                        </View>
+                        </Pressable>
                         {lastClose != null && (
-                          <View
-                            style={{
+                          <Pressable
+                            onLongPress={() => openPosTooltip('Beneficios')}
+                            delayLongPress={400}
+                            style={({ pressed }) => ({
                               flexDirection: 'row',
                               justifyContent: 'space-between',
                               alignItems: 'center',
@@ -346,7 +364,8 @@ export function MarketCandlesModal({
                               borderTopWidth: 1,
                               borderTopColor:
                                 palette.surfaceBorder ?? 'rgba(0,0,0,0.08)',
-                            }}
+                              opacity: pressed ? 0.85 : 1,
+                            })}
                           >
                             <Text
                               style={[
@@ -387,7 +406,7 @@ export function MarketCandlesModal({
                               })}{' '}
                               $
                             </Text>
-                          </View>
+                          </Pressable>
                         )}
                       </View>
                     </View>
@@ -658,6 +677,14 @@ export function MarketCandlesModal({
           )}
         </View>
       </CardModal>
+
+      <FinancialTooltipModal
+        visible={!!posTooltip}
+        title={posTooltip?.title ?? ''}
+        description={posTooltip?.desc ?? ''}
+        palette={palette}
+        onClose={() => setPosTooltip(null)}
+      />
 
       <VenderSheet
         visible={venderOpen}

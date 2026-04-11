@@ -47,3 +47,5 @@ app-example
 
 # Cursor Agent Skills (local tooling)
 .agents/skills/
+
+.vercel

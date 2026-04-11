@@ -26,6 +26,11 @@ export function createIApreguntasStyles(palette: Palette) {
       borderRadius: 999,
       backgroundColor: palette.primary,
     },
+    sectionTitle: {
+      fontSize: 11,
+      letterSpacing: 1.4,
+      textTransform: 'uppercase',
+    },
     welcomeArea: {
       alignItems: 'flex-start',
       paddingHorizontal: 20,

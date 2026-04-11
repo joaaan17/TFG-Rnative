@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useCallback, useMemo, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -41,6 +41,8 @@ import type { CashTransactionView } from '../types/cash.types';
 import { getLogoUrlForSymbol } from '../utils/logoForSymbol';
 import { createCashStyles } from './Cash.styles';
 import { createInvestmentsStyles } from './Investments.styles';
+import { FINANCIAL_TERMS } from '../constants/financialTerms';
+import { FinancialTooltipModal } from '../components/FinancialTooltipModal';
 
 /**
  * Pantalla de Inversiones: evolución global de la cartera, buscador y cards de acciones.
@@ -93,6 +95,14 @@ export function InvestmentsScreen() {
     () => new Date(),
   );
   const [calendarMonth, setCalendarMonth] = React.useState(() => new Date());
+  const [portfolioInfoTooltip, setPortfolioInfoTooltip] = useState<{
+    title: string;
+    desc: string;
+  } | null>(null);
+  const openPortfolioInfoTooltip = useCallback((label: string) => {
+    const desc = FINANCIAL_TERMS[label];
+    if (desc) setPortfolioInfoTooltip({ title: label, desc });
+  }, []);
 
   const {
     balance: cashOverviewBalance,
@@ -308,47 +318,60 @@ export function InvestmentsScreen() {
         ) : (
           <>
             <View style={styles.chartSection}>
-              <View style={styles.chartLabel}>
-                <View style={styles.chartLabelAccent} />
-                <Text
-                  style={[
-                    Hierarchy.titleSection,
-                    styles.chartLabelText,
-                    { color: palette.icon ?? palette.text },
-                  ]}
-                >
-                  Evolución de la cartera
-                </Text>
-              </View>
-              <View style={styles.amountWrap}>
-                <Text
-                  style={[
-                    Hierarchy.value,
-                    styles.amountValue,
-                    { color: palette.text },
-                  ]}
-                >
-                  {session
-                    ? tab === 0
-                      ? `${totalCarteraValue.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
-                      : `${cashBalance.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
-                    : '—'}
-                </Text>
-                <Text
-                  variant="muted"
-                  style={[
-                    Hierarchy.bodySmall,
-                    styles.amountLabel,
-                    { color: palette.icon },
-                  ]}
-                >
-                  {session
-                    ? tab === 0
-                      ? 'Valor total cartera'
-                      : 'Cash disponible'
-                    : 'Inicia sesión para ver tu cartera'}
-                </Text>
-              </View>
+              <Pressable
+                onLongPress={() => openPortfolioInfoTooltip('Evolución de la cartera')}
+                delayLongPress={400}
+              >
+                <View style={styles.chartLabel}>
+                  <View style={styles.chartLabelAccent} />
+                  <Text
+                    style={[
+                      Hierarchy.titleSection,
+                      styles.chartLabelText,
+                      { color: palette.icon ?? palette.text },
+                    ]}
+                  >
+                    Evolución de la cartera
+                  </Text>
+                </View>
+              </Pressable>
+              <Pressable
+                onLongPress={() => {
+                  if (session) openPortfolioInfoTooltip('Valor total cartera');
+                }}
+                delayLongPress={400}
+                disabled={!session}
+              >
+                <View style={styles.amountWrap}>
+                  <Text
+                    style={[
+                      Hierarchy.value,
+                      styles.amountValue,
+                      { color: palette.text },
+                    ]}
+                  >
+                    {session
+                      ? tab === 0
+                        ? `${totalCarteraValue.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
+                        : `${cashBalance.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
+                      : '—'}
+                  </Text>
+                  <Text
+                    variant="muted"
+                    style={[
+                      Hierarchy.bodySmall,
+                      styles.amountLabel,
+                      { color: palette.icon },
+                    ]}
+                  >
+                    {session
+                      ? tab === 0
+                        ? 'Valor total cartera'
+                        : 'Cash disponible'
+                      : 'Inicia sesión para ver tu cartera'}
+                  </Text>
+                </View>
+              </Pressable>
               <PortfolioPerformanceChart
                 token={session?.token ?? null}
                 height={280}
@@ -534,6 +557,13 @@ export function InvestmentsScreen() {
         open={selectedCashTransaction != null}
         onClose={() => setSelectedCashTransaction(null)}
         transaction={selectedCashTransaction}
+      />
+      <FinancialTooltipModal
+        visible={!!portfolioInfoTooltip}
+        title={portfolioInfoTooltip?.title ?? ''}
+        description={portfolioInfoTooltip?.desc ?? ''}
+        palette={palette}
+        onClose={() => setPortfolioInfoTooltip(null)}
       />
     </View>
   );

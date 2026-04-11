@@ -17,8 +17,6 @@ import {
   View,
 } from 'react-native';
 
-import { SocialConnections } from './social-connections';
-
 export type SignInFormProps = {
   isRegister?: boolean;
   name?: string;
@@ -236,7 +234,7 @@ export function SignInForm({
               </>
             )}
           </Text>
-          <SocialConnections />
+          {/* Login social (Google) eliminado: no usar SocialConnections aquí */}
         </CardContent>
       </Card>
     </View>

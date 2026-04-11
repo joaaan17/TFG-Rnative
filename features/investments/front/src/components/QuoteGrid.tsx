@@ -1,9 +1,11 @@
-import React from 'react';
-import { View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Pressable, View } from 'react-native';
 import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
 import type { QuoteSnapshot } from '../api/marketOverviewClient';
 import type { Palette } from '@/shared/hooks/use-palette';
+import { FINANCIAL_TERMS } from '../constants/financialTerms';
+import { FinancialTooltipModal } from './FinancialTooltipModal';
 
 const EMPTY = '—';
 
@@ -39,6 +41,12 @@ export function QuoteGrid({ quote, palette }: QuoteGridProps) {
   const mutedColor = palette.icon ?? palette.text;
   const borderColor = palette.surfaceBorder ?? palette.surfaceMuted;
 
+  const [tooltip, setTooltip] = useState<{ title: string; desc: string } | null>(null);
+  const openTooltip = useCallback((label: string) => {
+    const desc = FINANCIAL_TERMS[label];
+    if (desc) setTooltip({ title: label, desc });
+  }, []);
+
   return (
     <View style={{ marginTop: 16, marginBottom: 16 }}>
       <Text
@@ -57,9 +65,12 @@ export function QuoteGrid({ quote, palette }: QuoteGridProps) {
         }}
       >
         {ROWS.map(({ label, getValue }) => (
-          <View
+          <Pressable
             key={label}
-            style={{
+            onLongPress={() => openTooltip(label)}
+            delayLongPress={400}
+            accessibilityHint="Mantén pulsado para ver la explicación"
+            style={({ pressed }) => ({
               minWidth: '30%',
               flex: 1,
               maxWidth: '48%',
@@ -69,7 +80,8 @@ export function QuoteGrid({ quote, palette }: QuoteGridProps) {
               backgroundColor: palette.surfaceMuted ?? `${palette.primary}08`,
               borderWidth: 1,
               borderColor: borderColor + '40',
-            }}
+              opacity: pressed ? 0.85 : 1,
+            })}
           >
             <Text
               style={[Hierarchy.captionSmall, { color: mutedColor }]}
@@ -86,9 +98,17 @@ export function QuoteGrid({ quote, palette }: QuoteGridProps) {
             >
               {getValue(quote)}
             </Text>
-          </View>
+          </Pressable>
         ))}
       </View>
+
+      <FinancialTooltipModal
+        visible={!!tooltip}
+        title={tooltip?.title ?? ''}
+        description={tooltip?.desc ?? ''}
+        palette={palette}
+        onClose={() => setTooltip(null)}
+      />
     </View>
   );
 }

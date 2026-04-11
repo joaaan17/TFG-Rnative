@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 import { LightweightChartView } from '@/features/market-chart';
 import type { Candle } from '@/features/market-chart';
@@ -7,6 +7,9 @@ import { usePalette } from '@/shared/hooks/use-palette';
 import { Hierarchy } from '@/design-system/typography';
 import { usePortfolioAnalytics } from '../hooks/usePortfolioAnalytics';
 import type { PerformanceRange } from '../api/investmentsClient';
+import { AnimatedPillSelector } from '@/shared/components/ui/animated-pill-selector';
+import { FINANCIAL_TERMS } from '../constants/financialTerms';
+import { FinancialTooltipModal } from './FinancialTooltipModal';
 
 const RANGE_OPTIONS: { value: PerformanceRange; label: string }[] = [
   { value: '1D', label: '1 D' },
@@ -17,9 +20,9 @@ const RANGE_OPTIONS: { value: PerformanceRange; label: string }[] = [
   { value: '1Y', label: '1 A' },
 ];
 
-const CHART_MODES = [
-  { id: 'equity' as const, label: 'Valor cartera' },
-  { id: 'invested' as const, label: 'Invertido' },
+const CHART_MODE_OPTIONS: { value: 'equity' | 'invested'; label: string }[] = [
+  { value: 'equity', label: 'Valor cartera' },
+  { value: 'invested', label: 'Invertido' },
 ];
 
 /** Tipo mínimo de un punto de performance para interpolación */
@@ -120,6 +123,11 @@ export function PortfolioPerformanceChart({
   const palette = usePalette();
   const [range, setRange] = useState<PerformanceRange>('1M');
   const [mode, setMode] = useState<'equity' | 'invested'>('equity');
+  const [tooltip, setTooltip] = useState<{ title: string; desc: string } | null>(null);
+  const openTooltip = useCallback((label: string) => {
+    const desc = FINANCIAL_TERMS[label];
+    if (desc) setTooltip({ title: label, desc });
+  }, []);
 
   const { performance, loading, error, fetchPerformance, refetch } =
     usePortfolioAnalytics(token, range);
@@ -185,46 +193,14 @@ export function PortfolioPerformanceChart({
 
   return (
     <View style={{ paddingHorizontal: 0 }}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingVertical: 8,
-          gap: 6,
-          marginBottom: 6,
-        }}
-      >
-        {RANGE_OPTIONS.map((opt) => (
-          <Pressable
-            key={opt.value}
-            onPress={() => setRange(opt.value)}
-            style={{
-              flex: 1,
-              paddingVertical: 10,
-              borderRadius: 8,
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor:
-                range === opt.value
-                  ? palette.primary
-                  : (palette.surfaceMuted ?? '#f0f0f0'),
-            }}
-          >
-            <Text
-              style={[
-                Hierarchy.action,
-                {
-                  color:
-                    range === opt.value
-                      ? (palette.primaryText ?? '#FFF')
-                      : palette.text,
-                },
-              ]}
-            >
-              {opt.label}
-            </Text>
-          </Pressable>
-        ))}
+      <View style={{ paddingVertical: 8, marginBottom: 6 }}>
+        <AnimatedPillSelector
+          options={RANGE_OPTIONS}
+          value={range}
+          onChange={setRange}
+          palette={palette}
+          onLongPress={openTooltip}
+        />
       </View>
 
       {isLoading && candles.length === 0 && (
@@ -288,65 +264,32 @@ export function PortfolioPerformanceChart({
       )}
 
       {!isLoading && candles.length > 0 && (
-        <>
-          <LightweightChartView
-            key={`perf-${mode}-${range}`}
-            candles={candles}
-            height={height}
-            seriesType="line"
-            intraday={range === '1D'}
-            theme={{
-              layoutBackgroundColor:
-                palette.mainBackground ?? palette.background,
-              textColor: palette.text,
-              gridColor: palette.surfaceBorder ?? '#CBD5E1',
-              upColor: palette.primary,
-              fontSize: Hierarchy.captionSmall?.fontSize ?? 11,
-            }}
-          />
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingTop: 8,
-              gap: 6,
-            }}
-          >
-            {CHART_MODES.map((m) => (
-              <Pressable
-                key={m.id}
-                onPress={() => setMode(m.id)}
-                style={{
-                  flex: 1,
-                  paddingVertical: 10,
-                  borderRadius: 8,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor:
-                    mode === m.id
-                      ? palette.primary
-                      : (palette.surfaceMuted ?? '#f0f0f0'),
-                }}
-              >
-                <Text
-                  style={[
-                    Hierarchy.action,
-                    {
-                      color:
-                        mode === m.id
-                          ? (palette.primaryText ?? '#FFF')
-                          : palette.text,
-                    },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {m.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </>
+        <LightweightChartView
+          key={`perf-${mode}-${range}`}
+          candles={candles}
+          height={height}
+          seriesType="line"
+          intraday={range === '1D'}
+          theme={{
+            layoutBackgroundColor:
+              palette.mainBackground ?? palette.background,
+            textColor: palette.text,
+            gridColor: palette.surfaceBorder ?? '#CBD5E1',
+            upColor: palette.primary,
+            fontSize: Hierarchy.captionSmall?.fontSize ?? 11,
+          }}
+        />
       )}
+
+      <View style={{ paddingTop: 8 }}>
+        <AnimatedPillSelector
+          options={CHART_MODE_OPTIONS}
+          value={mode}
+          onChange={setMode}
+          palette={palette}
+          onLongPress={openTooltip}
+        />
+      </View>
 
       {!isLoading && candles.length === 0 && !errMsg && token && (
         <View
@@ -364,6 +307,14 @@ export function PortfolioPerformanceChart({
           </Text>
         </View>
       )}
+
+      <FinancialTooltipModal
+        visible={!!tooltip}
+        title={tooltip?.title ?? ''}
+        description={tooltip?.desc ?? ''}
+        palette={palette}
+        onClose={() => setTooltip(null)}
+      />
     </View>
   );
 }
