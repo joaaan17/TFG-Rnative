@@ -22,8 +22,7 @@ process.on('unhandledRejection', (reason) => {
   console.error('⚠️ [Server] unhandledRejection (ignorado):', reason);
 });
 process.on('uncaughtException', (err) => {
-  console.error('💥 [Server] uncaughtException:', err);
-  process.exit(1); // Estado corrupto — mejor reiniciar limpio
+  console.error('⚠️ [Server] uncaughtException (ignorado):', err);
 });
 
 app.use(
