@@ -27,7 +27,7 @@ export function useAuthViewModel() {
     }
   }, [email, password, signIn]);
 
-  const handleRegister = React.useCallback(async () => {
+  const handleRegister = React.useCallback(async (): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
     try {
@@ -38,9 +38,10 @@ export function useAuthViewModel() {
         password,
         confirmPassword,
       );
-      // RegisterScreen mostrará el modal de verificación
+      return true;
     } catch (err) {
       setError(authService.extractErrorMessage(err, 'Error desconocido'));
+      return false;
     } finally {
       setIsLoading(false);
     }

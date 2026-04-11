@@ -55,10 +55,9 @@ export function RegisterScreen() {
       return;
     }
 
-    // Llamar al handleRegister original
-    await handleRegister();
-    // Si llegamos aquí sin error, el registro fue exitoso
-    // Mostrar modal de verificación
+    const success = await handleRegister();
+    if (!success) return;
+
     setRegisteredEmail(cleanEmail);
     setShowVerificationModal(true);
   }, [name, username, email, password, confirmPassword, handleRegister]);
