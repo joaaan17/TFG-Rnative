@@ -64,26 +64,26 @@ const startServer = async () => {
     await mongoose.connect(authEnv.dbUri);
     console.log('✅ MongoDB Conectado exitosamente');
 
-    startPriceCacheWarmup();
-    startQuizScheduler();
+    // B) Levantar Servidor Express ANTES de los schedulers
+    const PORT = Number(process.env.PORT) || 3000;
+    console.log(`⏳ Intentando escuchar en puerto ${PORT}...`);
 
-    // B) Levantar Servidor Express
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-      console.log(
-        `📡 Endpoint de Auth listo en http://localhost:${PORT}/api/auth/login`,
-      );
-      console.log(
-        `📋 Noticias/quiz: POST http://localhost:${PORT}/api/ia-noticias/quiz`,
-      );
-      console.log(
-        `💰 Inversiones: POST http://localhost:${PORT}/api/investments/orders/buy | POST http://localhost:${PORT}/api/investments/orders/sell`,
-      );
+      console.log(`📡 NODE_ENV=${process.env.NODE_ENV}`);
     });
+
+    server.on('error', (err) => {
+      console.error('❌ Error en app.listen():', err);
+    });
+
+    // C) Schedulers en background (después de que el servidor ya escucha)
+    try { startPriceCacheWarmup(); } catch (e) { console.error('⚠️ PriceCache warmup error:', e); }
+    try { startQuizScheduler(); } catch (e) { console.error('⚠️ QuizScheduler error:', e); }
+
   } catch (error) {
     console.error('❌ Error al iniciar el servidor:', error);
-    process.exit(1);
+    // NO process.exit() — dejamos que Railway reinicie si es necesario
   }
 };
 
