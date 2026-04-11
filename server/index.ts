@@ -53,8 +53,8 @@ const startServer = async () => {
     const PORT = Number(process.env.PORT) || 3000;
     console.log(`⏳ Intentando escuchar en puerto ${PORT}...`);
 
-    const server = app.listen(PORT, () => {
-      console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Servidor corriendo en http://0.0.0.0:${PORT}`);
       console.log(`📡 NODE_ENV=${process.env.NODE_ENV}`);
     });
 
