@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Pressable } from 'react-native';
-import { CheckCircle2, ChevronRight } from 'lucide-react-native';
+import { CheckCircle2, ChevronRight, X } from 'lucide-react-native';
 import { CardModal } from '@/shared/components/card-modal';
 import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
@@ -36,16 +36,44 @@ export function SaleSuccessModal({
     <CardModal
       open={visible}
       onClose={onClose}
-      maxHeightPct={0.5}
+      maxHeightPct={0.72}
       closeOnBackdropPress={false}
       scrollable={false}
       contentNoPaddingTop
     >
+      {/* Botón de cierre en la esquina superior derecha */}
       <View
         style={{
-          flex: 1,
+          position: 'absolute',
+          top: 16,
+          right: 16,
+          zIndex: 10,
+        }}
+      >
+        <Pressable
+          onPress={onClose}
+          hitSlop={12}
+          style={({ pressed }) => ({
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: palette.surfaceBorder
+              ? `${palette.surfaceBorder}40`
+              : 'rgba(128,128,128,0.15)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            opacity: pressed ? 0.6 : 1,
+          })}
+          accessibilityRole="button"
+          accessibilityLabel="Cerrar"
+        >
+          <X size={16} color={palette.icon ?? palette.text} strokeWidth={2.5} />
+        </Pressable>
+      </View>
+      <View
+        style={{
           paddingHorizontal: 24,
-          paddingVertical: 32,
+          paddingVertical: 24,
           alignItems: 'center',
         }}
       >
@@ -57,7 +85,7 @@ export function SaleSuccessModal({
             backgroundColor: `${palette.primary}20`,
             justifyContent: 'center',
             alignItems: 'center',
-            marginBottom: 20,
+            marginBottom: 16,
           }}
         >
           <CheckCircle2 size={44} color={palette.primary} strokeWidth={2} />
@@ -100,7 +128,7 @@ export function SaleSuccessModal({
             {
               color: palette.icon ?? palette.text,
               textAlign: 'center',
-              marginBottom: 28,
+              marginBottom: 20,
             },
           ]}
         >

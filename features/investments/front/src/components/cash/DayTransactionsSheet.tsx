@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@/shared/components/ui/text';
@@ -103,6 +103,7 @@ export function DayTransactionsSheet({
 }: DayTransactionsSheetProps) {
   const palette = usePalette();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const isToday =
     selectedDate.getDate() === new Date().getDate() &&
     selectedDate.getMonth() === new Date().getMonth() &&
@@ -124,6 +125,7 @@ export function DayTransactionsSheet({
         s.daySheetWrap,
         { backgroundColor: sheetBg },
         { paddingBottom: 48 + insets.bottom + 64 },
+        { minHeight: windowHeight },
       ]}
     >
       <View style={[s.daySheetHandle, { backgroundColor: palette.primary }]} />
@@ -147,9 +149,10 @@ export function DayTransactionsSheet({
         </View>
       ) : (
         <ScrollView
-          style={{ maxHeight: 320 }}
+          style={{ maxHeight: windowHeight * 0.52 }}
           contentContainerStyle={{ paddingBottom: 24 }}
           showsVerticalScrollIndicator={false}
+          nestedScrollEnabled
         >
           {transactions.map((tx) => {
             const impact = getNetImpact(tx);
@@ -167,32 +170,25 @@ export function DayTransactionsSheet({
                 : palette.primary;
 
             return (
-              <Pressable
+              // El View gestiona TODO el layout (flexDirection:row, fondo, bordes).
+              // El Pressable es un overlay absoluteFill: así evitamos que
+              // function-style en Pressable rompa flexDirection:row en Android.
+              <View
                 key={tx.id}
-                onPress={() => onSelectTransaction(tx)}
-                style={({ pressed }) => [
+                style={[
                   s.daySheetCard,
                   {
                     backgroundColor:
                       palette.surfaceMuted ?? palette.chartAreaBackground,
                   },
-                  pressed && { opacity: 0.9 },
                 ]}
-                accessibilityRole="button"
-                accessibilityLabel={`Ver detalle: ${getTitle(tx)}`}
               >
                 <View
-                  style={[
-                    s.daySheetCardAccent,
-                    { backgroundColor: accentColor },
-                  ]}
+                  style={[s.daySheetCardAccent, { backgroundColor: accentColor }]}
                 />
                 <View style={s.daySheetCardBody}>
                   <Text
-                    style={[
-                      Hierarchy.bodySmallSemibold,
-                      { color: palette.text },
-                    ]}
+                    style={[Hierarchy.bodySmallSemibold, { color: palette.text }]}
                     numberOfLines={1}
                   >
                     {getTitle(tx)}
@@ -239,7 +235,16 @@ export function DayTransactionsSheet({
                     </Text>
                   )}
                 </View>
-              </Pressable>
+                {/* Overlay tocable encima del contenido — sin function-style para
+                    que Android no rompa el layout de los hijos superiores */}
+                <Pressable
+                  onPress={() => onSelectTransaction(tx)}
+                  android_ripple={{ color: 'rgba(0,0,0,0.06)', borderless: false }}
+                  style={StyleSheet.absoluteFill}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Ver detalle: ${getTitle(tx)}`}
+                />
+              </View>
             );
           })}
         </ScrollView>

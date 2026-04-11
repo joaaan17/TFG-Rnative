@@ -3,7 +3,7 @@ import { Platform, StyleSheet } from 'react-native';
 import type { Palette } from '@/shared/hooks/use-palette';
 import { Spacing } from '@/design-system/spacing';
 
-export function createCashStyles(palette: Palette) {
+export function createCashStyles(palette: Palette, screenWidth?: number) {
   return StyleSheet.create({
     header: {
       paddingTop: 0,
@@ -146,11 +146,16 @@ export function createCashStyles(palette: Palette) {
     // Calendario (bloque tipo referencia: fondo primary, mes centrado, L M X J V S D)
     calendarBlock: {
       marginHorizontal: -20,
+      // En Android, marginHorizontal negativo + overflow:'hidden' hace que el motor
+      // de layout calcule ancho 0 para los hijos flex, concatenando los números del
+      // calendario. Solución: ancho explícito en Android y sin overflow:hidden.
+      ...(Platform.OS === 'android' && screenWidth ? { width: screenWidth } : {}),
       marginBottom: 0,
       paddingTop: Spacing.md,
       paddingBottom: Spacing.lg,
       paddingHorizontal: Spacing.md,
-      overflow: 'hidden',
+      // overflow:'hidden' solo en web (para recorte); en Android rompe flex-children.
+      ...(Platform.OS === 'web' ? ({ overflow: 'hidden' } as const) : {}),
     },
     calendarHeader: {
       flexDirection: 'row',
@@ -186,14 +191,20 @@ export function createCashStyles(palette: Palette) {
     gridRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: 2,
+      paddingVertical: Platform.OS === 'android' ? 5 : 2,
     },
-    dayCell: {
+    // Wrapper con flex:1 para distribuir correctamente las 7 columnas en Android.
+    // Pressable con function-style no propaga flex:1 en el primer layout pass.
+    dayCellWrap: {
       flex: 1,
       alignItems: 'center',
+    },
+    dayCell: {
+      alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: Spacing.sm,
-      minHeight: 40,
+      paddingVertical: Platform.OS === 'android' ? 10 : Spacing.sm,
+      minHeight: Platform.OS === 'android' ? 48 : 40,
+      width: '100%',
     },
     dayNumber: {
       fontSize: 15,
@@ -224,6 +235,8 @@ export function createCashStyles(palette: Palette) {
     daySheetWrap: {
       marginTop: -30,
       marginHorizontal: -20,
+      // Mismo problema que calendarBlock: ancho explícito en Android para flex correcto.
+      ...(Platform.OS === 'android' && screenWidth ? { width: screenWidth } : {}),
       marginBottom: -160,
       paddingTop: Spacing.md,
       paddingHorizontal: Spacing.md,
@@ -252,7 +265,11 @@ export function createCashStyles(palette: Palette) {
     },
     daySheetCard: {
       flexDirection: 'row',
-      alignItems: 'center',
+      // 'stretch' en lugar de 'center': permite que la barra izquierda
+      // (daySheetCardAccent) ocupe toda la altura en Android.
+      // En iOS/web 'center' también funciona con alignSelf:'stretch' pero
+      // en Android la combinación falla (barra con altura 0).
+      alignItems: 'stretch',
       paddingVertical: Spacing.md,
       paddingHorizontal: Spacing.md,
       marginBottom: Spacing.sm,
@@ -264,15 +281,18 @@ export function createCashStyles(palette: Palette) {
       borderRadius: 2,
       marginRight: Spacing.md,
       alignSelf: 'stretch',
+      minHeight: 40,
     },
     daySheetCardBody: {
       flex: 1,
       minWidth: 0,
+      justifyContent: 'center',
     },
     daySheetCardAmount: {
       marginLeft: Spacing.sm,
       minWidth: 88,
       alignItems: 'flex-end',
+      justifyContent: 'center',
     },
   });
 }

@@ -20,9 +20,11 @@ const cardShadow = Platform.select({
 export function createDashboardStyles(palette: Palette, screenWidth: number) {
   const paddingH = 20;
   const gap = 12;
-  const cardWidth = (screenWidth - paddingH * 2 - gap) / 2;
+  // Math.floor evita que el redondeo de decimales en Android haga que
+  // la suma de tarjetas + gaps supere el ancho del contenedor.
+  const cardWidth = Math.floor((screenWidth - paddingH * 2 - gap) / 2);
   /** Ancho para 3 cards por fila (2 gaps entre ellas). */
-  const cardWidthThree = (screenWidth - paddingH * 2 - gap * 2) / 3;
+  const cardWidthThree = Math.floor((screenWidth - paddingH * 2 - gap * 2) / 3);
 
   const cardBg = palette.surfaceMuted ?? palette.background;
   const cardBorder = palette.surfaceBorder ?? palette.surfaceMuted;
@@ -122,10 +124,17 @@ export function createDashboardStyles(palette: Palette, screenWidth: number) {
     contextGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap,
+      // width:'100%' es imprescindible en Android: flexDirection:'row' + flexWrap
+      // hace que el contenedor se encoja al tamaño de su contenido, ignorando el
+      // ancho del padre. Sin él, justifyContent:'space-between' no tiene espacio
+      // extra que distribuir y las tarjetas quedan apiladas a la izquierda.
+      width: '100%',
+      justifyContent: 'space-between',
+      rowGap: gap,
       marginBottom: Spacing.lg,
     },
     contextCard: {
+      // Math.floor evita que el redondeo de decimales desborde el contenedor.
       width: cardWidthThree,
     },
     /** Activo dominante: ocupa toda la fila debajo del grid */

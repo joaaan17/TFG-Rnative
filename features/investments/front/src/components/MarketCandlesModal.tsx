@@ -185,7 +185,7 @@ export function MarketCandlesModal({
         scrollable={!showActions}
         contentNoPaddingTop
       >
-        <View style={{ flex: 1, minHeight: 0 }}>
+        <View style={showActions ? undefined : { flex: 1, minHeight: 0 }}>
           <ModalHeader
             title={asset?.name ?? ''}
             subtitle={asset?.symbol ?? ''}
@@ -502,12 +502,13 @@ export function MarketCandlesModal({
                   (palette.surfaceBorder ?? palette.surfaceMuted) + '60',
               }}
             >
-              <Pressable
-                onPress={onOrdenes}
-                accessibilityRole="button"
-                accessibilityLabel="Órdenes"
+              <View style={{ flex: 1 }}>
+                <Pressable
+                  onPress={onOrdenes}
+                  accessibilityRole="button"
+                accessibilityLabel="Historial"
                 android_ripple={{ color: palette.surfaceBorder ?? 'rgba(0,0,0,0.1)', borderless: false }}
-                style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.85 : 1 })}
+                style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
               >
                 <View
                   style={{
@@ -521,51 +522,53 @@ export function MarketCandlesModal({
                   }}
                 >
                   <Text style={[Hierarchy.action, { color: palette.primary }]}>
-                    Órdenes
+                    Historial
                   </Text>
-                </View>
-              </Pressable>
-              <Pressable
-                onPress={() => setOperarStep('actions')}
-                accessibilityRole="button"
-                accessibilityLabel="Operar"
-                android_ripple={{ color: 'rgba(255,255,255,0.2)', borderless: false }}
-                style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.85 : 1 })}
-              >
-                <View
-                  style={{
-                    height: 48,
-                    borderRadius: 12,
-                    backgroundColor: palette.primary,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
+                  </View>
+                </Pressable>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Pressable
+                  onPress={() => setOperarStep('actions')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Operar"
+                  android_ripple={{ color: 'rgba(255,255,255,0.2)', borderless: false }}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
                 >
-                  <Text
-                    style={[
-                      Hierarchy.action,
-                      { color: palette.primaryText ?? '#FFF', fontWeight: '600' },
-                    ]}
+                  <View
+                    style={{
+                      height: 48,
+                      borderRadius: 12,
+                      backgroundColor: palette.primary,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
                   >
-                    Operar
-                  </Text>
-                </View>
-              </Pressable>
+                    <Text
+                      style={[
+                        Hierarchy.action,
+                        { color: palette.primaryText ?? '#FFF', fontWeight: '600' },
+                      ]}
+                    >
+                      Operar
+                    </Text>
+                  </View>
+                </Pressable>
+              </View>
             </View>
           )}
 
           {showActions && (
             <Animated.View
               style={{
-                flex: 1,
                 paddingHorizontal: 16,
-                paddingVertical: 20,
-                justifyContent: 'center',
+                paddingTop: 28,
+                paddingBottom: 24,
                 opacity: actionsOpacity,
               }}
             >
               <Animated.View
-                style={{ marginTop: 24, transform: [{ translateY: comprarTranslateY }] }}
+                style={{ transform: [{ translateY: comprarTranslateY }] }}
               >
                 <Pressable
                   onPress={() => setComprarOpen(true)}
@@ -670,7 +673,10 @@ export function MarketCandlesModal({
             const xp = await award('SELL_STOCK');
             setSaleXpAwarded(xp);
             setVenderOpen(false);
-            setSaleSuccessOpen(true);
+            // En Android los Modales nativos no pueden apilarse: esperamos a que
+            // VenderSheet termine su animación de cierre (180 ms) antes de abrir
+            // el modal de éxito, evitando bloqueo de toques y XP invisible.
+            setTimeout(() => setSaleSuccessOpen(true), 280);
           }
         }}
         sellLoading={sellLoading}
@@ -691,7 +697,10 @@ export function MarketCandlesModal({
             const xp = await award('BUY_STOCK');
             setPurchaseXpAwarded(xp);
             setComprarOpen(false);
-            setPurchaseSuccessOpen(true);
+            // En Android los Modales nativos no pueden apilarse: esperamos a que
+            // InvertirSheet termine su animación de cierre (180 ms) antes de abrir
+            // el modal de éxito, evitando bloqueo de toques y XP invisible.
+            setTimeout(() => setPurchaseSuccessOpen(true), 280);
           }
         }}
         buyLoading={buyLoading}

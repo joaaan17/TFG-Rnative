@@ -24,7 +24,6 @@ import {
 } from 'lucide-react-native';
 import { usePalette } from '@/shared/hooks/use-palette';
 
-// Blur opcional para integrar el dock con el fondo (iOS/Android).
 let BlurViewComponent: React.ComponentType<any> | null = null;
 try {
   if (typeof Platform !== 'undefined' && Platform.OS !== 'web') {
@@ -38,7 +37,10 @@ try {
 
 const INDICATOR_DURATION_MS = 280;
 const INDICATOR_EASING = Easing.out(Easing.cubic);
-const ROW_PADDING_H = 8;
+const ITEM_COUNT = 5;
+const HALO_SIZE = 20;
+// Espacio reservado encima de los iconos para el indicador.
+const INDICATOR_AREA = 14;
 
 export type AppMenubarProps = {
   activePath?: string;
@@ -58,12 +60,16 @@ export function AppMenubar({
   onPressQuestion,
 }: AppMenubarProps) {
   const palette = usePalette();
-  const [rowWidth, setRowWidth] = React.useState(0);
+
+  // Posiciones X medidas directamente de cada ítem (evita cálculos aproximados).
+  const measuredCenterX = React.useRef<(number | null)[]>(
+    Array(ITEM_COUNT).fill(null),
+  );
   const [indicatorReady, setIndicatorReady] = React.useState(false);
   const isInitialPosition = React.useRef(true);
+
   const centerXSv = useSharedValue(0);
-  const ITEM_COUNT = 5;
-  const HALO_SIZE = 20;
+  const indexSv = useSharedValue(0);
 
   function withAlpha(hex: string, alpha01: number) {
     const a = Math.max(0, Math.min(1, alpha01));
@@ -134,48 +140,67 @@ export function AppMenubar({
     items.findIndex((it) => it.path === activePath),
   );
 
-  const indexSv = useSharedValue(activeIndex);
+  // Mueve el indicador al ítem activo usando posiciones medidas.
+  const moveIndicator = React.useCallback(
+    (idx: number, animated: boolean) => {
+      const cx = measuredCenterX.current[idx];
+      if (cx == null) return;
+      if (animated) {
+        cancelAnimation(centerXSv);
+        cancelAnimation(indexSv);
+        centerXSv.value = withTiming(cx, {
+          duration: INDICATOR_DURATION_MS,
+          easing: INDICATOR_EASING,
+        });
+        indexSv.value = withTiming(idx, {
+          duration: INDICATOR_DURATION_MS,
+          easing: INDICATOR_EASING,
+        });
+      } else {
+        centerXSv.value = cx;
+        indexSv.value = idx;
+      }
+    },
+    [centerXSv, indexSv],
+  );
 
+  // Cuando cambia el índice activo, mueve el indicador.
   React.useEffect(() => {
-    if (rowWidth <= 0) return;
-    const contentWidth = rowWidth - 2 * ROW_PADDING_H;
-    const slotWidth = contentWidth / ITEM_COUNT;
-    const targetCenterX = ROW_PADDING_H + (activeIndex + 0.5) * slotWidth;
-    if (isInitialPosition.current) {
-      centerXSv.value = targetCenterX;
-      indexSv.value = activeIndex;
-      isInitialPosition.current = false;
-      setIndicatorReady(true);
-    } else {
-      cancelAnimation(centerXSv);
-      cancelAnimation(indexSv);
-      centerXSv.value = withTiming(targetCenterX, {
-        duration: INDICATOR_DURATION_MS,
-        easing: INDICATOR_EASING,
-      });
-      indexSv.value = withTiming(activeIndex, {
-        duration: INDICATOR_DURATION_MS,
-        easing: INDICATOR_EASING,
-      });
-    }
-  }, [activeIndex, rowWidth, centerXSv, indexSv]);
+    moveIndicator(activeIndex, !isInitialPosition.current);
+  }, [activeIndex, moveIndicator]);
 
-  const onRowLayout = React.useCallback((e: LayoutChangeEvent) => {
-    const w = e.nativeEvent.layout.width;
-    if (w > 0) setRowWidth((prev) => (prev === w ? prev : w));
-  }, []);
+  // Callback para cada ítem: registra su centro X y lanza el indicador.
+  const onItemLayout = React.useCallback(
+    (index: number, e: LayoutChangeEvent) => {
+      const { x, width } = e.nativeEvent.layout;
+      measuredCenterX.current[index] = x + width / 2;
+
+      // Cuando todos los ítems están medidos, mostrar el indicador.
+      if (measuredCenterX.current.every((v) => v !== null)) {
+        const cx = measuredCenterX.current[activeIndex];
+        if (cx != null) {
+          centerXSv.value = cx;
+          indexSv.value = activeIndex;
+          isInitialPosition.current = false;
+          setIndicatorReady(true);
+        }
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activeIndex, centerXSv, indexSv],
+  );
 
   const dotWrapAnimatedStyle = useAnimatedStyle(() => {
     'worklet';
-    const x = centerXSv.value - HALO_SIZE / 2;
     return {
       position: 'absolute' as const,
-      left: 0,
+      // El indicador se posiciona centrado horizontalmente sobre el ítem.
+      left: centerXSv.value - HALO_SIZE / 2,
+      // Verticalmente: centrado en el área reservada encima de los iconos.
+      top: (INDICATOR_AREA - HALO_SIZE) / 2,
       width: HALO_SIZE,
       height: HALO_SIZE,
       borderRadius: HALO_SIZE / 2,
-      top: -10,
-      transform: [{ translateX: x }],
     };
   });
 
@@ -186,40 +211,35 @@ export function AppMenubar({
   const haloBorderColor = palette.surfaceBorder ?? palette.icon ?? palette.text;
 
   const iconWrapStyle0 = useAnimatedStyle(() => {
-    const current = indexSv.value;
-    const t = Math.max(0, 1 - Math.abs(current - 0));
+    const t = Math.max(0, 1 - Math.abs(indexSv.value - 0));
     return {
       transform: [{ scale: interpolate(t, [0, 1], [1, 1.06]) }],
       opacity: interpolate(t, [0, 1], [0.78, 1]),
     };
   }, []);
   const iconWrapStyle1 = useAnimatedStyle(() => {
-    const current = indexSv.value;
-    const t = Math.max(0, 1 - Math.abs(current - 1));
+    const t = Math.max(0, 1 - Math.abs(indexSv.value - 1));
     return {
       transform: [{ scale: interpolate(t, [0, 1], [1, 1.06]) }],
       opacity: interpolate(t, [0, 1], [0.78, 1]),
     };
   }, []);
   const iconWrapStyle2 = useAnimatedStyle(() => {
-    const current = indexSv.value;
-    const t = Math.max(0, 1 - Math.abs(current - 2));
+    const t = Math.max(0, 1 - Math.abs(indexSv.value - 2));
     return {
       transform: [{ scale: interpolate(t, [0, 1], [1, 1.06]) }],
       opacity: interpolate(t, [0, 1], [0.78, 1]),
     };
   }, []);
   const iconWrapStyle3 = useAnimatedStyle(() => {
-    const current = indexSv.value;
-    const t = Math.max(0, 1 - Math.abs(current - 3));
+    const t = Math.max(0, 1 - Math.abs(indexSv.value - 3));
     return {
       transform: [{ scale: interpolate(t, [0, 1], [1, 1.06]) }],
       opacity: interpolate(t, [0, 1], [0.78, 1]),
     };
   }, []);
   const iconWrapStyle4 = useAnimatedStyle(() => {
-    const current = indexSv.value;
-    const t = Math.max(0, 1 - Math.abs(current - 4));
+    const t = Math.max(0, 1 - Math.abs(indexSv.value - 4));
     return {
       transform: [{ scale: interpolate(t, [0, 1], [1, 1.06]) }],
       opacity: interpolate(t, [0, 1], [0.78, 1]),
@@ -255,6 +275,7 @@ export function AppMenubar({
         accessibilityLabel={label}
         style={({ pressed }) => [styles.item, pressed && { opacity: 0.7 }]}
         onPress={() => onPress?.()}
+        onLayout={(e) => onItemLayout(index, e)}
       >
         <Animated.View style={iconWrapStyles[index]}>
           <Icon size={22} color={iconColor} />
@@ -271,31 +292,30 @@ export function AppMenubar({
         {isBlurAvailable && BlurViewComponent ? (
           <BlurViewComponent
             intensity={22}
-            tint={Platform.select({
-              ios: 'default',
-              android: 'default',
-              default: 'default',
-            })}
+            tint="default"
             style={StyleSheet.absoluteFill}
           />
         ) : null}
-        {/* Scrim integrado (sin “cápsula”): solo material + borde superior */}
         <View
           style={[StyleSheet.absoluteFill, { backgroundColor: barBg, pointerEvents: 'none' }]}
         />
 
-        <View style={styles.row} onLayout={onRowLayout}>
-          {rowWidth > 0 && indicatorReady ? (
+        {/* Row: paddingTop = INDICATOR_AREA reserva espacio para el punto */}
+        <View style={styles.row}>
+          {indicatorReady ? (
             <Animated.View
-              style={[styles.dotWrap, dotWrapAnimatedStyle, { pointerEvents: 'none' }]}
+              style={[
+                dotWrapAnimatedStyle,
+                { alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' },
+              ]}
             >
               <View
                 style={[
                   styles.dotHalo,
                   {
-                    backgroundColor: withAlpha(haloBorderColor, 0.5),
+                    backgroundColor: withAlpha(haloBorderColor, 0.45),
                     borderWidth: 1,
-                    borderColor: withAlpha(haloBorderColor, 0.5),
+                    borderColor: withAlpha(haloBorderColor, 0.45),
                   },
                 ]}
               />
@@ -307,6 +327,7 @@ export function AppMenubar({
               />
             </Animated.View>
           ) : null}
+
           {items.map((it, i) => (
             <React.Fragment key={it.key}>
               {renderItem({
@@ -332,7 +353,7 @@ const styles = StyleSheet.create({
   },
   root: {
     width: '100%',
-    overflow: 'hidden',
+    overflow: 'visible',
     ...Platform.select({
       android: { elevation: 12 },
       web: { boxShadow: '0 -4px 12px rgba(11, 18, 32, 0.05)' },
@@ -347,21 +368,17 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    paddingTop: 7,
+    justifyContent: 'space-around',
+    // INDICATOR_AREA px de espacio sobre los iconos para el punto animado.
+    paddingTop: INDICATOR_AREA,
     paddingBottom: 9,
     position: 'relative',
   },
-  dotWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   dotHalo: {
     position: 'absolute',
-    width: 22,
-    height: 22,
-    borderRadius: 10,
+    width: HALO_SIZE,
+    height: HALO_SIZE,
+    borderRadius: HALO_SIZE / 2,
   },
   dot: {
     width: 6,
@@ -370,9 +387,8 @@ const styles = StyleSheet.create({
   },
   item: {
     flex: 1,
-    minHeight: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 3,
   },
 });

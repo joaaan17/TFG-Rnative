@@ -54,7 +54,10 @@ export function InvestmentsScreen() {
     () => createInvestmentsStyles(palette, screenWidth),
     [palette, screenWidth],
   );
-  const cashStyles = useMemo(() => createCashStyles(palette), [palette]);
+  const cashStyles = useMemo(
+    () => createCashStyles(palette, screenWidth),
+    [palette, screenWidth],
+  );
 
   const { session } = useAuthSession();
   const { data: portfolioData, refetch: refetchPortfolio } = usePortfolio(

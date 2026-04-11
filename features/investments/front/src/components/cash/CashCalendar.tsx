@@ -69,6 +69,7 @@ export type CashCalendarProps = {
     | 'weekdaysRow'
     | 'weekdayCell'
     | 'gridRow'
+    | 'dayCellWrap'
     | 'dayCell'
     | 'dayNumber'
     | 'dayNumberFaded'
@@ -168,42 +169,46 @@ export function CashCalendar({
             const hasActivity = daysWithActivity.has(key);
             const selected = isSameDay(correctDate, selectedDate);
 
+            // El View externo maneja flex:1 (distribución de columnas).
+            // Pressable con function-style no aplica flex:1 correctamente
+            // en Android durante el primer layout pass, concatenando números.
             return (
-              <Pressable
-                key={`${rowIndex}-${colIndex}-${key}`}
-                onPress={() => onSelectDay(correctDate)}
-                style={({ pressed }) => [
-                  s.dayCell,
-                  selected && s.daySelectedRing,
-                  pressed && !selected && { opacity: 0.7 },
-                ]}
-                accessibilityLabel={`Día ${cell.day}${hasActivity ? ', con movimientos' : ''}`}
-                accessibilityState={{ selected }}
-              >
-                <Text
-                  style={[
-                    Hierarchy.bodySmallSemibold,
-                    s.dayNumber,
-                    {
-                      color: cell.isCurrentMonth
-                        ? CALENDAR_TEXT
-                        : CALENDAR_TEXT_FADED,
-                    },
+              <View key={`${rowIndex}-${colIndex}-${key}`} style={s.dayCellWrap}>
+                <Pressable
+                  onPress={() => onSelectDay(correctDate)}
+                  style={({ pressed }) => [
+                    s.dayCell,
+                    selected && s.daySelectedRing,
+                    pressed && !selected && { opacity: 0.7 },
                   ]}
+                  accessibilityLabel={`Día ${cell.day}${hasActivity ? ', con movimientos' : ''}`}
+                  accessibilityState={{ selected }}
                 >
-                  {cell.day}
-                </Text>
-                {hasActivity && (
-                  <View style={s.dayDots}>
-                    <View
-                      style={[
-                        s.dayDot,
-                        { backgroundColor: CALENDAR_TEXT_FADED },
-                      ]}
-                    />
-                  </View>
-                )}
-              </Pressable>
+                  <Text
+                    style={[
+                      Hierarchy.bodySmallSemibold,
+                      s.dayNumber,
+                      {
+                        color: cell.isCurrentMonth
+                          ? CALENDAR_TEXT
+                          : CALENDAR_TEXT_FADED,
+                      },
+                    ]}
+                  >
+                    {cell.day}
+                  </Text>
+                  {hasActivity && (
+                    <View style={s.dayDots}>
+                      <View
+                        style={[
+                          s.dayDot,
+                          { backgroundColor: CALENDAR_TEXT_FADED },
+                        ]}
+                      />
+                    </View>
+                  )}
+                </Pressable>
+              </View>
             );
           })}
         </View>

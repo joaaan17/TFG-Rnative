@@ -63,7 +63,9 @@ export type CardModalProps = {
   contentBackgroundColor?: string;
 };
 
-const DRAG_HANDLE_OFFSET = 50; // espacio para el handle y margen superior
+// Overhead real de la Card encima del contentWrap:
+//   Card.paddingTop (py-6=24) + dragHandleRow (14) + gap-6 (24) = 62px
+const DRAG_HANDLE_OFFSET = 62;
 const DRAG_CLOSE_THRESHOLD = 80; // px arrastrados hacia abajo para cerrar
 
 export function CardModal({
@@ -241,7 +243,7 @@ export function CardModal({
       transparent
       visible={mounted}
       animationType="none"
-      onRequestClose={closeOnBackdropPress ? onClose : undefined}
+      onRequestClose={onClose}
       statusBarTranslucent={Platform.OS === 'android'}
     >
       <View style={styles.root}>
@@ -361,13 +363,8 @@ export function CardModal({
             style={[
               styles.sheet,
               scrollable
-                ? {
-                    height: fitContentHeight ?? maxHeight,
-                    maxHeight,
-                  }
-                : Platform.OS === 'android'
-                  ? { height: maxHeight, maxHeight }
-                  : { maxHeight },
+                ? { height: fitContentHeight ?? maxHeight, maxHeight }
+                : { maxHeight },
             ]}
           >
             <Card
@@ -375,17 +372,20 @@ export function CardModal({
               style={[
                 styles.card,
                 {
-                  // En Android siempre usamos height explícita para que los hijos con
-                  // flex:1 (tanto scrollable como no scrollable) resuelvan su tamaño.
-                  // En iOS/web: scrollable → flex:1; no scrollable → solo maxHeight.
-                  ...(Platform.OS === 'android'
-                    ? { height: scrollable ? (fitContentHeight ?? maxHeight) : maxHeight }
-                    : scrollable
-                      ? { flex: 1 }
-                      : {}),
+                  // scrollable: Android usa height explícita, iOS/web usa flex:1.
+                  // no scrollable: todos usan solo maxHeight y el contenido
+                  // determina la altura real (auto-sizing).
+                  ...(scrollable
+                    ? Platform.OS === 'android'
+                      ? { height: fitContentHeight ?? maxHeight }
+                      : { flex: 1 }
+                    : {}),
                   maxHeight,
                   backgroundColor: sheetBg,
                   borderColor: palette.surfaceBorder ?? palette.text,
+                  // contentWrap gestiona el padding inferior; anular el py-6 de la Card
+                  // para que fitContentHeight coincida con el espacio real disponible.
+                  paddingBottom: 0,
                   ...(contentNoPaddingTop && { paddingTop: 0 }),
                 },
               ]}
@@ -403,11 +403,11 @@ export function CardModal({
               <View
                 style={[
                   styles.contentWrap,
-                  // En Android siempre flex:1 para que los hijos flex:1 funcionen.
-                  // En iOS/web: scrollable → flex:1; no scrollable → maxHeight limitado.
-                  Platform.OS === 'android' || scrollable
+                  // scrollable: flex:1 para que el ScrollView se expanda.
+                  // no scrollable: paddingBottom solo, el contenido determina altura.
+                  scrollable
                     ? { flex: 1, minHeight: 0, paddingBottom }
-                    : { maxHeight: maxHeight - 120, paddingBottom },
+                    : { paddingBottom },
                 ]}
               >
                 {children}

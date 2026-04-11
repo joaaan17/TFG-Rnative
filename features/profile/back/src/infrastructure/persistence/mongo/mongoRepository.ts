@@ -52,14 +52,16 @@ export class MongoProfileRepository implements ProfileRepository {
         .exec();
       return { awarded: false, newTotal: doc?.experience ?? 0 };
     }
+    // Sin upsert: si el filtro no encuentra el doc (noticia ya reclamada),
+    // no hay que insertar nada; el perfil ya existe con ese _id.
+    // upsert:true causaba E11000 al intentar insertar un _id ya existente.
     const updated = await ProfileModel.findOneAndUpdate(
       { _id: userId, claimedNewsIds: { $nin: [trimmed] } },
       {
         $addToSet: { claimedNewsIds: trimmed },
         $inc: { experience: amount },
-        $setOnInsert: { name: 'Usuario' },
       },
-      { new: true, upsert: true },
+      { new: true, upsert: false },
     )
       .select('experience')
       .lean()

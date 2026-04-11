@@ -54,7 +54,7 @@ export function XpToast({ amount }: XpToastProps) {
         },
       ]}
       accessibilityLabel={`Has ganado ${amount} puntos de experiencia`}
-      accessibilityRole="status"
+      accessibilityRole="text"
     >
       <ExpIcon width={16} height={16} fill={palette.primary} />
       <Text

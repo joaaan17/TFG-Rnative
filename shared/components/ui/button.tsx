@@ -139,8 +139,22 @@ function Button({
   } as const;
 
   const resolvedVariant = variant ?? 'default';
+  const resolvedSize = size ?? 'default';
   const textColor = textColors[resolvedVariant];
   const resolvedTextStyle = [Hierarchy.action, textStyle] as const;
+
+  // En Android/iOS las clases NativeWind (h-9, h-10…) no aplican height como
+  // estilo de layout, haciendo los botones más altos que en web. Usamos estilos
+  // explícitos en nativo para igualar las dimensiones de Tailwind.
+  const nativeSizeStyle: Record<string, object> = {
+    default: { height: 40, paddingHorizontal: 16 },
+    sm:      { height: 36, paddingHorizontal: 12 },
+    lg:      { height: 44, paddingHorizontal: 24 },
+    xl:      { height: 56, paddingHorizontal: 32 },
+    icon:    { height: 40, width: 40, paddingHorizontal: 0 },
+  };
+  const platformSizeStyle =
+    Platform.OS !== 'web' ? nativeSizeStyle[resolvedSize] : undefined;
 
   const content =
     typeof children === 'function'
@@ -156,10 +170,11 @@ function Button({
   const resolvedStyle =
     typeof style === 'function'
       ? (state: Parameters<NonNullable<typeof style>>[0]) => [
+          platformSizeStyle,
           variantStyles[resolvedVariant],
           style(state),
         ]
-      : [variantStyles[resolvedVariant], style];
+      : [platformSizeStyle, variantStyles[resolvedVariant], style];
 
   return (
     <Pressable

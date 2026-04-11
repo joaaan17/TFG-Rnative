@@ -14,7 +14,9 @@ export function onProfileXpAwarded(callback: () => void): () => void {
 
 export function emitProfileXpAwarded(): void {
   xpListeners.forEach((cb) => cb());
-  if (typeof window !== 'undefined') {
+  // CustomEvent no existe en el entorno JS de React Native (Android/iOS);
+  // solo intentarlo en web donde window.CustomEvent está disponible.
+  if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') {
     window.dispatchEvent(new CustomEvent('profile:xpawarded'));
   }
 }

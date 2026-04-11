@@ -124,14 +124,14 @@ export function InvertirSheet({
       scrollable={false}
       contentNoPaddingTop
     >
-      <View style={{ flex: 1, minHeight: 0 }}>
+      <View>
         <ModalHeader
           title="Invertir"
           onBack={onClose}
           onClose={onClose}
           backAccessibilityLabel="Volver atrás"
         />
-        <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 24 }}>
+        <View style={{ paddingHorizontal: 20, paddingBottom: 24 }}>
           <Pressable
             style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}
             accessibilityRole="button"
