@@ -25,24 +25,9 @@ process.on('uncaughtException', (err) => {
   console.error('⚠️ [Server] uncaughtException (ignorado):', err);
 });
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
-  : [];
-
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Permitir requests sin origen (apps móviles, Postman, etc.)
-      if (!origin) return callback(null, true);
-      // En desarrollo, permitir todo
-      if (process.env.NODE_ENV !== 'production') return callback(null, true);
-      // Aceptar cualquier subdominio de vercel.app automáticamente
-      if (/^https:\/\/.*\.vercel\.app$/.test(origin))
-        return callback(null, true);
-      // Aceptar orígenes explícitos de ALLOWED_ORIGINS
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      callback(new Error(`CORS bloqueado para origen: ${origin}`));
-    },
+    origin: true, // Refleja el origen del request — permite todos los orígenes
     credentials: true,
   }),
 );
