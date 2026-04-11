@@ -1,9 +1,15 @@
 import { Platform } from 'react-native';
+import { env } from '@/config/env';
 import type { MarketChartData } from '../types/market-chart.types';
 
 function getBaseUrl() {
-  if (Platform.OS === 'android') return 'http://10.0.2.2:3000/api/market-chart';
-  return 'http://localhost:3000/api/market-chart';
+  const base =
+    env.apiUrl && env.apiUrl !== 'https://api.example.com'
+      ? env.apiUrl.replace(/\/$/, '')
+      : Platform.OS === 'android'
+        ? 'http://10.0.2.2:3000'
+        : 'http://localhost:3000';
+  return `${base}/api/market-chart`;
 }
 
 export interface FetchChartParams {

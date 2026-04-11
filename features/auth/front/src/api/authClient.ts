@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { env } from '@/config/env';
 import type {
   LoginBody,
   LoginResponse,
@@ -7,17 +8,13 @@ import type {
 } from '../types/auth.types';
 
 function getBaseUrl() {
-  // Android emulator: 10.0.2.2 apunta al host (tu PC).
-  if (Platform.OS === 'android') return 'http://10.0.2.2:3000/api/auth';
-
-  // iOS simulator / web en local.
-  if (Platform.OS === 'ios' || Platform.OS === 'web')
-    return 'http://localhost:3000/api/auth';
-
-  // Dispositivo físico: normalmente necesitarás tu IP LAN.
-  // Cambia esto por tu IP (ej. http://192.168.1.50:3000/api/auth)
-  // o pásalo por config/env si lo prefieres.
-  return 'http://localhost:3000/api/auth';
+  const base =
+    env.apiUrl && env.apiUrl !== 'https://api.example.com'
+      ? env.apiUrl.replace(/\/$/, '')
+      : Platform.OS === 'android'
+        ? 'http://10.0.2.2:3000'
+        : 'http://localhost:3000';
+  return `${base}/api/auth`;
 }
 
 async function parseJsonSafe(response: Response) {

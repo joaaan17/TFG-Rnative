@@ -1,8 +1,14 @@
 import { Platform } from 'react-native';
+import { env } from '@/config/env';
 
 function getBaseUrl(): string {
-  if (Platform.OS === 'android') return 'http://10.0.2.2:3000/api/investments';
-  return 'http://localhost:3000/api/investments';
+  const base =
+    env.apiUrl && env.apiUrl !== 'https://api.example.com'
+      ? env.apiUrl.replace(/\/$/, '')
+      : Platform.OS === 'android'
+        ? 'http://10.0.2.2:3000'
+        : 'http://localhost:3000';
+  return `${base}/api/investments`;
 }
 
 export interface PortfolioHolding {

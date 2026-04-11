@@ -1,10 +1,14 @@
 import { Platform } from 'react-native';
+import { env } from '@/config/env';
 
 function getBaseUrl() {
-  if (Platform.OS === 'android') return 'http://10.0.2.2:3000/api/iapreguntas';
-  if (Platform.OS === 'ios' || Platform.OS === 'web')
-    return 'http://localhost:3000/api/iapreguntas';
-  return 'http://localhost:3000/api/iapreguntas';
+  const base =
+    env.apiUrl && env.apiUrl !== 'https://api.example.com'
+      ? env.apiUrl.replace(/\/$/, '')
+      : Platform.OS === 'android'
+        ? 'http://10.0.2.2:3000'
+        : 'http://localhost:3000';
+  return `${base}/api/iapreguntas`;
 }
 
 export async function askAi(

@@ -1,11 +1,14 @@
 import { Platform } from 'react-native';
+import { env } from '@/config/env';
 
 function getBaseUrl() {
-  if (Platform.OS === 'android')
-    return 'http://10.0.2.2:3000/api/relationships';
-  if (Platform.OS === 'ios' || Platform.OS === 'web')
-    return 'http://localhost:3000/api/relationships';
-  return 'http://localhost:3000/api/relationships';
+  const base =
+    env.apiUrl && env.apiUrl !== 'https://api.example.com'
+      ? env.apiUrl.replace(/\/$/, '')
+      : Platform.OS === 'android'
+        ? 'http://10.0.2.2:3000'
+        : 'http://localhost:3000';
+  return `${base}/api/relationships`;
 }
 
 async function parseJsonSafe(response: Response) {

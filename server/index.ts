@@ -16,7 +16,23 @@ import {
 } from '../features/market/back/src';
 
 const app = express();
-app.use(cors());
+
+// En desarrollo se permiten todos los orígenes.
+// En producción se leen desde ALLOWED_ORIGINS (comma-separated).
+// Ejemplo: ALLOWED_ORIGINS=https://tu-app.vercel.app,https://otro-dominio.com
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+  : [];
+
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === 'production' && allowedOrigins.length > 0
+        ? allowedOrigins
+        : true, // true = refleja cualquier origen (seguro solo en desarrollo)
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
