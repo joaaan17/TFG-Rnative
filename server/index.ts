@@ -22,7 +22,8 @@ process.on('unhandledRejection', (reason) => {
   console.error('⚠️ [Server] unhandledRejection (ignorado):', reason);
 });
 process.on('uncaughtException', (err) => {
-  console.error('⚠️ [Server] uncaughtException (ignorado):', err);
+  console.error('💥 [Server] uncaughtException:', err);
+  process.exit(1); // Estado corrupto — mejor reiniciar limpio
 });
 
 app.use(
@@ -60,6 +61,7 @@ const startServer = async () => {
 
     server.on('error', (err) => {
       console.error('❌ Error en app.listen():', err);
+      process.exit(1); // Forzar reinicio de Railway si el puerto falla
     });
 
     // C) Schedulers en background (después de que el servidor ya escucha)
