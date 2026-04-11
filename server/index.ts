@@ -17,19 +17,23 @@ import {
 
 const app = express();
 
-// En desarrollo se permiten todos los orígenes.
-// En producción se leen desde ALLOWED_ORIGINS (comma-separated).
-// Ejemplo: ALLOWED_ORIGINS=https://tu-app.vercel.app,https://otro-dominio.com
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
   : [];
 
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === 'production' && allowedOrigins.length > 0
-        ? allowedOrigins
-        : true, // true = refleja cualquier origen (seguro solo en desarrollo)
+    origin: (origin, callback) => {
+      // Permitir requests sin origen (apps móviles, Postman, etc.)
+      if (!origin) return callback(null, true);
+      // En desarrollo, permitir todo
+      if (process.env.NODE_ENV !== 'production') return callback(null, true);
+      // Aceptar cualquier subdominio de vercel.app automáticamente
+      if (/^https:\/\/.*\.vercel\.app$/.test(origin)) return callback(null, true);
+      // Aceptar orígenes explícitos de ALLOWED_ORIGINS
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      callback(new Error(`CORS bloqueado para origen: ${origin}`));
+    },
     credentials: true,
   }),
 );
