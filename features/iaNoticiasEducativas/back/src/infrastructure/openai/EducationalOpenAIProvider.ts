@@ -17,22 +17,41 @@ export class EducationalOpenAIProvider implements AIProviderPort {
       '[iaNoticias] 12. EducationalOpenAI: llamando a gpt-4o-mini...',
       prompt.length,
     );
-    const completion = await this.client.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Eres un profesor experto en inversión y mercados financieros. Transforma noticias en textos educativos.',
-        },
-        { role: 'user', content: prompt },
-      ],
-    });
-    const text = completion.choices[0]?.message?.content ?? '';
-    console.log(
-      '[iaNoticias] 13. EducationalOpenAI: respuesta recibida, length=',
-      text?.length ?? 0,
-    );
-    return text;
+
+    const MAX_RETRIES = 2;
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const completion = await this.client.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content:
+                'Eres un profesor experto en inversión y mercados financieros. Transforma noticias en textos educativos.',
+            },
+            { role: 'user', content: prompt },
+          ],
+        });
+        const text = completion.choices[0]?.message?.content ?? '';
+        console.log(
+          '[iaNoticias] 13. EducationalOpenAI: respuesta recibida, length=',
+          text?.length ?? 0,
+        );
+        return text;
+      } catch (err) {
+        lastError = err;
+        console.warn(
+          `[iaNoticias] EducationalOpenAI: intento ${attempt}/${MAX_RETRIES} fallido:`,
+          err instanceof Error ? err.message : err,
+        );
+        if (attempt < MAX_RETRIES) {
+          await new Promise((resolve) => setTimeout(resolve, 1500 * attempt));
+        }
+      }
+    }
+
+    throw lastError;
   }
 }

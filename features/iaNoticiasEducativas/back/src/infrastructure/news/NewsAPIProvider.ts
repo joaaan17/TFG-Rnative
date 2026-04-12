@@ -119,17 +119,42 @@ export class NewsAPIProvider implements NewsProviderPort {
     );
     const headlines = await this.getHeadlines();
     const found = headlines.find((n) => n.id === id);
-    if (!found) {
+    if (found) {
       console.log(
-        '[iaNoticias] NewsAPIProvider: getNewsById NOT FOUND, ids disponibles:',
-        headlines.slice(0, 3).map((n) => n.id?.slice(0, 40)),
+        '[iaNoticias] 7. NewsAPIProvider: getNewsById encontrada:',
+        found.title?.slice(0, 40),
       );
-      throw new Error(`Noticia no encontrada: ${id}`);
+      return found;
     }
+
+    // Fallback: la noticia ya no está en la lista actual (el servidor se reinició
+    // o el caché expiró). Construimos un objeto mínimo usando la URL como contexto
+    // para que la IA pueda generar el contenido educativo igualmente.
     console.log(
-      '[iaNoticias] 7. NewsAPIProvider: getNewsById encontrada:',
-      found.title?.slice(0, 40),
+      '[iaNoticias] NewsAPIProvider: getNewsById NOT FOUND en caché, usando fallback con URL como contexto',
     );
-    return found;
+
+    // Intentar extraer un título legible de la URL
+    let titleFromUrl = id;
+    try {
+      const pathname = new URL(id).pathname;
+      titleFromUrl = pathname
+        .split('/')
+        .filter(Boolean)
+        .pop()
+        ?.replace(/[-_]/g, ' ')
+        ?.replace(/\.[^.]+$/, '') ?? id;
+    } catch {
+      // URL mal formada, usar el id tal cual
+    }
+
+    return {
+      id,
+      title: titleFromUrl,
+      content: `Noticia financiera relacionada con: ${titleFromUrl}. URL original: ${id}`,
+      imageUrl: undefined,
+      source: 'Fuente externa',
+      publishedAt: new Date().toISOString(),
+    };
   }
 }
