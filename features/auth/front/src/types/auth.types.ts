@@ -27,7 +27,10 @@ export interface RegisterBody {
   password: string;
 }
 
-export type RegisterResponse = AuthUser;
+export type RegisterResponse = {
+  token: string;
+  user: AuthUser;
+};
 
 export interface LoginState {
   email: string;

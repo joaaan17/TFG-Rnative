@@ -31,13 +31,14 @@ export function useAuthViewModel() {
     setIsLoading(true);
     setError(null);
     try {
-      await authService.register(
+      const result = await authService.register(
         name,
         username,
         email,
         password,
         confirmPassword,
       );
+      await signIn(result.token, result.user);
       return true;
     } catch (err) {
       setError(authService.extractErrorMessage(err, 'Error desconocido'));
@@ -45,7 +46,7 @@ export function useAuthViewModel() {
     } finally {
       setIsLoading(false);
     }
-  }, [confirmPassword, email, name, password, username]);
+  }, [confirmPassword, email, name, password, signIn, username]);
 
   return {
     name,

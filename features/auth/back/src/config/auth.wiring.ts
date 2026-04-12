@@ -63,11 +63,11 @@ export const loginUseCase = new LoginUseCase(
   tokenService,
 );
 
-// Caso de uso de registro (crea perfil automáticamente)
+// Caso de uso de registro (crea perfil automáticamente, login directo sin verificación email)
 export const registerUseCase = new RegisterUseCase(
   authRepository,
   passwordService,
-  mailService,
+  tokenService,
   createProfileUseCase,
 );
 

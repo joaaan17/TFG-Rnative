@@ -1,7 +1,7 @@
 import type {
   AuthRepository,
   PasswordService,
-  MailService,
+  TokenService,
   OnUserRegistered,
 } from '../../domain/ports';
 import type { NewUser } from '../../domain/auth.types';
@@ -10,7 +10,7 @@ export class RegisterUseCase {
   constructor(
     private repository: AuthRepository,
     private passwordService: PasswordService,
-    private mailService: MailService,
+    private tokenService: TokenService,
     private onUserRegistered?: OnUserRegistered,
   ) {}
 
@@ -29,10 +29,6 @@ export class RegisterUseCase {
       await this.repository.deleteById(existingUser.id);
     }
 
-    const verificationCode = Math.floor(
-      100000 + Math.random() * 900000,
-    ).toString();
-
     const passwordHash = await this.passwordService.hash(data.password);
 
     const newUser: NewUser & { verificationCode: string; isVerified: boolean } =
@@ -40,8 +36,8 @@ export class RegisterUseCase {
         email: data.email.toLowerCase(),
         passwordHash,
         name: data.name,
-        verificationCode,
-        isVerified: false,
+        verificationCode: '',
+        isVerified: true,
       };
 
     const savedUser = await this.repository.save(newUser);
@@ -55,18 +51,18 @@ export class RegisterUseCase {
       });
     }
 
-    // Enviar email en background: no bloquea la respuesta HTTP
-    this.mailService
-      .sendVerificationCode(savedUser.email, verificationCode)
-      .catch((err) =>
-        console.error('❌ Error enviando email de verificación:', err),
-      );
-
-    return {
+    const token = this.tokenService.sign({
       id: savedUser.id,
       email: savedUser.email,
-      name: savedUser.name,
-      message: 'Verificación enviada al correo',
+    });
+
+    return {
+      token,
+      user: {
+        id: savedUser.id,
+        email: savedUser.email,
+        name: savedUser.name,
+      },
     };
   }
 }

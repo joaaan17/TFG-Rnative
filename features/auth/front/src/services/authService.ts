@@ -7,7 +7,7 @@
  */
 
 import { authClient } from '../api/authClient';
-import type { AuthUser, LoginResponse } from '../types/auth.types';
+import type { LoginResponse, RegisterResponse } from '../types/auth.types';
 
 function extractErrorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback;
@@ -28,7 +28,7 @@ export const authService = {
     email: string,
     password: string,
     confirmPassword: string,
-  ): Promise<AuthUser> {
+  ): Promise<RegisterResponse> {
     const cleanName = name.trim();
     const cleanUsername = username.trim();
     const cleanEmail = email.trim();
