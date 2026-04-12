@@ -18,12 +18,8 @@ import { useIApreguntasViewModel } from '../state/useIApreguntasViewModel';
 import { ChatMessageBubble } from '../components/ChatMessageBubble';
 import { ConsultorioComposer } from '../components/ConsultorioComposer';
 import { LoadingMessagesOverlay } from '../components/LoadingMessagesOverlay';
-import { XpToast } from '../components/XpToast';
+import { ConsultorioXpRewardModal } from '../components/ConsultorioXpRewardModal';
 
-/**
- * Pantalla tonta, limpia, sin inteligencia.
- * Solo renderiza y conecta props/handlers del ViewModel.
- */
 export function IApreguntasScreen() {
   const palette = usePalette();
   const styles = useMemo(() => createIApreguntasStyles(palette), [palette]);
@@ -38,6 +34,8 @@ export function IApreguntasScreen() {
     error,
     ask,
     lastAwardedXp,
+    dismissXpReward,
+    consultorioRemainingToday,
   } = useIApreguntasViewModel();
 
   useEffect(() => {
@@ -47,7 +45,12 @@ export function IApreguntasScreen() {
   }, [messages.length, loading]);
 
   const containerBg = palette.mainBackground ?? palette.background;
-  const isSendActive = questionText.trim().length > 0 && !loading;
+  const atDailyLimit = consultorioRemainingToday === 0;
+  const canSend =
+    questionText.trim().length > 0 &&
+    !loading &&
+    !atDailyLimit;
+  const isSendActive = canSend;
 
   return (
     <KeyboardAvoidingView
@@ -102,8 +105,52 @@ export function IApreguntasScreen() {
         <Text style={[Hierarchy.bodySmall, styles.errorText]}>{error}</Text>
       ) : null}
 
-      <View style={styles.xpToastWrap}>
-        <XpToast amount={lastAwardedXp} />
+      <View style={styles.quotaBanner}>
+        {consultorioRemainingToday === null ? (
+          <Text
+            style={[
+              Hierarchy.bodySmall,
+              styles.quotaLine,
+              { color: palette.icon ?? palette.text },
+            ]}
+          >
+            Comprobando preguntas disponibles hoy…
+          </Text>
+        ) : atDailyLimit ? (
+          <Text
+            style={[
+              Hierarchy.bodySmallSemibold,
+              styles.quotaLine,
+              { color: palette.destructive },
+            ]}
+          >
+            Has usado las 2 preguntas de hoy. Vuelve mañana para seguir
+            consultando.
+          </Text>
+        ) : (
+          <>
+            <Text
+              style={[
+                Hierarchy.bodySmall,
+                styles.quotaLine,
+                { color: palette.text },
+              ]}
+            >
+              {consultorioRemainingToday === 1
+                ? 'Te queda 1 pregunta disponible hoy.'
+                : `Te quedan ${consultorioRemainingToday} preguntas disponibles hoy.`}
+            </Text>
+            <Text
+              style={[
+                Hierarchy.bodySmall,
+                styles.bonusHint,
+                { color: palette.icon ?? palette.text },
+              ]}
+            >
+              Bonificación por pregunta: +1 000 XP
+            </Text>
+          </>
+        )}
       </View>
 
       <View style={styles.inputArea}>
@@ -113,11 +160,12 @@ export function IApreguntasScreen() {
               animationKey={typewriterKey}
               value={questionText}
               onChangeText={setQuestionText}
+              editable={!atDailyLimit}
             />
           </View>
           <Pressable
             onPress={ask}
-            disabled={loading || !questionText.trim()}
+            disabled={loading || !questionText.trim() || atDailyLimit}
             style={[
               styles.sendButton,
               isSendActive ? styles.sendButtonActive : null,
@@ -138,6 +186,13 @@ export function IApreguntasScreen() {
           </Pressable>
         </View>
       </View>
+
+      <ConsultorioXpRewardModal
+        visible={lastAwardedXp != null && lastAwardedXp > 0}
+        onClose={dismissXpReward}
+        xpAwarded={lastAwardedXp ?? 0}
+        remainingToday={consultorioRemainingToday ?? 0}
+      />
     </KeyboardAvoidingView>
   );
 }

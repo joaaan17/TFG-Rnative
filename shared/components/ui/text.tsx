@@ -10,7 +10,7 @@ const textVariants = cva(
   cn(
     'text-foreground text-base',
     Platform.select({
-      web: 'select-text',
+      web: 'select-none',
     }),
   ),
   {
@@ -127,6 +127,7 @@ function Text({
       style={resolvedStyle}
       role={variant && !suppressVariant ? ROLE[variant] : undefined}
       aria-level={variant && !suppressVariant ? ARIA_LEVEL[variant] : undefined}
+      selectable={false}
       {...props}
     />
   );

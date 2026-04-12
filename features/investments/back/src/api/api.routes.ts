@@ -15,6 +15,7 @@ const router = Router();
 
 router.get('/portfolio/me', requireAuth, getPortfolioController);
 router.get('/portfolio/overview', requireAuth, getPortfolioOverviewController);
+/** Resumen dashboard; opcional ?userId= para ver cartera de otro usuario (amigo). */
 router.get('/portfolio/summary', requireAuth, getDashboardSummaryController);
 router.get('/portfolio/performance', requireAuth, getPerformanceController);
 router.get('/cash/overview', requireAuth, getCashOverviewController);

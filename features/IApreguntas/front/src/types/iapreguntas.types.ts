@@ -2,6 +2,12 @@
  * Tipos compartidos de la feature IAPreguntas.
  */
 
+/** Preguntas al consultorio permitidas por día civil. Mantenida en sync con el backend. */
+export const CONSULTORIO_MAX_DAILY = 2;
+
+/** XP otorgado por cada pregunta al consultorio. Sync con BONUS_XP.ASK_CONSULTORIO del backend. */
+export const CONSULTORIO_XP_PER_QUESTION = 1000;
+
 export type ChatMessage = {
   id: string;
   role: 'user' | 'assistant';

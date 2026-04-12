@@ -37,6 +37,12 @@ export class AwardExperienceUseCase {
       return { experienceAwarded: awarded ? xp : 0, newTotal };
     }
 
+    if (bonusType === 'ASK_CONSULTORIO') {
+      throw new Error(
+        'ASK_CONSULTORIO se otorga automáticamente al enviar la pregunta al consultorio',
+      );
+    }
+
     if (bonusType === 'COMPLETE_QUIZ') {
       const raw = metadata?.correctCount ?? '';
       const correctCount = Math.min(

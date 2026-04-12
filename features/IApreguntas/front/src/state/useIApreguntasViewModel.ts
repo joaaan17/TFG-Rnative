@@ -1,9 +1,17 @@
 import React from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
-import { useAwardExperience } from '@/features/profile/front/src/hooks/useAwardExperience';
+import { profileService } from '@/features/profile/front/src/services/profileService';
+import { applyXpFromServerAward } from '@/features/profile/front/src/utils/applyXpFromServerAward';
+import {
+  getLocalRemaining,
+  recordQuestionUsed,
+  syncFromServer,
+} from '../cache/consultorioQuotaCache';
 import { iapreguntasService } from '../services/iapreguntasService';
 import {
+  CONSULTORIO_MAX_DAILY,
+  CONSULTORIO_XP_PER_QUESTION,
   IA_PREGUNTAS_WELCOME_MESSAGES,
   type ChatMessage,
 } from '../types/iapreguntas.types';
@@ -17,8 +25,11 @@ export type UseIApreguntasViewModelResult = {
   messages: ChatMessage[];
   error: string | null;
   ask: () => Promise<void>;
-  /** XP otorgado en la última consulta (para mostrar notificación). Se limpia tras unos segundos. */
+  /** XP otorgado en la última consulta; null = sin recompensa pendiente. */
   lastAwardedXp: number | null;
+  dismissXpReward: () => void;
+  /** Preguntas que puedes hacer hoy (null = cargando). */
+  consultorioRemainingToday: number | null;
 };
 
 function generateId() {
@@ -27,7 +38,6 @@ function generateId() {
 
 export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
   const { session } = useAuthSession();
-  const { award } = useAwardExperience();
   const [typewriterKey, setTypewriterKey] = React.useState(0);
   const [questionText, setQuestionText] = React.useState('');
   const [welcomeText, setWelcomeText] = React.useState<string>(
@@ -37,6 +47,39 @@ export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [error, setError] = React.useState<string | null>(null);
   const [lastAwardedXp, setLastAwardedXp] = React.useState<number | null>(null);
+  const [consultorioRemainingToday, setConsultorioRemainingToday] =
+    React.useState<number | null>(null);
+
+  const loadConsultorioQuota = React.useCallback(async () => {
+    const userId = session?.user?.id;
+    if (!userId) {
+      setConsultorioRemainingToday(null);
+      return;
+    }
+
+    const localRemaining = await getLocalRemaining();
+
+    try {
+      const p = await profileService.getProfile(userId, session?.token);
+      const serverRemaining =
+        typeof p.consultorioRemainingToday === 'number'
+          ? p.consultorioRemainingToday
+          : null;
+
+      if (serverRemaining !== null) {
+        await syncFromServer(serverRemaining);
+        setConsultorioRemainingToday(serverRemaining);
+      } else {
+        setConsultorioRemainingToday(localRemaining);
+      }
+    } catch {
+      setConsultorioRemainingToday(localRemaining);
+    }
+  }, [session?.user?.id, session?.token]);
+
+  React.useEffect(() => {
+    void loadConsultorioQuota();
+  }, [loadConsultorioQuota]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -45,9 +88,14 @@ export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
         Math.random() * IA_PREGUNTAS_WELCOME_MESSAGES.length,
       );
       setWelcomeText(IA_PREGUNTAS_WELCOME_MESSAGES[index]);
+      void loadConsultorioQuota();
       return undefined;
-    }, []),
+    }, [loadConsultorioQuota]),
   );
+
+  const dismissXpReward = React.useCallback(() => {
+    setLastAwardedXp(null);
+  }, []);
 
   const ask = React.useCallback(async () => {
     const token = session?.token;
@@ -57,6 +105,13 @@ export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
     }
     const text = questionText.trim();
     if (!text) return;
+
+    if (consultorioRemainingToday !== null && consultorioRemainingToday <= 0) {
+      setError(
+        'Has alcanzado el límite de 2 preguntas al día. Vuelve mañana.',
+      );
+      return;
+    }
 
     setQuestionText('');
     setError(null);
@@ -77,23 +132,45 @@ export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
         content: res.answer,
       };
       setMessages((prev) => [...prev, assistantMsg]);
-      const xp = await award('ASK_CONSULTORIO');
-      if (xp != null && xp > 0) {
-        setLastAwardedXp(xp);
+
+      const localAfterUse = await recordQuestionUsed();
+
+      const remaining =
+        typeof res.consultorioRemainingToday === 'number'
+          ? res.consultorioRemainingToday
+          : localAfterUse;
+      const clamped = Math.max(0, remaining);
+
+      if (typeof res.consultorioRemainingToday === 'number') {
+        await syncFromServer(clamped);
       }
+      setConsultorioRemainingToday(clamped);
+
+      const xp =
+        typeof res.experienceAwarded === 'number' && res.experienceAwarded > 0
+          ? res.experienceAwarded
+          : CONSULTORIO_XP_PER_QUESTION;
+
+      if (typeof res.newTotal === 'number') {
+        applyXpFromServerAward(xp, res.newTotal);
+      }
+      setLastAwardedXp(xp);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Error al consultar la IA');
+      const msg = e instanceof Error ? e.message : 'Error al consultar la IA';
+      setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
+      if (msg.includes('límite')) {
+        setConsultorioRemainingToday(0);
+        void syncFromServer(0);
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
-  }, [questionText, session?.token, award]);
-
-  // Limpiar lastAwardedXp tras 3 segundos para ocultar la notificación
-  React.useEffect(() => {
-    if (lastAwardedXp == null) return;
-    const t = setTimeout(() => setLastAwardedXp(null), 3000);
-    return () => clearTimeout(t);
-  }, [lastAwardedXp]);
+  }, [
+    questionText,
+    session?.token,
+    consultorioRemainingToday,
+  ]);
 
   return {
     typewriterKey,
@@ -105,5 +182,7 @@ export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
     error,
     ask,
     lastAwardedXp,
+    dismissXpReward,
+    consultorioRemainingToday,
   };
 }

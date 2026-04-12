@@ -2,12 +2,12 @@ import { Platform } from 'react-native';
 import { env } from '@/config/env';
 import type { ProfileUser, ProfileSearchItem } from '../types/profile.types';
 
-export type BonusType =
+/** Bonificaciones que el cliente puede solicitar por POST /experience/award (el consultorio otorga XP en su propio endpoint). */
+export type ProfileAwardBonusType =
   | 'BUY_STOCK'
   | 'SELL_STOCK'
   | 'COMPLETE_QUIZ'
-  | 'VIEW_NEWS'
-  | 'ASK_CONSULTORIO';
+  | 'VIEW_NEWS';
 
 function getBaseUrl() {
   const base =
@@ -30,9 +30,20 @@ async function parseJsonSafe(response: Response) {
 export const profileClient = {
   getBaseUrl,
 
-  async getProfile(userId: string): Promise<ProfileUser> {
+  async getProfile(
+    userId: string,
+    token?: string | null,
+  ): Promise<ProfileUser> {
     const baseUrl = getBaseUrl();
-    const response = await fetch(`${baseUrl}/${userId}`, { method: 'GET' });
+    const headers: Record<string, string> = {};
+    const t = token?.trim();
+    if (t) {
+      headers.Authorization = `Bearer ${t}`;
+    }
+    const response = await fetch(`${baseUrl}/${userId}`, {
+      method: 'GET',
+      headers: Object.keys(headers).length ? headers : undefined,
+    });
     const data = await parseJsonSafe(response);
 
     if (!response.ok) {
@@ -77,7 +88,7 @@ export const profileClient = {
 
   async awardExperience(
     token: string,
-    bonusType: BonusType,
+    bonusType: ProfileAwardBonusType,
     metadata?: Record<string, string>,
   ): Promise<{ experienceAwarded: number; newTotal: number }> {
     const baseUrl = getBaseUrl();

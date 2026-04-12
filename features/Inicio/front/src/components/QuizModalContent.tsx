@@ -43,7 +43,7 @@ export function QuizModalContent({
   const palette = usePalette();
   const styles = useMemo(() => createQuizStyles(palette), [palette]);
   const insets = useSafeAreaInsets();
-  const BUTTON_AREA_HEIGHT = 80 + Math.max(insets.bottom, 8);
+  const BUTTON_AREA_HEIGHT = 72 + Math.max(insets.bottom, 8);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [reviewingIndex, setReviewingIndex] = useState<number | null>(null);
   const quizCompleteCalledRef = useRef(false);
@@ -205,11 +205,9 @@ export function QuizModalContent({
         <View
           style={{
             paddingHorizontal: 20,
-            paddingTop: 12,
-            paddingBottom: Math.max(insets.bottom, 16),
+            paddingTop: 4,
+            paddingBottom: Math.max(insets.bottom, 12),
             backgroundColor: palette.cardBackground ?? palette.background,
-            borderTopWidth: 1,
-            borderTopColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.06)',
           }}
         >
           <Button
@@ -420,11 +418,9 @@ export function QuizModalContent({
       <View
         style={{
           paddingHorizontal: 20,
-          paddingTop: 12,
-          paddingBottom: Math.max(insets.bottom, 16),
+          paddingTop: 4,
+          paddingBottom: Math.max(insets.bottom, 12),
           backgroundColor: palette.cardBackground ?? palette.background,
-          borderTopWidth: 1,
-          borderTopColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.06)',
         }}
       >
         <Button

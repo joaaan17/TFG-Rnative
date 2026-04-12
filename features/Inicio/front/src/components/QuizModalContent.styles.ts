@@ -71,7 +71,7 @@ export function createQuizStyles(palette: Palette) {
     // --- Contenedor para transición tipo CircularGallery ---
     questionTransitionWrap: {
       overflow: 'hidden' as const,
-      marginBottom: 24,
+      marginBottom: 8,
     },
     questionTransitionInner: {
       width: '100%',
@@ -81,7 +81,7 @@ export function createQuizStyles(palette: Palette) {
     questionCard: {
       borderRadius: 16,
       padding: 20,
-      marginBottom: 24,
+      marginBottom: 0,
       backgroundColor: palette.cardBackground ?? palette.background,
       borderWidth: 1,
       borderColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.08)',

@@ -5,7 +5,7 @@ import {
   emitLevelUp,
   emitProfileXpAwarded,
 } from '../events/profile-events';
-import { profileClient, type BonusType } from '../api/profileClient';
+import { profileClient, type ProfileAwardBonusType } from '../api/profileClient';
 
 /**
  * Hook para otorgar experiencia al usuario desde acciones (compra, venta, quiz, noticia).
@@ -16,7 +16,7 @@ export function useAwardExperience() {
 
   const award = useCallback(
     async (
-      bonusType: BonusType,
+      bonusType: ProfileAwardBonusType,
       metadata?: Record<string, string>,
     ): Promise<number | null> => {
       const token = session?.token;

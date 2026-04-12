@@ -1,11 +1,18 @@
 import type { Request, Response } from 'express';
+import { BONUS_XP } from '../../../../profile/back/src/domain/experience.types';
+import { profileRepository } from '../../../../profile/back/src/config/profile.wiring';
 import { askMarketAI } from '../config/iapreguntas.wiring';
 
 /**
- * Controller delgado, sin lógica.
- * Solo extrae datos, llama al caso de uso y devuelve respuesta.
+ * Reserva cupo diario (2/día), llama a la IA y otorga XP solo si la respuesta es correcta.
  */
 export async function askAiController(req: Request, res: Response) {
+  const userId = req.auth?.userId;
+  if (!userId) {
+    res.status(401).json({ message: 'No autenticado' });
+    return;
+  }
+
   const { prompt } = req.body;
 
   if (!prompt || typeof prompt !== 'string') {
@@ -13,6 +20,32 @@ export async function askAiController(req: Request, res: Response) {
     return;
   }
 
-  const answer = await askMarketAI.execute(prompt);
-  res.json({ answer });
+  const reserve = await profileRepository.reserveConsultorioQuestion(userId);
+  if (!reserve.ok) {
+    res.status(429).json({
+      error:
+        'Has alcanzado el límite de 2 preguntas al día en el consultorio. Vuelve mañana.',
+      consultorioRemainingToday: 0,
+    });
+    return;
+  }
+
+  try {
+    const answer = await askMarketAI.execute(prompt);
+    const newTotal = await profileRepository.addExperience(
+      userId,
+      BONUS_XP.ASK_CONSULTORIO,
+    );
+    res.json({
+      answer,
+      experienceAwarded: BONUS_XP.ASK_CONSULTORIO,
+      newTotal,
+      consultorioRemainingToday: reserve.remainingAfter,
+    });
+  } catch (err) {
+    await profileRepository.releaseConsultorioQuestion(userId);
+    const message =
+      err instanceof Error ? err.message : 'Error al consultar la IA';
+    res.status(500).json({ error: message });
+  }
 }

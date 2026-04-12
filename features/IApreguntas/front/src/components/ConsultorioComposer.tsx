@@ -10,11 +10,14 @@ export type ConsultorioComposerProps = {
   animationKey?: number;
   value: string;
   onChangeText: (value: string) => void;
+  /** false = límite diario alcanzado */
+  editable?: boolean;
 };
 
 export function ConsultorioComposer({
   value,
   onChangeText,
+  editable = true,
 }: ConsultorioComposerProps) {
   const palette = usePalette();
   return (
@@ -32,6 +35,7 @@ export function ConsultorioComposer({
           placeholder="Escribe tu pregunta..."
           value={value}
           onChangeText={onChangeText}
+          editable={editable}
           style={[
             consultorioComposerStyles.input,
             {

@@ -13,12 +13,15 @@ function extractErrorMessage(err: unknown, fallback: string): string {
 }
 
 export const profileService = {
-  async getProfile(userId: string): Promise<ProfileUser> {
+  async getProfile(
+    userId: string,
+    token?: string | null,
+  ): Promise<ProfileUser> {
     const trimmed = userId?.trim();
     if (!trimmed) {
       throw new Error('ID de usuario requerido');
     }
-    return profileClient.getProfile(trimmed);
+    return profileClient.getProfile(trimmed, token);
   },
 
   async searchProfiles(

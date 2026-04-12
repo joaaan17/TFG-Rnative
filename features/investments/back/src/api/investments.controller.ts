@@ -433,9 +433,11 @@ export const getCashOverviewController = async (
 };
 
 /**
- * GET /api/investments/portfolio/summary
- * Resumen y contexto para el Dashboard: valor total, rentabilidad, cash, invertido,
- * mejor/peor activo, activos en cartera, número de operaciones, última operación.
+ * GET /api/investments/portfolio/summary?userId=optional
+ * Resumen y contexto para el Dashboard (usuario autenticado).
+ * Si `userId` en query es un id válido, devuelve el mismo resumen para **ese** usuario
+ * (p. ej. perfil de amigo), sin rutas extra — así el endpoint funciona aunque el proceso
+ * no haya recargado rutas nuevas.
  */
 export const getDashboardSummaryController = async (
   req: Request,
@@ -443,11 +445,16 @@ export const getDashboardSummaryController = async (
 ): Promise<void> => {
   try {
     const userId = getUserId(req);
+    const q = req.query.userId;
+    const forOther =
+      typeof q === 'string' && q.trim().length > 0 ? q.trim() : undefined;
+    const targetUserId = forOther ?? userId;
     console.log(
       '[investments] getDashboardSummaryController: calling useCase.execute for userId=',
-      userId,
+      targetUserId,
+      forOther ? '(query userId)' : '(self)',
     );
-    const result = await getDashboardSummaryUseCase.execute(userId);
+    const result = await getDashboardSummaryUseCase.execute(targetUserId);
     console.log('[investments] getDashboardSummaryController: success');
     res.status(200).json(result);
   } catch (err) {

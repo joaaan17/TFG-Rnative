@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import {
   awardExperienceUseCase,
   getProfileUseCase,
+  profileRepository,
   searchProfilesUseCase,
 } from '../config/profile.wiring';
 import type { BonusType } from '../domain/experience.types';
@@ -58,7 +59,7 @@ export const awardExperienceController = async (
 
     if (
       !bonusType ||
-      !['BUY_STOCK', 'SELL_STOCK', 'COMPLETE_QUIZ', 'VIEW_NEWS', 'ASK_CONSULTORIO'].includes(
+      !['BUY_STOCK', 'SELL_STOCK', 'COMPLETE_QUIZ', 'VIEW_NEWS'].includes(
         bonusType,
       )
     ) {
@@ -68,7 +69,7 @@ export const awardExperienceController = async (
       );
       res.status(400).json({
         message:
-          'bonusType requerido: BUY_STOCK | SELL_STOCK | COMPLETE_QUIZ | VIEW_NEWS | ASK_CONSULTORIO',
+          'bonusType requerido: BUY_STOCK | SELL_STOCK | COMPLETE_QUIZ | VIEW_NEWS (el consultorio otorga XP al enviar la pregunta)',
       });
       return;
     }
@@ -98,6 +99,10 @@ export const getProfileController = async (
     if (!userId) {
       res.status(400).json({ message: 'ID de usuario requerido' });
       return;
+    }
+    const authId = req.auth?.userId;
+    if (authId && authId === userId) {
+      await profileRepository.recordDailyStreakActivity(userId);
     }
     const profile = await getProfileUseCase.execute(userId);
     res.status(200).json(profile);

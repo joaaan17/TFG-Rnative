@@ -7,7 +7,8 @@ import { MongoProfileRepository } from '../infrastructure/persistence/mongo/mong
 import { MongoRelationshipRepository } from '../../../../relationships/back/src/infrastructure/persistence/mongo/relationship.repository';
 import { MongoPortfolioRepository } from '../../../../investments/back/src/infrastructure/persistence/mongo/portfolio.repository';
 
-const profileRepository = new MongoProfileRepository();
+/** Repositorio compartido (perfil + experiencia + consultorio + racha). */
+export const profileRepository = new MongoProfileRepository();
 const relationshipRepository = new MongoRelationshipRepository();
 const initialCash = Number(process.env.PORTFOLIO_INITIAL_CASH) || 10_000;
 const portfolioRepository = new MongoPortfolioRepository(initialCash);

@@ -1,5 +1,15 @@
 import mongoose from 'mongoose';
+import {
+  computeConsultorioRemainingToday,
+  CONSULTORIO_PREGUNTAS_POR_DIA,
+  getConsultorioDateKey,
+} from '../../../domain/consultorio-day.util';
+import {
+  getDivisionFromExperience,
+  toExperienceNumber,
+} from '../../../domain/division.utils';
 import { getNivelFromExperience } from '../../../domain/level.utils';
+import { computeNextStreakAfterXp } from '../../../domain/streak.utils';
 import type {
   ProfileRepository,
   ProfileSearchResult,
@@ -24,19 +34,84 @@ export class MongoProfileRepository implements ProfileRepository {
     }).exec();
   }
 
+  async recordDailyStreakActivity(userId: string): Promise<void> {
+    const todayKey = getConsultorioDateKey();
+    const existing = await ProfileModel.findById(userId)
+      .select('bf lastStreakDayKey')
+      .lean()
+      .exec();
+
+    if (!existing) {
+      const streak = computeNextStreakAfterXp(0, undefined, todayKey);
+      await ProfileModel.create({
+        _id: userId,
+        name: 'Usuario',
+        bf: streak.bf,
+        lastStreakDayKey: streak.lastStreakDayKey,
+      });
+      return;
+    }
+
+    const streak = computeNextStreakAfterXp(
+      existing.bf ?? 0,
+      existing.lastStreakDayKey,
+      todayKey,
+    );
+    await ProfileModel.findByIdAndUpdate(userId, {
+      $set: {
+        bf: streak.bf,
+        lastStreakDayKey: streak.lastStreakDayKey,
+      },
+    }).exec();
+  }
+
   async addExperience(userId: string, amount: number): Promise<number> {
-    const doc = await ProfileModel.findByIdAndUpdate(
+    const amountSafe = Math.max(0, Math.floor(amount));
+    if (amountSafe === 0) {
+      const d = await ProfileModel.findById(userId).select('experience').lean();
+      return d?.experience ?? 0;
+    }
+
+    const todayKey = getConsultorioDateKey();
+    const existing = await ProfileModel.findById(userId)
+      .select('experience bf lastStreakDayKey')
+      .lean()
+      .exec();
+
+    if (!existing) {
+      const streak = computeNextStreakAfterXp(0, undefined, todayKey);
+      const created = await ProfileModel.create({
+        _id: userId,
+        name: 'Usuario',
+        experience: amountSafe,
+        bf: streak.bf,
+        lastStreakDayKey: streak.lastStreakDayKey,
+      });
+      return created.experience ?? 0;
+    }
+
+    const streak = computeNextStreakAfterXp(
+      existing.bf ?? 0,
+      existing.lastStreakDayKey,
+      todayKey,
+    );
+    const newTotal = (existing.experience ?? 0) + amountSafe;
+
+    const updated = await ProfileModel.findByIdAndUpdate(
       userId,
       {
-        $inc: { experience: amount },
-        $setOnInsert: { name: 'Usuario' },
+        $set: {
+          experience: newTotal,
+          bf: streak.bf,
+          lastStreakDayKey: streak.lastStreakDayKey,
+        },
       },
-      { new: true, upsert: true },
+      { new: true },
     )
       .select('experience')
       .lean()
       .exec();
-    return doc?.experience ?? 0;
+    return updated?.experience ?? 0;
   }
 
   async addExperienceIfNewsNotClaimed(
@@ -55,7 +130,8 @@ export class MongoProfileRepository implements ProfileRepository {
     // Sin upsert: si el filtro no encuentra el doc (noticia ya reclamada),
     // no hay que insertar nada; el perfil ya existe con ese _id.
     // upsert:true causaba E11000 al intentar insertar un _id ya existente.
-    const updated = await ProfileModel.findOneAndUpdate(
+    const todayKey = getConsultorioDateKey();
+    const afterXp = await ProfileModel.findOneAndUpdate(
       { _id: userId, claimedNewsIds: { $nin: [trimmed] } },
       {
         $addToSet: { claimedNewsIds: trimmed },
@@ -63,17 +139,121 @@ export class MongoProfileRepository implements ProfileRepository {
       },
       { new: true, upsert: false },
     )
-      .select('experience')
+      .select('experience bf lastStreakDayKey')
       .lean()
       .exec();
-    if (updated) {
-      return { awarded: true, newTotal: updated.experience ?? 0 };
+
+    if (afterXp) {
+      const streak = computeNextStreakAfterXp(
+        afterXp.bf ?? 0,
+        afterXp.lastStreakDayKey,
+        todayKey,
+      );
+      await ProfileModel.findByIdAndUpdate(userId, {
+        $set: {
+          bf: streak.bf,
+          lastStreakDayKey: streak.lastStreakDayKey,
+        },
+      }).exec();
+      return { awarded: true, newTotal: afterXp.experience ?? 0 };
     }
-    const existing = await ProfileModel.findById(userId)
+    const fallback = await ProfileModel.findById(userId)
       .select('experience')
       .lean()
       .exec();
-    return { awarded: false, newTotal: existing?.experience ?? 0 };
+    return { awarded: false, newTotal: fallback?.experience ?? 0 };
+  }
+
+  async reserveConsultorioQuestion(
+    userId: string,
+  ): Promise<{ ok: boolean; remainingAfter: number }> {
+    const todayKey = getConsultorioDateKey();
+
+    const afterNewDay = await ProfileModel.findOneAndUpdate(
+      {
+        _id: userId,
+        $or: [
+          { consultorioDayKey: { $ne: todayKey } },
+          { consultorioDayKey: { $exists: false } },
+        ],
+      },
+      {
+        $set: { consultorioDayKey: todayKey, consultorioConsultCount: 1 },
+      },
+      { new: true, upsert: false },
+    )
+      .select('consultorioDayKey consultorioConsultCount')
+      .lean()
+      .exec();
+
+    if (afterNewDay) {
+      return {
+        ok: true,
+        remainingAfter: computeConsultorioRemainingToday(
+          afterNewDay.consultorioDayKey,
+          afterNewDay.consultorioConsultCount,
+        ),
+      };
+    }
+
+    const afterSameDay = await ProfileModel.findOneAndUpdate(
+      {
+        _id: userId,
+        consultorioDayKey: todayKey,
+        consultorioConsultCount: { $lt: CONSULTORIO_PREGUNTAS_POR_DIA },
+      },
+      { $inc: { consultorioConsultCount: 1 } },
+      { new: true, upsert: false },
+    )
+      .select('consultorioDayKey consultorioConsultCount')
+      .lean()
+      .exec();
+
+    if (afterSameDay) {
+      return {
+        ok: true,
+        remainingAfter: computeConsultorioRemainingToday(
+          afterSameDay.consultorioDayKey,
+          afterSameDay.consultorioConsultCount,
+        ),
+      };
+    }
+
+    const existing = await ProfileModel.findById(userId)
+      .select('consultorioDayKey consultorioConsultCount')
+      .lean()
+      .exec();
+
+    if (!existing) {
+      const created = await ProfileModel.create({
+        _id: userId,
+        name: 'Usuario',
+        consultorioDayKey: todayKey,
+        consultorioConsultCount: 1,
+      });
+      return {
+        ok: true,
+        remainingAfter: computeConsultorioRemainingToday(
+          created.consultorioDayKey,
+          created.consultorioConsultCount,
+        ),
+      };
+    }
+
+    return {
+      ok: false,
+      remainingAfter: computeConsultorioRemainingToday(
+        existing.consultorioDayKey,
+        existing.consultorioConsultCount,
+      ),
+    };
+  }
+
+  async releaseConsultorioQuestion(userId: string): Promise<void> {
+    await ProfileModel.findOneAndUpdate(
+      { _id: userId, consultorioConsultCount: { $gt: 0 } },
+      { $inc: { consultorioConsultCount: -1 } },
+    ).exec();
   }
 
   async deleteById(id: string): Promise<void> {
@@ -151,8 +331,10 @@ export class MongoProfileRepository implements ProfileRepository {
     followers?: number;
     cashBalance?: number;
     experience?: number;
+    consultorioDayKey?: string;
+    consultorioConsultCount?: number;
   }): Profile {
-    const experience = doc.experience ?? 0;
+    const experience = toExperienceNumber(doc.experience);
     const nivel = getNivelFromExperience(experience);
     return {
       id: String(doc._id),
@@ -162,12 +344,16 @@ export class MongoProfileRepository implements ProfileRepository {
       joinedAt: doc.joinedAt,
       bf: doc.bf,
       nivel,
-      division: doc.division,
+      division: getDivisionFromExperience(experience),
       patrimonio: doc.patrimonio,
       following: doc.following,
       followers: doc.followers,
       cashBalance: doc.cashBalance,
       experience,
+      consultorioRemainingToday: computeConsultorioRemainingToday(
+        doc.consultorioDayKey,
+        doc.consultorioConsultCount,
+      ),
     };
   }
 }

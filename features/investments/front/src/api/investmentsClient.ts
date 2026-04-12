@@ -318,3 +318,24 @@ export async function getPortfolioSummary(
   }
   return data as DashboardSummaryApiResponse;
 }
+
+export async function getPortfolioSummaryForUser(
+  userId: string,
+  token: string,
+  signal?: AbortSignal,
+): Promise<DashboardSummaryApiResponse> {
+  const qs = new URLSearchParams({ userId });
+  const response = await fetch(
+    `${getBaseUrl()}/portfolio/summary?${qs.toString()}`,
+    {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+      signal,
+    },
+  );
+  const data = await parseJsonSafe(response);
+  if (!response.ok) {
+    throw new Error(getMessage(data, 'Error al obtener datos del amigo'));
+  }
+  return data as DashboardSummaryApiResponse;
+}

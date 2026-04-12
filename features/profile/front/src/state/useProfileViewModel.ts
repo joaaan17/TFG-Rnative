@@ -33,6 +33,7 @@ export function useProfileViewModel() {
   const [friendsError, setFriendsError] = React.useState<string | null>(null);
   const [showFriendProfileModal, setShowFriendProfileModal] =
     React.useState(false);
+  const [friendUserId, setFriendUserId] = React.useState<string | null>(null);
   const [friendProfile, setFriendProfile] = React.useState<ProfileUser | null>(
     null,
   );
@@ -88,7 +89,7 @@ export function useProfileViewModel() {
     }
     setError(null);
     setIsLoading(true);
-    getProfile(userId)
+    getProfile(userId, session?.token)
       .then((data) => {
         if (!cancelled) setProfile(data);
       })
@@ -104,7 +105,7 @@ export function useProfileViewModel() {
     return () => {
       cancelled = true;
     };
-  }, [session?.user?.id]);
+  }, [session?.user?.id, session?.token]);
 
   const closeSettingsModal = React.useCallback(() => {
     setShowSettingsModal(false);
@@ -136,11 +137,12 @@ export function useProfileViewModel() {
   }, []);
 
   const handleSelectFriend = React.useCallback((userId: string) => {
+    setFriendUserId(userId);
     setShowFriendProfileModal(true);
     setFriendProfile(null);
     setFriendProfileError(null);
     setFriendProfileLoading(true);
-    getProfile(userId)
+    getProfile(userId, session?.token)
       .then((data) => setFriendProfile(data))
       .catch((err) => {
         setFriendProfileError(
@@ -149,10 +151,11 @@ export function useProfileViewModel() {
         setFriendProfile(null);
       })
       .finally(() => setFriendProfileLoading(false));
-  }, []);
+  }, [session?.token]);
 
   const closeFriendProfileModal = React.useCallback(() => {
     setShowFriendProfileModal(false);
+    setFriendUserId(null);
     setFriendProfile(null);
     setFriendProfileError(null);
   }, []);
@@ -194,10 +197,10 @@ export function useProfileViewModel() {
   const refetchProfile = React.useCallback(() => {
     const userId = session?.user?.id;
     if (!userId) return;
-    getProfile(userId)
+    getProfile(userId, session?.token)
       .then((data) => setProfile(data))
       .catch(() => {});
-  }, [session?.user?.id]);
+  }, [session?.user?.id, session?.token]);
 
   React.useEffect(() => {
     const unsubscribe = onProfileXpAwarded(refetchProfile);
@@ -324,6 +327,7 @@ export function useProfileViewModel() {
     friendsLoading,
     friendsError,
     showFriendProfileModal,
+    friendUserId,
     friendProfile,
     friendProfileLoading,
     friendProfileError,

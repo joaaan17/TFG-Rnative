@@ -1,10 +1,10 @@
-import { askAi } from '../api/iapreguntasClient';
+import { askAi, type AskConsultorioResponse } from '../api/iapreguntasClient';
 
 export const iapreguntasService = {
   async askMarketAI(
     prompt: string,
     token: string,
-  ): Promise<{ answer: string }> {
+  ): Promise<AskConsultorioResponse> {
     if (!prompt.trim()) {
       throw new Error('El prompt no puede estar vacío');
     }

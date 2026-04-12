@@ -18,6 +18,8 @@ export interface ProfileUser {
   cashBalance?: number;
   /** Experiencia acumulada (XP) por bonos: compra, venta, test, noticia. */
   experience?: number;
+  /** Preguntas al consultorio disponibles hoy (máx. 2 por día). */
+  consultorioRemainingToday?: number;
 }
 
 export interface ProfileStats {

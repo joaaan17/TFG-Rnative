@@ -1,5 +1,8 @@
 import { Router } from 'express';
-import { requireAuth } from '../../../../auth/back/src/api/auth.middleware';
+import {
+  optionalAuth,
+  requireAuth,
+} from '../../../../auth/back/src/api/auth.middleware';
 import {
   awardExperienceController,
   getProfileController,
@@ -10,6 +13,6 @@ const router = Router();
 
 router.get('/search', requireAuth, searchProfilesController);
 router.post('/experience/award', requireAuth, awardExperienceController);
-router.get('/:id', getProfileController);
+router.get('/:id', optionalAuth, getProfileController);
 
 export default router;

@@ -17,6 +17,12 @@ export type ProfileDocument = mongoose.Document & {
   experience?: number;
   /** IDs de noticias ya reclamadas (1 XP por noticia y usuario, evita farm). */
   claimedNewsIds?: string[];
+  /** Día civil (Europe/Madrid, YYYY-MM-DD) del contador de consultorio. */
+  consultorioDayKey?: string;
+  /** Preguntas al consultorio consumidas ese día (máx. 2). */
+  consultorioConsultCount?: number;
+  /** Último día civil (Europe/Madrid, YYYY-MM-DD) en que se contó actividad para la racha. */
+  lastStreakDayKey?: string;
 };
 
 const ProfileSchema = new Schema<ProfileDocument>(
@@ -36,6 +42,9 @@ const ProfileSchema = new Schema<ProfileDocument>(
     cashBalance: { type: Number, default: 0 },
     experience: { type: Number, default: 0 },
     claimedNewsIds: { type: [String], default: [] },
+    consultorioDayKey: { type: String, trim: true },
+    consultorioConsultCount: { type: Number, default: 0, min: 0 },
+    lastStreakDayKey: { type: String, trim: true },
   },
   { timestamps: true },
 );

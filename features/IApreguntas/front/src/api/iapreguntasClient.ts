@@ -11,10 +11,25 @@ function getBaseUrl() {
   return `${base}/api/iapreguntas`;
 }
 
+async function parseJsonSafe(response: Response) {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+export type AskConsultorioResponse = {
+  answer: string;
+  experienceAwarded: number;
+  newTotal: number;
+  consultorioRemainingToday: number;
+};
+
 export async function askAi(
   prompt: string,
   token: string,
-): Promise<{ answer: string }> {
+): Promise<AskConsultorioResponse> {
   const response = await fetch(`${getBaseUrl()}/ask`, {
     method: 'POST',
     headers: {
@@ -24,9 +39,14 @@ export async function askAi(
     body: JSON.stringify({ prompt }),
   });
 
+  const data = await parseJsonSafe(response);
   if (!response.ok) {
-    throw new Error('Error al consultar la IA');
+    const message =
+      typeof data?.error === 'string'
+        ? data.error
+        : 'Error al consultar la IA';
+    throw new Error(message);
   }
 
-  return response.json() as Promise<{ answer: string }>;
+  return data as AskConsultorioResponse;
 }

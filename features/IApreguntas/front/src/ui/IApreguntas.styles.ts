@@ -56,11 +56,20 @@ export function createIApreguntasStyles(palette: Palette) {
     chatContent: {
       paddingBottom: Spacing.md,
     },
-    xpToastWrap: {
+    
+    quotaBanner: {
       paddingHorizontal: 20,
-      paddingVertical: 6,
-      alignItems: 'center',
-      minHeight: 36,
+      paddingBottom: Spacing.sm,
+      gap: 4,
+    },
+    quotaLine: {
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    bonusHint: {
+      fontSize: 12,
+      lineHeight: 16,
+      opacity: 0.85,
     },
     inputArea: {
       paddingHorizontal: 20,

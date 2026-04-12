@@ -16,6 +16,7 @@ import RachaIcon from '@/shared/icons/racha.svg';
 import SettingsIcon from '@/shared/icons/settings.svg';
 import { usePortfolio } from '@/features/investments/front/src/hooks/usePortfolio';
 
+import { getDivisionFromExperience } from '@/shared/constants/divisions';
 import { getNivelFromExperience } from '@/shared/constants/xp-level';
 import { createProfileStyles } from './Profile.styles';
 import { AddFriendsModal } from '../components/add-friends-modal';
@@ -85,6 +86,7 @@ export function ProfileScreen() {
     friendsLoading,
     friendsError,
     showFriendProfileModal,
+    friendUserId,
     friendProfile,
     friendProfileLoading,
     friendProfileError,
@@ -314,7 +316,7 @@ export function ProfileScreen() {
                       <LigaIcon width={18} height={18} />
                     </View>
                     <Text variant="h4" style={styles.summaryValue}>
-                      {profile?.division ?? 'Bronce'}
+                      {getDivisionFromExperience(profile?.experience ?? 0)}
                     </Text>
                   </View>
                 </View>
@@ -367,6 +369,7 @@ export function ProfileScreen() {
         profile={friendProfile}
         loading={friendProfileLoading}
         error={friendProfileError}
+        friendUserId={friendUserId}
       />
 
       <PendingRequestsModal

@@ -1,5 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { LightweightChartView } from '@/features/market-chart';
 import type { Candle } from '@/features/market-chart';
 import { Text } from '@/shared/components/ui/text';
@@ -132,9 +137,11 @@ export function PortfolioPerformanceChart({
   const { performance, loading, error, fetchPerformance, refetch } =
     usePortfolioAnalytics(token, range);
 
+  // Solo refetch al cambiar rango (o montaje): los puntos ya traen equity e invested;
+  // cambiar "Valor cartera" / "Invertido" solo elige qué serie pintar, sin nueva petición.
   useEffect(() => {
-    if (mode === 'equity' || mode === 'invested') fetchPerformance();
-  }, [range, mode, fetchPerformance]);
+    fetchPerformance();
+  }, [range, fetchPerformance]);
 
   const refetchRef = useRef(refetch);
   const modeRef = useRef(mode);
@@ -203,6 +210,7 @@ export function PortfolioPerformanceChart({
         />
       </View>
 
+      {/* Área del gráfico: altura fija; si hay datos y sigue cargando, overlay con spinner */}
       {isLoading && candles.length === 0 && (
         <View
           style={{
@@ -263,22 +271,48 @@ export function PortfolioPerformanceChart({
         </View>
       )}
 
-      {!isLoading && candles.length > 0 && (
-        <LightweightChartView
-          key={`perf-${mode}-${range}`}
-          candles={candles}
-          height={height}
-          seriesType="line"
-          intraday={range === '1D'}
-          theme={{
-            layoutBackgroundColor:
-              palette.mainBackground ?? palette.background,
-            textColor: palette.text,
-            gridColor: palette.surfaceBorder ?? '#CBD5E1',
-            upColor: palette.primary,
-            fontSize: Hierarchy.captionSmall?.fontSize ?? 11,
-          }}
-        />
+      {candles.length > 0 && (
+        <View style={{ position: 'relative', minHeight: height }}>
+          <LightweightChartView
+            key={`perf-${mode}-${range}`}
+            candles={candles}
+            height={height}
+            seriesType="line"
+            intraday={range === '1D'}
+            theme={{
+              layoutBackgroundColor:
+                palette.mainBackground ?? palette.background,
+              textColor: palette.text,
+              gridColor: palette.surfaceBorder ?? '#CBD5E1',
+              upColor: palette.primary,
+              fontSize: Hierarchy.captionSmall?.fontSize ?? 11,
+            }}
+          />
+          {isLoading && (
+            <View
+              pointerEvents="none"
+              style={[
+                StyleSheet.absoluteFillObject,
+                {
+                  height,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                },
+              ]}
+            >
+              <View
+                style={[
+                  StyleSheet.absoluteFillObject,
+                  {
+                    backgroundColor: palette.mainBackground ?? palette.background,
+                    opacity: 0.72,
+                  },
+                ]}
+              />
+              <ActivityIndicator size="large" color={palette.primary} />
+            </View>
+          )}
+        </View>
       )}
 
       <View style={{ paddingTop: 8 }}>
