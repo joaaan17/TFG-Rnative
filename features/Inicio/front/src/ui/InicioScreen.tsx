@@ -472,7 +472,7 @@ export function InicioScreen() {
       <CardModal
         open={isQuizModalOpen}
         onClose={closeQuizModal}
-        maxHeightPct={0.88}
+        maxHeightPct={0.94}
         scrollable
         contentHeight={quizContentHeight}
       >

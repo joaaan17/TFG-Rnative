@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import { Hierarchy } from '@/design-system/typography';
 import { Text } from '@/shared/components/ui/text';
@@ -41,6 +42,8 @@ export function QuizModalContent({
 }: QuizModalContentProps) {
   const palette = usePalette();
   const styles = useMemo(() => createQuizStyles(palette), [palette]);
+  const insets = useSafeAreaInsets();
+  const BUTTON_AREA_HEIGHT = 80 + Math.max(insets.bottom, 8);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [reviewingIndex, setReviewingIndex] = useState<number | null>(null);
   const quizCompleteCalledRef = useRef(false);
@@ -148,53 +151,67 @@ export function QuizModalContent({
   // Modo repaso: mostrar pregunta seleccionada desde resultados
   if (allAnswered && isReviewing) {
     return (
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[styles.content, styles.contentWithButtonSpace]}
-        showsVerticalScrollIndicator={false}
-        onContentSizeChange={(w, h) => reportLayout(w, h)}
-      >
-        <View style={styles.sectionWrap}>
-          <View style={styles.sectionAccent} />
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: BUTTON_AREA_HEIGHT + 8 },
+          ]}
+          showsVerticalScrollIndicator={false}
+          onContentSizeChange={(w, h) => reportLayout(w, h)}
+        >
+          <View style={styles.sectionWrap}>
+            <View style={styles.sectionAccent} />
+            <Text
+              style={[
+                Hierarchy.titleSection,
+                styles.sectionTitle,
+                { color: palette.icon ?? palette.text },
+              ]}
+            >
+              Repasar pregunta {displayIndex + 1}
+            </Text>
+          </View>
           <Text
             style={[
-              Hierarchy.titleSection,
-              styles.sectionTitle,
+              Hierarchy.caption,
+              styles.sectionSubtitle,
               { color: palette.icon ?? palette.text },
             ]}
           >
-            Repasar pregunta {displayIndex + 1}
+            {displayIndex + 1} de {total}
           </Text>
-        </View>
-        <Text
-          style={[
-            Hierarchy.caption,
-            styles.sectionSubtitle,
-            { color: palette.icon ?? palette.text },
-          ]}
+
+          <View style={styles.questionTransitionWrap} collapsable={false}>
+            <Animated.View
+              key={displayIndex}
+              entering={QUIZ_ENTERING}
+              exiting={QUIZ_EXITING}
+              style={styles.questionTransitionInner}
+            >
+              <QuestionBlock
+                question={currentQuestion}
+                index={displayIndex}
+                selectedIndex={answers[displayIndex] ?? null}
+                onSelect={() => {}}
+                styles={styles}
+                palette={palette}
+              />
+            </Animated.View>
+          </View>
+        </ScrollView>
+
+        <View
+          style={{
+            paddingHorizontal: 20,
+            paddingTop: 12,
+            paddingBottom: Math.max(insets.bottom, 16),
+            backgroundColor: palette.cardBackground ?? palette.background,
+            borderTopWidth: 1,
+            borderTopColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.06)',
+          }}
         >
-          {displayIndex + 1} de {total}
-        </Text>
-
-        <View style={styles.questionTransitionWrap} collapsable={false}>
-          <Animated.View
-            key={displayIndex}
-            entering={QUIZ_ENTERING}
-            exiting={QUIZ_EXITING}
-            style={styles.questionTransitionInner}
-          >
-            <QuestionBlock
-              question={currentQuestion}
-              index={displayIndex}
-              selectedIndex={answers[displayIndex] ?? null}
-              onSelect={() => {}}
-              styles={styles}
-              palette={palette}
-            />
-          </Animated.View>
-        </View>
-
-        <View style={styles.nextContainer}>
           <Button
             onPress={() => setReviewingIndex(null)}
             variant="default"
@@ -204,7 +221,7 @@ export function QuizModalContent({
             <Text style={Hierarchy.action}>Volver a resultados</Text>
           </Button>
         </View>
-      </ScrollView>
+      </View>
     );
   }
 
@@ -339,62 +356,77 @@ export function QuizModalContent({
   const progressPct = total > 0 ? (currentIndex + 1) / total : 0;
 
   return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={[styles.content, styles.contentWithButtonSpace]}
-      showsVerticalScrollIndicator={false}
-      onContentSizeChange={(w, h) => reportLayout(w, h)}
-    >
-      <View style={styles.sectionWrap}>
-        <View style={styles.sectionAccent} />
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: BUTTON_AREA_HEIGHT + 8 },
+        ]}
+        showsVerticalScrollIndicator={false}
+        onContentSizeChange={(w, h) => reportLayout(w, h)}
+      >
+        <View style={styles.sectionWrap}>
+          <View style={styles.sectionAccent} />
+          <Text
+            style={[
+              Hierarchy.titleSection,
+              styles.sectionTitle,
+              { color: palette.icon ?? palette.text },
+            ]}
+          >
+            Test de comprensión
+          </Text>
+        </View>
         <Text
           style={[
-            Hierarchy.titleSection,
-            styles.sectionTitle,
+            Hierarchy.caption,
+            styles.progressSubtitle,
             { color: palette.icon ?? palette.text },
           ]}
         >
-          Test de comprensión
+          Pregunta {currentIndex + 1} de {total}
         </Text>
-      </View>
-      <Text
-        style={[
-          Hierarchy.caption,
-          styles.progressSubtitle,
-          { color: palette.icon ?? palette.text },
-        ]}
-      >
-        Pregunta {currentIndex + 1} de {total}
-      </Text>
 
-      <View style={styles.progressBarWrap}>
-        <View
-          style={[
-            styles.progressBarFill,
-            { width: `${progressPct * 100}%` },
-          ]}
-        />
-      </View>
-
-      <View style={styles.questionTransitionWrap} collapsable={false}>
-        <Animated.View
-          key={currentIndex}
-          entering={QUIZ_ENTERING}
-          exiting={QUIZ_EXITING}
-          style={styles.questionTransitionInner}
-        >
-          <QuestionBlock
-            question={currentQuestion}
-            index={currentIndex}
-            selectedIndex={answers[currentIndex] ?? null}
-            onSelect={(opt) => handleSelectOption(currentIndex, opt)}
-            styles={styles}
-            palette={palette}
+        <View style={styles.progressBarWrap}>
+          <View
+            style={[
+              styles.progressBarFill,
+              { width: `${progressPct * 100}%` },
+            ]}
           />
-        </Animated.View>
-      </View>
+        </View>
 
-      <View style={styles.nextContainer}>
+        <View style={styles.questionTransitionWrap} collapsable={false}>
+          <Animated.View
+            key={currentIndex}
+            entering={QUIZ_ENTERING}
+            exiting={QUIZ_EXITING}
+            style={styles.questionTransitionInner}
+          >
+            <QuestionBlock
+              question={currentQuestion}
+              index={currentIndex}
+              selectedIndex={answers[currentIndex] ?? null}
+              onSelect={(opt) => handleSelectOption(currentIndex, opt)}
+              styles={styles}
+              palette={palette}
+            />
+          </Animated.View>
+        </View>
+      </ScrollView>
+
+      {/* Botón fijo en la parte inferior — siempre visible */}
+      <View
+        style={{
+          paddingHorizontal: 20,
+          paddingTop: 12,
+          paddingBottom: Math.max(insets.bottom, 16),
+          backgroundColor: palette.cardBackground ?? palette.background,
+          borderTopWidth: 1,
+          borderTopColor: palette.surfaceBorder ?? 'rgba(0,0,0,0.06)',
+        }}
+      >
         <Button
           onPress={handleNext}
           disabled={!currentAnswered}
@@ -409,7 +441,7 @@ export function QuizModalContent({
           </Text>
         </Button>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
