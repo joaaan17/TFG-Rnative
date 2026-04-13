@@ -19,7 +19,8 @@ interface NewsAPIResponse {
   articles: NewsAPIArticle[];
 }
 
-const CACHE_TTL_MS = 2 * 24 * 60 * 60 * 1000; // 2 días
+/** Caché en memoria del servidor: equilibrio entre frescura y llamadas a NewsAPI. */
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hora (el cliente fuerza bypass con ?refresh=true al tirar de la lista)
 let cache: { raw: RawNews[]; ts: number } | null = null;
 
 function toRawNews(article: NewsAPIArticle, index: number): RawNews {
@@ -51,8 +52,12 @@ export class NewsAPIProvider implements NewsProviderPort {
     private readonly baseUrl = 'https://newsapi.org/v2',
   ) {}
 
-  async getHeadlines(): Promise<RawNews[]> {
-    if (cache && Date.now() - cache.ts < CACHE_TTL_MS) {
+  async getHeadlines(options?: { bypassCache?: boolean }): Promise<RawNews[]> {
+    if (
+      !options?.bypassCache &&
+      cache &&
+      Date.now() - cache.ts < CACHE_TTL_MS
+    ) {
       console.log(
         '[iaNoticias] 3. NewsAPIProvider: getHeadlines desde CACHE (',
         cache.raw.length,

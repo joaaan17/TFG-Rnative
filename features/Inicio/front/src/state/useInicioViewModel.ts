@@ -67,14 +67,15 @@ export function useInicioViewModel(): UseInicioViewModelResult {
   );
 
   const token = session?.token;
+  const userId = session?.user?.id;
 
   const fetchHeadlines = React.useCallback(
     async (forceRefresh = false) => {
-      if (!token) return;
+      if (!token || !userId) return;
       if (!forceRefresh) setLoading(true);
       setError(null);
       try {
-        const headlines = await loadHeadlines(token, { forceRefresh });
+        const headlines = await loadHeadlines(token, { forceRefresh, userId });
         setNews(headlines);
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Error al cargar noticias';
@@ -84,8 +85,21 @@ export function useInicioViewModel(): UseInicioViewModelResult {
         if (!forceRefresh) setLoading(false);
       }
     },
-    [token],
+    [token, userId],
   );
+
+  /** Al cambiar de cuenta, las cachés locales son por usuario: forzar fetch de titulares nuevos. */
+  const prevUserIdRef = React.useRef<string | undefined>(undefined);
+  React.useEffect(() => {
+    if (!token || !userId) {
+      prevUserIdRef.current = userId;
+      return;
+    }
+    if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== userId) {
+      void fetchHeadlines(true);
+    }
+    prevUserIdRef.current = userId;
+  }, [token, userId, fetchHeadlines]);
 
   const openNews = React.useCallback(
     async (item: NewsPreview) => {
@@ -95,7 +109,7 @@ export function useInicioViewModel(): UseInicioViewModelResult {
         'token=',
         !!token,
       );
-      if (!token) {
+      if (!token || !userId) {
         console.log('[iaNoticias FRONT] ViewModel: openNews SKIP - sin token');
         return;
       }
@@ -104,7 +118,7 @@ export function useInicioViewModel(): UseInicioViewModelResult {
       setLoadingNews(true);
       setError(null);
       try {
-        const educational = await loadEducationalNews(item.id, token);
+        const educational = await loadEducationalNews(item.id, token, userId);
         console.log('[iaNoticias FRONT] ViewModel: openNews OK');
         setSelectedNews(educational);
         const xp = await award('VIEW_NEWS', { newsId: item.id });
@@ -118,7 +132,7 @@ export function useInicioViewModel(): UseInicioViewModelResult {
         setLoadingNews(false);
       }
     },
-    [token, award],
+    [token, userId, award],
   );
 
   const closeNewsModal = React.useCallback(
@@ -135,7 +149,7 @@ export function useInicioViewModel(): UseInicioViewModelResult {
   );
 
   const openQuiz = React.useCallback(async () => {
-    if (!token || !selectedNews) return;
+    if (!token || !userId || !selectedNews) return;
     const newsId = selectedNews.id;
     currentQuizNewsIdRef.current = newsId;
     setIsQuizModalOpen(true);
@@ -153,7 +167,7 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     setLoadingQuiz(true);
     setError(null);
     try {
-      const quizData = await loadQuiz(newsId, token);
+      const quizData = await loadQuiz(newsId, token, userId);
       quizStoreRef.current.set(newsId, quizData);
       answersStoreRef.current.set(newsId, {});
       setQuiz(quizData);
@@ -164,7 +178,7 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     } finally {
       setLoadingQuiz(false);
     }
-  }, [token, selectedNews]);
+  }, [token, userId, selectedNews]);
 
   const closeQuizModal = React.useCallback(() => {
     setIsQuizModalOpen(false);

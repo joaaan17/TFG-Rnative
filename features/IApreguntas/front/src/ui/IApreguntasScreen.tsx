@@ -36,6 +36,7 @@ export function IApreguntasScreen() {
     lastAwardedXp,
     dismissXpReward,
     consultorioRemainingToday,
+    nombreUsuario,
   } = useIApreguntasViewModel();
 
   useEffect(() => {
@@ -72,8 +73,8 @@ export function IApreguntasScreen() {
       </View>
 
       <View style={styles.welcomeArea}>
-        <Text style={[Hierarchy.bodySmallSemibold, styles.helloText]}>
-          Hola Joan
+        <Text style={[Hierarchy.titleModalLarge, styles.helloText]}>
+          Hola {nombreUsuario}
         </Text>
         <TypewriterTextComponent
           key={`welcome-${typewriterKey}`}

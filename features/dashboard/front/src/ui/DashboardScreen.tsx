@@ -125,6 +125,8 @@ export function DashboardScreen() {
   const summary = portfolioSummary;
   const totalProfitPositive = summary.totalProfitability.amount.startsWith('+');
   const dailyProfitPositive = summary.dailyProfitability.amount.startsWith('+');
+  const summaryReady =
+    !loadingSummary && summary.totalProfitability.amount !== '—';
 
   return (
     <View style={styles.container}>
@@ -214,9 +216,11 @@ export function DashboardScreen() {
                 Hierarchy.bodySmallSemibold,
                 styles.summaryValue,
                 {
-                  color: totalProfitPositive
-                    ? ENTRY_GREEN
-                    : palette.destructive,
+                  color: summaryReady
+                    ? totalProfitPositive
+                      ? ENTRY_GREEN
+                      : palette.destructive
+                    : palette.text,
                 },
               ]}
             >
@@ -239,9 +243,11 @@ export function DashboardScreen() {
                 Hierarchy.bodySmallSemibold,
                 styles.summaryValue,
                 {
-                  color: dailyProfitPositive
-                    ? ENTRY_GREEN
-                    : palette.destructive,
+                  color: summaryReady
+                    ? dailyProfitPositive
+                      ? ENTRY_GREEN
+                      : palette.destructive
+                    : palette.text,
                 },
               ]}
             >

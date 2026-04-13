@@ -61,7 +61,8 @@ export function FriendsListModal({
     <CardModal
       open={open}
       onClose={onClose}
-      maxHeightPct={0.7}
+      maxHeightPct={0.99}
+      scrollable
       contentNoPaddingTop
     >
       <ModalHeader

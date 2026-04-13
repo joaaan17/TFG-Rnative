@@ -30,6 +30,8 @@ export type UseIApreguntasViewModelResult = {
   dismissXpReward: () => void;
   /** Preguntas que puedes hacer hoy (null = cargando). */
   consultorioRemainingToday: number | null;
+  /** Nombre del usuario autenticado para el saludo del consultorio. */
+  nombreUsuario: string;
 };
 
 function generateId() {
@@ -49,6 +51,11 @@ export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
   const [lastAwardedXp, setLastAwardedXp] = React.useState<number | null>(null);
   const [consultorioRemainingToday, setConsultorioRemainingToday] =
     React.useState<number | null>(null);
+
+  const nombreUsuario = React.useMemo(() => {
+    const n = session?.user?.name?.trim();
+    return n && n.length > 0 ? n : 'Usuario';
+  }, [session?.user?.name]);
 
   const loadConsultorioQuota = React.useCallback(async () => {
     const userId = session?.user?.id;
@@ -184,5 +191,6 @@ export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
     lastAwardedXp,
     dismissXpReward,
     consultorioRemainingToday,
+    nombreUsuario,
   };
 }

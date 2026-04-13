@@ -185,6 +185,22 @@ function getMockStats(): DashboardStats {
   };
 }
 
+/** Placeholder neutro antes de la API: evita mostrar números mock en verde al cargar. */
+function getInitialDashboardStats(): DashboardStats {
+  const mock = getMockStats();
+  return {
+    ...mock,
+    portfolioSummary: {
+      totalValue: '—',
+      totalProfitability: { amount: '—', percent: '—' },
+      dailyProfitability: { amount: '—', percent: '—' },
+      availableCash: '—',
+      totalInvested: '—',
+    },
+    contextCards: [],
+  };
+}
+
 export type UseDashboardViewModelResult = {
   /** Resumen global de la cartera (valor total, rentabilidad, cash, invertido). */
   portfolioSummary: PortfolioSummary;
@@ -215,7 +231,9 @@ export function useDashboardViewModel(): UseDashboardViewModelResult {
   const { session } = useAuthSession();
   const token = session?.token ?? null;
 
-  const [stats, setStats] = React.useState<DashboardStats>(getMockStats);
+  const [stats, setStats] = React.useState<DashboardStats>(() =>
+    getInitialDashboardStats(),
+  );
   const [loadingSummary, setLoadingSummary] = React.useState(true);
   const [summaryError, setSummaryError] = React.useState<string | null>(null);
 

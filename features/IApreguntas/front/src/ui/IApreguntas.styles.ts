@@ -38,7 +38,8 @@ export function createIApreguntasStyles(palette: Palette) {
     },
     helloText: {
       color: palette.text,
-      marginBottom: 6,
+      marginBottom: 10,
+      letterSpacing: -0.3,
     },
     welcomeText: {
       color: palette.icon ?? palette.text,

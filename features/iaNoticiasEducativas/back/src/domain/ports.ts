@@ -5,8 +5,10 @@
 
 import type { RawNews } from './iaNoticiasEducativas.types';
 
+export type GetHeadlinesOptions = { bypassCache?: boolean };
+
 export interface NewsProviderPort {
-  getHeadlines(): Promise<RawNews[]>;
+  getHeadlines(options?: GetHeadlinesOptions): Promise<RawNews[]>;
   getNewsById(id: string): Promise<RawNews>;
 }
 

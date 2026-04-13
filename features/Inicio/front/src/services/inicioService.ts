@@ -19,53 +19,69 @@ import type {
 
 export type { NewsPreview, EducationalNews, NewsQuiz };
 
-/** Headlines: cache 2 días. Solo hace llamada si el cache está vacío o vencido. */
+export type InicioLoadOptions = {
+  userId: string;
+  forceRefresh?: boolean;
+};
+
+/** Headlines: cache 2 días por usuario. Pull-to-refresh fuerza API + bypass caché servidor. */
 export async function loadHeadlines(
   token: string,
-  options?: { forceRefresh?: boolean },
+  options: InicioLoadOptions,
 ): Promise<NewsPreview[]> {
   if (!token?.trim()) throw new Error('Token requerido');
-  if (!options?.forceRefresh) {
-    const cached = await getHeadlinesCached();
+  const uid = options.userId?.trim();
+  if (!uid) throw new Error('userId requerido');
+
+  if (!options.forceRefresh) {
+    const cached = await getHeadlinesCached(uid);
     if (cached != null && cached.length > 0) {
       return cached;
     }
   }
-  const data = await getHeadlines(token.trim());
-  await setHeadlinesCached(data);
+  const data = await getHeadlines(token.trim(), {
+    forceRefresh: options.forceRefresh,
+  });
+  await setHeadlinesCached(uid, data);
   return data;
 }
 
-/** Educational news: cache 2 días por newsId. Evita llamadas repetidas. */
+/** Educational news: cache 2 días por usuario y noticia. */
 export async function loadEducationalNews(
   newsId: string,
   token: string,
+  userId: string,
 ): Promise<EducationalNews> {
   if (!newsId?.trim()) throw new Error('newsId requerido');
   if (!token?.trim()) throw new Error('Token requerido');
+  const uid = userId?.trim();
+  if (!uid) throw new Error('userId requerido');
   const id = newsId.trim();
-  const cached = await getEducationalNewsCached(id);
+  const cached = await getEducationalNewsCached(uid, id);
   if (cached != null) {
     return cached;
   }
   const data = await getEducationalNews(id, token.trim());
-  await setEducationalNewsCached(id, data);
+  await setEducationalNewsCached(uid, id, data);
   return data;
 }
 
-/** Quiz: cache 7 días por newsId. Reutiliza quiz sin volver a generar. */
+/** Quiz: cache 7 días por usuario y noticia. */
 export async function loadQuiz(
   newsId: string,
   token: string,
+  userId: string,
 ): Promise<NewsQuiz> {
   if (!newsId?.trim()) throw new Error('newsId requerido');
   if (!token?.trim()) throw new Error('Token requerido');
+  const uid = userId?.trim();
+  if (!uid) throw new Error('userId requerido');
   const id = newsId.trim();
-  const cached = await getQuizCached(id);
+  const cached = await getQuizCached(uid, id);
   if (cached != null) {
     return cached;
   }
   const data = await getQuiz(id, token.trim());
-  await setQuizCached(id, data);
+  await setQuizCached(uid, id, data);
   return data;
 }

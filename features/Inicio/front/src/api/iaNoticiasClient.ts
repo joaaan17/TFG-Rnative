@@ -16,13 +16,20 @@ function getBaseUrl() {
   return `${base}/api/ia-noticias`;
 }
 
-export async function getHeadlines(token: string): Promise<NewsPreview[]> {
-  const url = `${getBaseUrl()}/headlines`;
+export async function getHeadlines(
+  token: string,
+  options?: { forceRefresh?: boolean },
+): Promise<NewsPreview[]> {
+  const qs = options?.forceRefresh ? '?refresh=true' : '';
+  const url = `${getBaseUrl()}/headlines${qs}`;
   console.log('[iaNoticias FRONT] 1. Client: getHeadlines', url);
   const response = await fetch(url, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
+      // Evita caché HTTP agresivo del navegador / PWA en el escritorio (Safari).
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
     },
   });
 
@@ -58,6 +65,8 @@ export async function getEducationalNews(
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
     },
     body: JSON.stringify({ newsId }),
   });
@@ -90,6 +99,8 @@ export async function getQuiz(
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
     },
     body: JSON.stringify({ newsId }),
   });

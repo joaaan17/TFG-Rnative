@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
 import { onLevelUp } from '../events/profile-events';
 import { LevelUpModal } from './LevelUpModal';
 
@@ -7,6 +8,7 @@ import { LevelUpModal } from './LevelUpModal';
  * Debe montarse una sola vez (p. ej. en AppShell).
  */
 export function LevelUpModalWrapper({ children }: { children: React.ReactNode }) {
+  const { session } = useAuthSession();
   const [state, setState] = useState<{
     visible: boolean;
     newLevel: number;
@@ -32,6 +34,7 @@ export function LevelUpModalWrapper({ children }: { children: React.ReactNode })
         onClose={handleClose}
         newLevel={state.newLevel}
         newTotalXp={state.newTotalXp}
+        userName={session?.user?.name}
       />
     </>
   );

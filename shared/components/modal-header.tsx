@@ -59,6 +59,15 @@ export type ModalHeaderProps = {
   title: string;
   /** Subtítulo opcional bajo el título, en estilo muted. */
   subtitle?: string;
+  /**
+   * Líneas máximas del título (p. ej. 3 si el título incluye nombre y no debe cortarse con "…").
+   * Por defecto 1 (una línea).
+   */
+  titleNumberOfLines?: number;
+  /**
+   * Líneas máximas del subtítulo. Por defecto 1.
+   */
+  subtitleNumberOfLines?: number;
   /** Si se pasa, se muestra flecha atrás y se llama al pulsar. */
   onBack?: () => void;
   /** Si se pasa, se muestra X y se llama al pulsar. */
@@ -77,6 +86,8 @@ export type ModalHeaderProps = {
 export function ModalHeader({
   title,
   subtitle,
+  titleNumberOfLines = 1,
+  subtitleNumberOfLines = 1,
   onBack,
   onClose,
   backAccessibilityLabel = 'Volver',
@@ -120,7 +131,7 @@ export function ModalHeader({
             Hierarchy.titleModal,
             { color: palette.text, textAlign: 'center' },
           ]}
-          numberOfLines={1}
+          numberOfLines={titleNumberOfLines}
         >
           {title}
         </Text>
@@ -135,7 +146,7 @@ export function ModalHeader({
                 textAlign: 'center',
               },
             ]}
-            numberOfLines={1}
+            numberOfLines={subtitleNumberOfLines}
           >
             {subtitle}
           </Text>

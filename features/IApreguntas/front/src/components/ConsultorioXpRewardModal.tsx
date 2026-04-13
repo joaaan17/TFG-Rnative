@@ -80,13 +80,11 @@ export function ConsultorioXpRewardModal({
       <View style={styles.content}>
         <Animated.View
           style={[
-            styles.iconWrap,
-            { backgroundColor: `${palette.primary}14`, transform: [{ scale }], opacity },
+            styles.iconCircle,
+            { backgroundColor: `${palette.primary}18`, transform: [{ scale }], opacity },
           ]}
         >
-          <View style={[styles.iconInner, { backgroundColor: `${palette.primary}22` }]}>
-            <Sparkles size={38} color={palette.primary} strokeWidth={1.8} />
-          </View>
+          <Sparkles size={38} color={palette.primary} strokeWidth={1.8} />
         </Animated.View>
 
         <View style={[styles.sectionRow, { borderLeftColor: palette.primary }]}>
@@ -164,21 +162,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 32,
   },
-  iconWrap: {
+  /** Un solo círculo suave (antes había dos anidados que parecían “doble halo”). */
+  iconCircle: {
     alignSelf: 'center',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 22,
-  },
-  iconInner: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   sectionRow: {
     flexDirection: 'row',

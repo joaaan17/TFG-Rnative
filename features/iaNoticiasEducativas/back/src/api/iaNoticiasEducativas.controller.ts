@@ -7,10 +7,18 @@ import {
 import { getQuiz, setQuiz } from '../config/quiz-store';
 import { getExplainCached, setExplainCached } from '../config/explain-cache';
 
-export async function getHeadlinesController(_req: Request, res: Response) {
-  console.log('[iaNoticias] 1. Controller: getHeadlines recibida');
+export async function getHeadlinesController(req: Request, res: Response) {
+  const refresh = req.query.refresh;
+  const bypassCache =
+    refresh === 'true' || refresh === '1' || refresh === 'yes';
+  console.log(
+    '[iaNoticias] 1. Controller: getHeadlines recibida',
+    bypassCache ? '(refresh: bypass caché servidor)' : '',
+  );
   try {
-    const headlines = await getHeadlines.execute();
+    const headlines = await getHeadlines.execute({
+      bypassCache: bypassCache,
+    });
     console.log(
       '[iaNoticias] 2. Controller: getHeadlines OK, enviando',
       headlines?.length ?? 0,

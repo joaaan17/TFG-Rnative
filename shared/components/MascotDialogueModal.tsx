@@ -12,53 +12,44 @@ import { ModalHeader } from '@/shared/components/modal-header';
 import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
+import type { MascotDialogueBucket } from '@/shared/data/mascot-investor-dialogues';
 
-const LEVEL_UP_IMAGE = require('@/shared/gus-images/Gemini_Generated_Image_9kyg439kyg439kyg-removebg-preview.png');
+const MASCOT_IMAGE = require('@/shared/gus-images/Gemini_Generated_Image_9kyg439kyg439kyg-removebg-preview.png');
 
-export type LevelUpModalProps = {
-  visible: boolean;
+export type MascotDialogueModalProps = {
+  open: boolean;
   onClose: () => void;
-  newLevel: number;
-  newTotalXp: number;
-  /** Nombre del usuario (sesión); mejora el saludo y el mensaje de ánimo. */
-  userName?: string;
+  mascotName: string;
+  bucket: MascotDialogueBucket;
+  message: string;
+  objective: string;
 };
 
-function firstNameFromDisplay(name: string | undefined): string {
-  const t = name?.trim();
-  if (!t) return '';
-  return t.split(/\s+/)[0] ?? t;
-}
+const BUCKET_SUBTITLE: Record<MascotDialogueBucket, string> = {
+  '0_minutes': 'Bienvenida al hábito',
+  '5_minutes': 'Tu tiempo suma',
+  '15_minutes': 'Disciplina que marca',
+};
 
 /**
- * Modal de felicitación cuando el usuario sube de nivel.
- * Estética alineada con la app: secciones tipo TU POSICIÓN, cards grises, azul primario.
+ * Modal alineado con LevelUp: CardModal, ModalHeader, imagen y cuerpo legible.
  */
-export function LevelUpModal({
-  visible,
+export function MascotDialogueModal({
+  open,
   onClose,
-  newLevel,
-  newTotalXp,
-  userName,
-}: LevelUpModalProps) {
+  mascotName,
+  bucket,
+  message,
+  objective,
+}: MascotDialogueModalProps) {
   const palette = usePalette();
   const [contentHeight, setContentHeight] = React.useState<
     number | undefined
   >();
 
   React.useEffect(() => {
-    if (!visible) setContentHeight(undefined);
-  }, [visible]);
-
-  const firstName = firstNameFromDisplay(userName);
-
-  const headerTitle = firstName
-    ? `¡${firstName}, has subido de nivel!`
-    : '¡Has subido de nivel!';
-  const headerSubtitle = 'Tu constancia con el aprendizaje marca la diferencia';
-  const encouragementBody = firstName
-    ? `${firstName}, cada XP refuerza lo que vas dominando y te acerca al siguiente reto. Usa el consultorio, los tests y la cartera práctica: vas por el camino correcto.`
-    : 'Cada XP refuerza lo que vas dominando y te acerca al siguiente reto. Sigue practicando en la app: la constancia es la que suma.';
+    if (!open) setContentHeight(undefined);
+  }, [open]);
 
   const cardBg =
     palette.background === '#070B14' || palette.background?.startsWith('#0')
@@ -78,9 +69,9 @@ export function LevelUpModal({
 
   return (
     <CardModal
-      open={visible}
+      open={open}
       onClose={onClose}
-      maxHeightPct={0.94}
+      maxHeightPct={0.92}
       closeOnBackdropPress
       scrollable
       contentHeight={contentHeight}
@@ -97,10 +88,10 @@ export function LevelUpModal({
         contentContainerStyle={styles.scrollContent}
       >
         <ModalHeader
-          title={headerTitle}
-          subtitle={headerSubtitle}
-          titleNumberOfLines={3}
-          subtitleNumberOfLines={3}
+          title={mascotName}
+          subtitle={BUCKET_SUBTITLE[bucket]}
+          titleNumberOfLines={2}
+          subtitleNumberOfLines={2}
           onClose={onClose}
           closeAccessibilityLabel="Cerrar"
         />
@@ -108,11 +99,11 @@ export function LevelUpModal({
           <View
             style={[
               styles.imageWrap,
-              { backgroundColor: `${palette.primary}08` },
+              { backgroundColor: `${palette.primary}10` },
             ]}
           >
             <Image
-              source={LEVEL_UP_IMAGE}
+              source={MASCOT_IMAGE}
               style={styles.image}
               contentFit="contain"
             />
@@ -127,60 +118,46 @@ export function LevelUpModal({
                 { color: palette.icon ?? palette.text },
               ]}
             >
-              NUEVO NIVEL
+              OBJETIVO DEL MOMENTO
             </Text>
           </View>
 
           <View
             style={[
-              styles.levelCard,
+              styles.copyCard,
               { backgroundColor: cardBg, ...cardShadow },
             ]}
           >
-            <Text style={[Hierarchy.value, { color: palette.text }]}>
-              {newLevel}
-            </Text>
-          </View>
-
-          <View
-            style={[styles.sectionRow, { borderLeftColor: palette.primary }]}
-          >
-            <Text
-              style={[
-                Hierarchy.titleSection,
-                { color: palette.icon ?? palette.text },
-              ]}
-            >
-              XP ACUMULADOS
-            </Text>
-          </View>
-
-          <View
-            style={[styles.xpCard, { backgroundColor: cardBg, ...cardShadow }]}
-          >
-            <Text style={[Hierarchy.valueSecondary, { color: palette.text }]}>
-              {newTotalXp.toLocaleString('es-ES')} XP
-            </Text>
             <Text
               variant="muted"
               style={[
                 Hierarchy.caption,
                 {
-                  color: palette.icon ?? palette.text,
-                  marginTop: 8,
-                  textAlign: 'center',
-                  lineHeight: 20,
+                  color: palette.primary,
+                  marginBottom: 12,
+                  lineHeight: 18,
                 },
               ]}
             >
-              {encouragementBody}
+              {objective}
+            </Text>
+            <Text
+              style={[
+                Hierarchy.body,
+                {
+                  color: palette.text,
+                  lineHeight: 24,
+                },
+              ]}
+            >
+              {message}
             </Text>
           </View>
 
           <Pressable
             onPress={onClose}
             style={({ pressed }) => [
-              styles.ctaButton,
+              styles.cta,
               {
                 backgroundColor: palette.primary,
                 opacity: pressed ? 0.9 : 1,
@@ -226,28 +203,24 @@ export function LevelUpModal({
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 4,
-  },
+  scroll: { flex: 1 },
+  scrollContent: { paddingBottom: 8 },
   content: {
     paddingHorizontal: 20,
-    paddingBottom: 32,
+    paddingBottom: 28,
   },
   imageWrap: {
     alignSelf: 'center',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 132,
+    height: 132,
+    borderRadius: 66,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   image: {
-    width: 120,
-    height: 120,
+    width: 112,
+    height: 112,
   },
   sectionRow: {
     flexDirection: 'row',
@@ -256,20 +229,13 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     borderLeftWidth: 3,
   },
-  levelCard: {
-    borderRadius: 12,
+  copyCard: {
+    borderRadius: 14,
     paddingVertical: 16,
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    alignItems: 'center',
+    paddingHorizontal: 18,
+    marginBottom: 22,
   },
-  xpCard: {
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    marginBottom: 24,
-  },
-  ctaButton: {
+  cta: {
     width: '100%',
     paddingVertical: 15,
     paddingHorizontal: 8,

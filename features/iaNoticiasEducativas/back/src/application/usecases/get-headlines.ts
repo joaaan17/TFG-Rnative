@@ -8,8 +8,10 @@ import type { NewsPreview } from '../../domain/iaNoticiasEducativas.types';
 export class GetHeadlines {
   constructor(private readonly newsProvider: NewsProviderPort) {}
 
-  async execute(): Promise<NewsPreview[]> {
-    const raw = await this.newsProvider.getHeadlines();
+  async execute(options?: { bypassCache?: boolean }): Promise<NewsPreview[]> {
+    const raw = await this.newsProvider.getHeadlines({
+      bypassCache: options?.bypassCache,
+    });
     return raw.map((r) => ({
       id: r.id,
       title: r.title,

@@ -154,6 +154,13 @@ export function CardModal({
       ? Math.min(contentHeight + DRAG_HANDLE_OFFSET + paddingBottom, maxHeight)
       : null;
 
+  /** En web/PWA (p. ej. Safari iPhone) `window.innerHeight` y RN a veces dan menos que la ventana visual → franja inferior. */
+  const webFullscreenSheet =
+    Platform.OS === 'web' &&
+    scrollable &&
+    fitContentHeight == null &&
+    maxHeightPct >= 0.99;
+
   // Calcular intensidad máxima del blur según si está bloqueado
   const maxBlurIntensity = closeOnBackdropPress ? 20 : 40;
   const maxBackdropOpacity = closeOnBackdropPress ? 0.3 : 0.5;
@@ -246,7 +253,7 @@ export function CardModal({
       onRequestClose={onClose}
       statusBarTranslucent={Platform.OS === 'android'}
     >
-      <View style={styles.root}>
+      <View style={[styles.root, styles.rootWeb]}>
         {/* BlurView para efecto de desenfoque real en iOS/Android con animación */}
         {isBlurAvailable && BlurViewComponent ? (
           <Animated.View
@@ -365,6 +372,7 @@ export function CardModal({
               scrollable
                 ? { height: fitContentHeight ?? maxHeight, maxHeight }
                 : { maxHeight },
+              webFullscreenSheet && styles.sheetWebFullscreen,
             ]}
           >
             <Card
@@ -381,6 +389,7 @@ export function CardModal({
                       : { flex: 1 }
                     : {}),
                   maxHeight,
+                  ...(webFullscreenSheet ? { flex: 1, minHeight: 0 } : {}),
                   backgroundColor: sheetBg,
                   borderColor: palette.surfaceBorder ?? palette.text,
                   // contentWrap gestiona el padding inferior; anular el py-6 de la Card
@@ -434,6 +443,28 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
   },
+  /** Modal a pantalla completa en navegador / PWA (evita hueco inferior en iOS Safari). */
+  rootWeb: Platform.select({
+    web: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: '100%',
+      height: '100%',
+      minHeight: '100dvh',
+    },
+    default: {},
+  }),
+  sheetWebFullscreen: Platform.select({
+    web: {
+      height: '100dvh',
+      maxHeight: '100dvh',
+      minHeight: '100dvh',
+    },
+    default: {},
+  }),
   backdrop: {
     ...StyleSheet.absoluteFillObject,
   },
