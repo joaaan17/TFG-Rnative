@@ -7,12 +7,14 @@ import {
   deleteFriendController,
   listFriendsController,
   listPendingRequestsController,
+  recommendUsersController,
 } from './relationships.controller';
 
 const router = Router();
 
 router.use(requireAuth);
 
+router.get('/recommend-users', recommendUsersController);
 router.post('/request', requestController);
 router.post('/accept', acceptController);
 router.post('/reject', rejectController);

@@ -95,6 +95,22 @@ export class MongoRelationshipRepository implements RelationshipRepository {
     return docs.map((d) => String(d.requesterId));
   }
 
+  async findOtherUserIdsInPendingRelationships(userId: string): Promise<string[]> {
+    const oid = toObjectId(userId);
+    const docs = await RelationshipModel.find({
+      status: 'pending',
+      $or: [{ userAId: oid }, { userBId: oid }],
+    })
+      .select('userAId userBId')
+      .lean()
+      .exec();
+    return docs.map((d) => {
+      const a = String(d.userAId);
+      const b = String(d.userBId);
+      return d.userAId.equals(oid) ? b : a;
+    });
+  }
+
   private mapToRelationship(doc: {
     _id: unknown;
     userAId: unknown;

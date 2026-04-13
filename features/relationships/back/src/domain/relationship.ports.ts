@@ -16,6 +16,8 @@ export interface RelationshipRepository {
   deleteByPair(userAId: string, userBId: string): Promise<void>;
   findAcceptedFriendIds(userId: string): Promise<string[]>;
   findPendingRequesterIds(userId: string): Promise<string[]>;
+  /** En relaciones `pending`, devuelve el id del otro usuario (no el propio). */
+  findOtherUserIdsInPendingRelationships(userId: string): Promise<string[]>;
   countAcceptedFriends(userId: string): Promise<number>;
 }
 

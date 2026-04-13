@@ -3,11 +3,23 @@ import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
 import { onProfileXpAwarded } from '../events/profile-events';
 import { authService } from '@/features/auth/front/src/services/authService';
 import { relationshipsService } from '@/features/relationships/front/src/services/relationshipsService';
+import type { PendingRequestItem } from '@/features/relationships/front/src/services/relationshipsService';
 import { profileService } from '../services/profileService';
 import type { ProfileUser, ProfileSearchItem } from '../types/profile.types';
-import type { PendingRequestItem } from '@/features/relationships/front/src/services/relationshipsService';
 
-const { getProfile, searchProfiles, extractErrorMessage } = profileService;
+const {
+  getProfile,
+  searchProfiles,
+  suggestProfilesForFriends,
+  extractErrorMessage,
+} = profileService;
+
+function stripAchievementGrantsFromProfile(data: ProfileUser): ProfileUser {
+  const { lastAchievementGrants: _, ...rest } = data as ProfileUser & {
+    lastAchievementGrants?: ProfileUser['lastAchievementGrants'];
+  };
+  return rest as ProfileUser;
+}
 
 export function useProfileViewModel() {
   const { session, signOut } = useAuthSession();
@@ -47,11 +59,27 @@ export function useProfileViewModel() {
   );
   const [searchLoading, setSearchLoading] = React.useState(false);
   const [searchError, setSearchError] = React.useState<string | null>(null);
+  const [suggestedUsers, setSuggestedUsers] = React.useState<
+    ProfileSearchItem[]
+  >([]);
+  const [suggestedLoading, setSuggestedLoading] = React.useState(false);
+  const [suggestedError, setSuggestedError] = React.useState<string | null>(
+    null,
+  );
   const [requestedIds, setRequestedIds] = React.useState<Set<string>>(
     () => new Set(),
   );
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [deleteError, setDeleteError] = React.useState<string | null>(null);
+
+  const [achievementRewardModal, setAchievementRewardModal] = React.useState<{
+    grants: { level: number; amountUsd: number }[];
+    totalGrantedUsd: number;
+  } | null>(null);
+
+  const closeAchievementRewardModal = React.useCallback(() => {
+    setAchievementRewardModal(null);
+  }, []);
 
   const handleSignOut = React.useCallback(async () => {
     await signOut();
@@ -91,7 +119,15 @@ export function useProfileViewModel() {
     setIsLoading(true);
     getProfile(userId, session?.token)
       .then((data) => {
-        if (!cancelled) setProfile(data);
+        if (cancelled) return;
+        const extra = data.lastAchievementGrants;
+        setProfile(stripAchievementGrantsFromProfile(data));
+        if (extra?.grants?.length) {
+          setAchievementRewardModal({
+            grants: extra.grants,
+            totalGrantedUsd: extra.totalGrantedUsd ?? 0,
+          });
+        }
       })
       .catch((err) => {
         if (!cancelled) {
@@ -121,6 +157,8 @@ export function useProfileViewModel() {
     setSearchFriendsValue('');
     setSearchResults([]);
     setSearchError(null);
+    setSuggestedUsers([]);
+    setSuggestedError(null);
     setRequestedIds(new Set());
   }, []);
 
@@ -136,22 +174,25 @@ export function useProfileViewModel() {
     setFriendsError(null);
   }, []);
 
-  const handleSelectFriend = React.useCallback((userId: string) => {
-    setFriendUserId(userId);
-    setShowFriendProfileModal(true);
-    setFriendProfile(null);
-    setFriendProfileError(null);
-    setFriendProfileLoading(true);
-    getProfile(userId, session?.token)
-      .then((data) => setFriendProfile(data))
-      .catch((err) => {
-        setFriendProfileError(
-          extractErrorMessage(err, 'Error al cargar perfil'),
-        );
-        setFriendProfile(null);
-      })
-      .finally(() => setFriendProfileLoading(false));
-  }, [session?.token]);
+  const handleSelectFriend = React.useCallback(
+    (userId: string) => {
+      setFriendUserId(userId);
+      setShowFriendProfileModal(true);
+      setFriendProfile(null);
+      setFriendProfileError(null);
+      setFriendProfileLoading(true);
+      getProfile(userId, session?.token)
+        .then((data) => setFriendProfile(data))
+        .catch((err) => {
+          setFriendProfileError(
+            extractErrorMessage(err, 'Error al cargar perfil'),
+          );
+          setFriendProfile(null);
+        })
+        .finally(() => setFriendProfileLoading(false));
+    },
+    [session?.token],
+  );
 
   const closeFriendProfileModal = React.useCallback(() => {
     setShowFriendProfileModal(false);
@@ -198,7 +239,16 @@ export function useProfileViewModel() {
     const userId = session?.user?.id;
     if (!userId) return;
     getProfile(userId, session?.token)
-      .then((data) => setProfile(data))
+      .then((data) => {
+        const extra = data.lastAchievementGrants;
+        setProfile(stripAchievementGrantsFromProfile(data));
+        if (extra?.grants?.length) {
+          setAchievementRewardModal({
+            grants: extra.grants,
+            totalGrantedUsd: extra.totalGrantedUsd ?? 0,
+          });
+        }
+      })
       .catch(() => {});
   }, [session?.user?.id, session?.token]);
 
@@ -305,6 +355,35 @@ export function useProfileViewModel() {
     return () => clearTimeout(t);
   }, [searchFriendsValue, session?.token, showAddFriendsModal]);
 
+  React.useEffect(() => {
+    const token = session?.token;
+    if (!token || !showAddFriendsModal) return;
+    if (searchFriendsValue.trim().length > 0) return;
+
+    let cancelled = false;
+    setSuggestedLoading(true);
+    setSuggestedError(null);
+    suggestProfilesForFriends(token, 50)
+      .then((res) => {
+        if (!cancelled) setSuggestedUsers(res.items);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setSuggestedUsers([]);
+          setSuggestedError(
+            extractErrorMessage(err, 'Error al cargar recomendaciones'),
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setSuggestedLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.token, showAddFriendsModal, searchFriendsValue]);
+
   return {
     profile,
     isLoading,
@@ -344,6 +423,9 @@ export function useProfileViewModel() {
     searchResults,
     searchLoading,
     searchError,
+    suggestedUsers,
+    suggestedLoading,
+    suggestedError,
     requestedIds,
     handleRequestFriend,
     handleSignOut,
@@ -351,6 +433,8 @@ export function useProfileViewModel() {
     isDeleting,
     deleteError,
     refetchProfile,
+    achievementRewardModal,
+    closeAchievementRewardModal,
   };
 }
 

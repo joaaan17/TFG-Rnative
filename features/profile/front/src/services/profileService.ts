@@ -33,11 +33,27 @@ export const profileService = {
     if (!token?.trim()) {
       throw new Error('Token requerido');
     }
+    const trimmed = (q ?? '').trim().slice(0, 50);
+    const maxLimit = trimmed.length > 0 ? 50 : 100;
     return profileClient.searchProfiles(
-      (q ?? '').trim().slice(0, 50),
+      trimmed,
       Math.max(1, page),
-      Math.min(50, Math.max(1, limit)),
+      Math.min(maxLimit, Math.max(1, limit)),
       token.trim(),
+    );
+  },
+
+  /** Perfiles aleatorios para añadir amigos (excluye amigos, pendientes y tú). */
+  async suggestProfilesForFriends(
+    token: string,
+    limit = 15,
+  ): Promise<{ items: ProfileSearchItem[] }> {
+    if (!token?.trim()) {
+      throw new Error('Token requerido');
+    }
+    return profileClient.suggestProfiles(
+      token.trim(),
+      Math.min(100, Math.max(1, limit)),
     );
   },
 

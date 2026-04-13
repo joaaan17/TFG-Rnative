@@ -41,11 +41,25 @@ export interface ProfileRepository {
   /** Deshace una reserva si la respuesta de la IA falló. */
   releaseConsultorioQuestion(userId: string): Promise<void>;
   deleteById(id: string): Promise<void>;
+  /** XP y niveles-hito cuya recompensa en $ ya se abonó (persistente). */
+  getExperienceAndAchievementGrants(
+    userId: string,
+  ): Promise<{ experience: number; grantedLevels: number[] } | null>;
+  setAchievementCashGrantedLevels(
+    userId: string,
+    levels: number[],
+  ): Promise<void>;
   searchProfiles(
     q: string,
     page: number,
     limit: number,
     excludeUserId?: string,
+  ): Promise<ProfileSearchResult[]>;
+  /** Usuarios registrados excluyendo los ids dados (amigos, pendientes, yo). Paginado opcional. */
+  suggestProfiles(
+    excludeUserIds: string[],
+    limit: number,
+    page?: number,
   ): Promise<ProfileSearchResult[]>;
 }
 

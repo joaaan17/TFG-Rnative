@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import mongoose from 'mongoose';
+import { suggestProfilesUseCase } from '../../../../profile/back/src/config/profile.wiring';
 import {
   requestFriendship,
   acceptFriendship,
@@ -193,4 +194,28 @@ export async function listPendingRequestsController(
   }
   const result = await listPendingRequests({ currentUserId: userId });
   jsonOk(res, result);
+}
+
+/** Perfiles registrados para añadir amigos (excluye tú, amigos y pendientes). Respuesta plana `{ items }` para el cliente de perfil. */
+export async function recommendUsersController(req: Request, res: Response) {
+  try {
+    const userId = getCurrentUserId(req);
+    if (!userId) {
+      jsonError(res, 'Unauthorized', 401);
+      return;
+    }
+    const limitRaw = req.query.limit;
+    const pageRaw = req.query.page;
+    const page = typeof pageRaw === 'string' ? parseInt(pageRaw, 10) || 1 : 1;
+    const limit = Math.min(
+      100,
+      typeof limitRaw === 'string' ? parseInt(limitRaw, 10) || 50 : 50,
+    );
+    const result = await suggestProfilesUseCase.execute(userId, limit, page);
+    res.status(200).json(result);
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : 'Error al obtener recomendaciones';
+    res.status(500).json({ message });
+  }
 }

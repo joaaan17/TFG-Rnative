@@ -4,8 +4,8 @@ import { Check } from 'lucide-react-native';
 import { usePalette } from '@/shared/hooks/use-palette';
 import { getLevelMilestoneDefinitions, getUnlockedAchievementIds } from '../utils/achievementUtils';
 
-const PREVIEW_SLOT_SIZE = 36;
-const PREVIEW_GAP = 6;
+const PREVIEW_SLOT_SIZE = 28;
+const PREVIEW_GAP = 5;
 
 export type AchievementPreviewProps = {
   experience?: number;
@@ -72,6 +72,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: PREVIEW_GAP,
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
   },
 });

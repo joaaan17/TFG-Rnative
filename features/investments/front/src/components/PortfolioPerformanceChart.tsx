@@ -26,8 +26,8 @@ const RANGE_OPTIONS: { value: PerformanceRange; label: string }[] = [
 ];
 
 const CHART_MODE_OPTIONS: { value: 'equity' | 'invested'; label: string }[] = [
-  { value: 'equity', label: 'Valor cartera' },
   { value: 'invested', label: 'Invertido' },
+  { value: 'equity', label: 'Valor cartera' },
 ];
 
 /** Tipo mínimo de un punto de performance para interpolación */
@@ -127,7 +127,7 @@ export function PortfolioPerformanceChart({
 }: PortfolioPerformanceChartProps) {
   const palette = usePalette();
   const [range, setRange] = useState<PerformanceRange>('1M');
-  const [mode, setMode] = useState<'equity' | 'invested'>('equity');
+  const [mode, setMode] = useState<'equity' | 'invested'>('invested');
   const [tooltip, setTooltip] = useState<{ title: string; desc: string } | null>(null);
   const openTooltip = useCallback((label: string) => {
     const desc = FINANCIAL_TERMS[label];

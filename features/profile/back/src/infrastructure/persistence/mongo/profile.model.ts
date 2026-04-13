@@ -23,6 +23,7 @@ export type ProfileDocument = mongoose.Document & {
   consultorioConsultCount?: number;
   /** Último día civil (Europe/Madrid, YYYY-MM-DD) en que se contó actividad para la racha. */
   lastStreakDayKey?: string;
+  achievementCashGrantedLevels?: number[];
 };
 
 const ProfileSchema = new Schema<ProfileDocument>(
@@ -45,6 +46,7 @@ const ProfileSchema = new Schema<ProfileDocument>(
     consultorioDayKey: { type: String, trim: true },
     consultorioConsultCount: { type: Number, default: 0, min: 0 },
     lastStreakDayKey: { type: String, trim: true },
+    achievementCashGrantedLevels: { type: [Number], default: [] },
   },
   { timestamps: true },
 );

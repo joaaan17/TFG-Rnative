@@ -9,14 +9,16 @@ export type ProfileAwardBonusType =
   | 'COMPLETE_QUIZ'
   | 'VIEW_NEWS';
 
+function getApiOrigin(): string {
+  return env.apiUrl && env.apiUrl !== 'https://api.example.com'
+    ? env.apiUrl.replace(/\/$/, '')
+    : Platform.OS === 'android'
+      ? 'http://10.0.2.2:3000'
+      : 'http://localhost:3000';
+}
+
 function getBaseUrl() {
-  const base =
-    env.apiUrl && env.apiUrl !== 'https://api.example.com'
-      ? env.apiUrl.replace(/\/$/, '')
-      : Platform.OS === 'android'
-        ? 'http://10.0.2.2:3000'
-        : 'http://localhost:3000';
-  return `${base}/api/profile`;
+  return `${getApiOrigin()}/api/profile`;
 }
 
 async function parseJsonSafe(response: Response) {
@@ -64,10 +66,12 @@ export const profileClient = {
     token: string,
   ): Promise<{ items: ProfileSearchItem[] }> {
     const baseUrl = getBaseUrl();
+    const trimmedQ = q.trim().slice(0, 50);
+    const maxLimit = trimmedQ.length > 0 ? 50 : 100;
     const params = new URLSearchParams({
-      q: q.trim().slice(0, 50),
+      q: trimmedQ,
       page: String(page),
-      limit: String(Math.min(50, limit)),
+      limit: String(Math.min(maxLimit, Math.max(1, limit))),
     });
     const response = await fetch(`${baseUrl}/search?${params}`, {
       method: 'GET',
@@ -84,6 +88,19 @@ export const profileClient = {
       throw new Error(message);
     }
     return data as { items: ProfileSearchItem[] };
+  },
+
+  /** Mismo contrato que búsqueda: GET /api/profile/search con q vacío (lista descubrible). */
+  async suggestProfiles(
+    token: string,
+    limit = 15,
+  ): Promise<{ items: ProfileSearchItem[] }> {
+    return profileClient.searchProfiles(
+      '',
+      1,
+      Math.min(100, Math.max(1, limit)),
+      token,
+    );
   },
 
   async awardExperience(

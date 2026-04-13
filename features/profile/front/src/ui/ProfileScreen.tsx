@@ -15,6 +15,7 @@ import LigaIcon from '@/shared/icons/liga.svg';
 import RachaIcon from '@/shared/icons/racha.svg';
 import SettingsIcon from '@/shared/icons/settings.svg';
 import { usePortfolio } from '@/features/investments/front/src/hooks/usePortfolio';
+import { AchievementRewardModal } from '../components/AchievementRewardModal';
 
 import { getDivisionFromExperience } from '@/shared/constants/divisions';
 import { getNivelFromExperience } from '@/shared/constants/xp-level';
@@ -74,6 +75,9 @@ export function ProfileScreen() {
     searchResults,
     searchLoading,
     searchError,
+    suggestedUsers,
+    suggestedLoading,
+    suggestedError,
     requestedIds,
     handleRequestFriend,
     showRequestsModal,
@@ -103,6 +107,8 @@ export function ProfileScreen() {
     isDeleting,
     deleteError,
     refetchProfile,
+    achievementRewardModal,
+    closeAchievementRewardModal,
   } = useProfileViewModel();
   const [typewriterKey, setTypewriterKey] = React.useState(0);
   const [showLogrosModal, setShowLogrosModal] = React.useState(false);
@@ -111,6 +117,11 @@ export function ProfileScreen() {
     session?.token ?? null,
     true,
   );
+
+  const handleCloseAchievementReward = React.useCallback(() => {
+    closeAchievementRewardModal();
+    void refetchPortfolio();
+  }, [closeAchievementRewardModal, refetchPortfolio]);
 
   const displayName = profile?.name ?? user?.name ?? '';
   const joinedText = formatJoinedText(profile?.username, profile?.joinedAt);
@@ -271,8 +282,9 @@ export function ProfileScreen() {
             style={[
               styles.addFriendsButtonFullWidth,
               {
-                backgroundColor: 'rgba(29,78,216,0.12)',
-                borderColor: 'rgba(29,78,216,0.28)',
+                backgroundColor: `${palette.primary}22`,
+                borderColor: `${palette.primary}12`,
+                borderWidth: 1,
               },
             ]}
             onPress={() => setShowFriendsModal(true)}
@@ -391,6 +403,9 @@ export function ProfileScreen() {
         searchResults={searchResults}
         searchLoading={searchLoading}
         searchError={searchError}
+        suggestedUsers={suggestedUsers}
+        suggestedLoading={suggestedLoading}
+        suggestedError={suggestedError}
         requestedIds={requestedIds}
         onRequestFriend={handleRequestFriend}
       />
@@ -400,6 +415,15 @@ export function ProfileScreen() {
         onClose={() => setShowLogrosModal(false)}
         experience={profile?.experience ?? 0}
       />
+
+      {achievementRewardModal ? (
+        <AchievementRewardModal
+          open
+          onClose={handleCloseAchievementReward}
+          grants={achievementRewardModal.grants}
+          totalGrantedUsd={achievementRewardModal.totalGrantedUsd}
+        />
+      ) : null}
 
       <SettingsModal
         open={showSettingsModal}

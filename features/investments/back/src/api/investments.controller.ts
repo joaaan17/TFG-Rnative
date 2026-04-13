@@ -8,6 +8,7 @@ import {
   getDashboardSummaryUseCase,
   portfolioAnalyticsService,
 } from '../config/investments.wiring';
+import { syncAchievementCashRewardsUseCase } from '../../../../profile/back/src/config/profile.wiring';
 import type {
   TimeframeParam,
   RangeParam,
@@ -51,6 +52,7 @@ export const getPortfolioController = async (
 ): Promise<void> => {
   try {
     const userId = getUserId(req);
+    await syncAchievementCashRewardsUseCase.execute(userId);
     const result = await getOrCreatePortfolioUseCase.execute(userId);
     res.status(200).json(result);
   } catch (err) {
@@ -384,6 +386,7 @@ export const getCashOverviewController = async (
 ): Promise<void> => {
   try {
     const userId = getUserId(req);
+    await syncAchievementCashRewardsUseCase.execute(userId);
     const [portfolio, rawTransactions] = await Promise.all([
       getOrCreatePortfolioUseCase.execute(userId),
       getTransactionsUseCase.execute(userId, 100),

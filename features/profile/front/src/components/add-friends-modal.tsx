@@ -17,6 +17,10 @@ export type AddFriendsModalProps = {
   searchResults: ProfileSearchItem[];
   searchLoading: boolean;
   searchError: string | null;
+  /** Sugerencias cuando la búsqueda está vacía (usuarios registrados con los que aún no tienes relación). */
+  suggestedUsers: ProfileSearchItem[];
+  suggestedLoading: boolean;
+  suggestedError: string | null;
   requestedIds: Set<string>;
   onRequestFriend: (targetUserId: string) => void;
 };
@@ -40,7 +44,7 @@ function ProfileSearchCard({
           paddingVertical: 8,
         }}
       >
-        <ProfileAvatar size={44} iconOnly />
+        <ProfileAvatar size={44} iconOnly imageUri={item.avatarUrl} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text variant="default" style={{ fontWeight: '600' }}>
             {item.name}
@@ -88,14 +92,15 @@ export function AddFriendsModal({
   searchResults,
   searchLoading,
   searchError,
+  suggestedUsers,
+  suggestedLoading,
+  suggestedError,
   requestedIds,
   onRequestFriend,
 }: AddFriendsModalProps) {
-  const showResults =
-    searchValue.trim().length > 0 &&
-    (searchLoading || searchResults.length > 0 || searchError);
-  const showEmpty =
-    searchValue.trim().length > 0 &&
+  const isSearchMode = searchValue.trim().length > 0;
+  const showSearchEmpty =
+    isSearchMode &&
     !searchLoading &&
     searchResults.length === 0 &&
     !searchError;
@@ -104,7 +109,8 @@ export function AddFriendsModal({
     <CardModal
       open={open}
       onClose={onClose}
-      maxHeightPct={0.7}
+      maxHeightPct={0.99}
+      scrollable
       contentNoPaddingTop
     >
       <ModalHeader
@@ -120,7 +126,7 @@ export function AddFriendsModal({
           placeholder="ej. nombre, usuario"
           autoFocus={open}
         />
-        {showResults ? (
+        {isSearchMode ? (
           <ScrollView
             style={{ flex: 1 }}
             showsVerticalScrollIndicator={false}
@@ -137,7 +143,7 @@ export function AddFriendsModal({
               >
                 {searchError}
               </Text>
-            ) : showEmpty ? (
+            ) : showSearchEmpty ? (
               <Text
                 variant="muted"
                 style={{ textAlign: 'center', paddingVertical: 16 }}
@@ -155,7 +161,52 @@ export function AddFriendsModal({
               ))
             )}
           </ScrollView>
-        ) : null}
+        ) : (
+          <ScrollView
+            style={{ flex: 1 }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text
+              style={{
+                fontSize: 13,
+                fontWeight: '600',
+                marginBottom: 10,
+                opacity: 0.85,
+              }}
+            >
+              Personas que te recomendamos
+            </Text>
+            {suggestedLoading ? (
+              <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+                <ActivityIndicator size="small" />
+              </View>
+            ) : suggestedError ? (
+              <Text
+                variant="muted"
+                style={{ textAlign: 'center', paddingVertical: 16 }}
+              >
+                {suggestedError}
+              </Text>
+            ) : suggestedUsers.length === 0 ? (
+              <Text
+                variant="muted"
+                style={{ textAlign: 'center', paddingVertical: 16 }}
+              >
+                No hay más usuarios para mostrar ahora mismo
+              </Text>
+            ) : (
+              suggestedUsers.map((item) => (
+                <ProfileSearchCard
+                  key={item.id}
+                  item={item}
+                  isRequested={requestedIds.has(item.id)}
+                  onRequestPress={() => onRequestFriend(item.id)}
+                />
+              ))
+            )}
+          </ScrollView>
+        )}
       </View>
     </CardModal>
   );

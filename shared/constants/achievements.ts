@@ -39,7 +39,9 @@ export type AchievementCategoryConfig = {
   /** Número total de slots (casillas) */
   totalSlots: number;
   /** Genera las definiciones de logros */
-  getDefinitions: (config: AchievementCategoryConfig) => AchievementDefinition[];
+  getDefinitions: (
+    config: AchievementCategoryConfig,
+  ) => AchievementDefinition[];
 };
 
 /**
@@ -48,12 +50,33 @@ export type AchievementCategoryConfig = {
  */
 const LEVELS_PER_ACHIEVEMENT = 5;
 
+/** Último nivel-hito con logro (5, 10, …, MAX) — 16 slots hasta nivel 80 */
+export const LEVEL_MILESTONE_MAX_LEVEL = 80;
+
+/** Recompensa en efectivo (USD) por cada logro de nivel (debe coincidir con el backend). */
+export const ACHIEVEMENT_LEVEL_CASH_USD = 10_000;
+
+export function getMilestoneLevelList(): number[] {
+  const out: number[] = [];
+  for (
+    let L = LEVELS_PER_ACHIEVEMENT;
+    L <= LEVEL_MILESTONE_MAX_LEVEL;
+    L += LEVELS_PER_ACHIEVEMENT
+  ) {
+    out.push(L);
+  }
+  return out;
+}
+
 /** Categoría "Logros por nivel" - cada 5 niveles un logro */
 export const LEVEL_MILESTONE_CONFIG: AchievementCategoryConfig = {
   id: 'level_milestone',
   title: 'LOGROS POR NIVEL',
-  clinica: { type: 'level_milestone', levelsPerAchievement: LEVELS_PER_ACHIEVEMENT },
-  totalSlots: 8,
+  clinica: {
+    type: 'level_milestone',
+    levelsPerAchievement: LEVELS_PER_ACHIEVEMENT,
+  },
+  totalSlots: getMilestoneLevelList().length,
   getDefinitions: (config) => {
     return Array.from({ length: config.totalSlots }, (_, i) => {
       const requiredLevel = (i + 1) * LEVELS_PER_ACHIEVEMENT;
@@ -78,7 +101,7 @@ export const ACHIEVEMENT_CATEGORIES: AchievementCategoryConfig[] = [
 export function isAchievementUnlocked(
   definition: AchievementDefinition,
   config: AchievementCategoryConfig,
-  ctx: AchievementContext
+  ctx: AchievementContext,
 ): boolean {
   const { clinica } = config;
   switch (clinica.type) {

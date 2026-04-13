@@ -179,8 +179,40 @@ export class InMemoryProfileRepository implements ProfileRepository {
     return [];
   }
 
+  async suggestProfiles(
+    _excludeUserIds: string[],
+    _limit: number,
+    _page?: number,
+  ): Promise<ProfileSearchResult[]> {
+    return [];
+  }
+
   async deleteById(id: string): Promise<void> {
     InMemoryProfileRepository.profilesById.delete(id);
+  }
+
+  async getExperienceAndAchievementGrants(
+    userId: string,
+  ): Promise<{ experience: number; grantedLevels: number[] } | null> {
+    const profile = InMemoryProfileRepository.profilesById.get(userId);
+    if (!profile) return null;
+    const raw = profile as Profile & { achievementCashGrantedLevels?: number[] };
+    return {
+      experience: toExperienceNumber(profile.experience),
+      grantedLevels: [...(raw.achievementCashGrantedLevels ?? [])],
+    };
+  }
+
+  async setAchievementCashGrantedLevels(
+    userId: string,
+    levels: number[],
+  ): Promise<void> {
+    const profile = InMemoryProfileRepository.profilesById.get(userId);
+    if (!profile) return;
+    InMemoryProfileRepository.profilesById.set(userId, {
+      ...profile,
+      achievementCashGrantedLevels: levels,
+    } as Profile);
   }
 }
 

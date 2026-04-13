@@ -20,6 +20,13 @@ export interface ProfileUser {
   experience?: number;
   /** Preguntas al consultorio disponibles hoy (máx. 2 por día). */
   consultorioRemainingToday?: number;
+  /**
+   * Solo en la respuesta GET propio: recompensas de logros de nivel abonadas en esta petición.
+   */
+  lastAchievementGrants?: {
+    grants: Array<{ level: number; amountUsd: number }>;
+    totalGrantedUsd: number;
+  };
 }
 
 export interface ProfileStats {

@@ -260,6 +260,32 @@ export class MongoProfileRepository implements ProfileRepository {
     await ProfileModel.findByIdAndDelete(id).exec();
   }
 
+  async getExperienceAndAchievementGrants(
+    userId: string,
+  ): Promise<{ experience: number; grantedLevels: number[] } | null> {
+    const doc = await ProfileModel.findById(userId)
+      .select('experience achievementCashGrantedLevels')
+      .lean()
+      .exec();
+    if (!doc) return null;
+    return {
+      experience: toExperienceNumber(doc.experience),
+      grantedLevels: Array.isArray(doc.achievementCashGrantedLevels)
+        ? [...doc.achievementCashGrantedLevels].sort((a, b) => a - b)
+        : [],
+    };
+  }
+
+  async setAchievementCashGrantedLevels(
+    userId: string,
+    levels: number[],
+  ): Promise<void> {
+    const unique = [...new Set(levels)].filter((n) => n > 0).sort((a, b) => a - b);
+    await ProfileModel.findByIdAndUpdate(userId, {
+      $set: { achievementCashGrantedLevels: unique },
+    }).exec();
+  }
+
   async searchProfiles(
     q: string,
     page: number,
@@ -281,6 +307,35 @@ export class MongoProfileRepository implements ProfileRepository {
       .sort({ usernameLower: 1 })
       .skip((page - 1) * limit)
       .limit(limit)
+      .lean()
+      .exec();
+    return docs.map((d) => ({
+      id: String(d._id),
+      name: d.name,
+      username: d.username,
+      avatarUrl: d.avatarUrl,
+    }));
+  }
+
+  async suggestProfiles(
+    excludeUserIds: string[],
+    limit: number,
+    page = 1,
+  ): Promise<ProfileSearchResult[]> {
+    const cap = Math.min(100, Math.max(1, Math.floor(limit)));
+    const safePage = Math.max(1, Math.floor(page));
+    const skip = (safePage - 1) * cap;
+    const oidHex = /^[a-fA-F0-9]{24}$/;
+    const oids = excludeUserIds
+      .filter((id) => oidHex.test(id))
+      .map((id) => new mongoose.Types.ObjectId(id));
+    const docs = await ProfileModel.find({
+      _id: { $nin: oids },
+    })
+      .select('_id name username avatarUrl')
+      .sort({ nameLower: 1 })
+      .skip(skip)
+      .limit(cap)
       .lean()
       .exec();
     return docs.map((d) => ({

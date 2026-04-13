@@ -54,8 +54,7 @@ export function createInvestmentsStyles(palette: Palette, screenWidth: number) {
       marginBottom: 24,
     },
     amountValue: {
-      fontSize: 28,
-      letterSpacing: -0.5,
+      letterSpacing: -0.3,
     },
     amountLabel: {
       marginTop: 4,

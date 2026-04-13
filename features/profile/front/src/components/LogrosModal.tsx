@@ -6,6 +6,7 @@ import { ModalHeader } from '@/shared/components/modal-header';
 import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
+import { ACHIEVEMENT_LEVEL_CASH_USD } from '@/shared/constants/achievements';
 import {
   getLevelMilestoneDefinitions,
   getUnlockedAchievementIds,
@@ -18,8 +19,8 @@ export type LogrosModalProps = {
   experience?: number;
 };
 
-/** Tamaño de cada casilla para que 8 quepan en 1 fila */
-const SLOT_SIZE = 34;
+/** Casillas compactas; hasta 16 (nivel 80) con wrap */
+const SLOT_SIZE = 30;
 const SLOT_GAP = 6;
 
 /**
@@ -36,12 +37,9 @@ export function LogrosModal({
   const definitions = React.useMemo(() => getLevelMilestoneDefinitions(), []);
   const unlockedIds = React.useMemo(
     () => getUnlockedAchievementIds(experience),
-    [experience]
+    [experience],
   );
-  const styles = React.useMemo(
-    () => createLogrosStyles(palette),
-    [palette]
-  );
+  const styles = React.useMemo(() => createLogrosStyles(palette), [palette]);
 
   return (
     <CardModal
@@ -80,7 +78,9 @@ export function LogrosModal({
               { color: palette.icon ?? palette.text },
             ]}
           >
-            Alcanza nivel 5, 10, 15… para marcar cada casilla.
+            Alcanza nivel 5, 10, 15… hasta 80. Cada casilla suma{' '}
+            {ACHIEVEMENT_LEVEL_CASH_USD.toLocaleString('es-ES')} US$ a tu
+            efectivo cuando la desbloqueas.
           </Text>
 
           {/* Grid de casillas */}
@@ -125,7 +125,7 @@ export function LogrosModal({
                   {
                     color: unlockedIds.has(def.id)
                       ? palette.primary
-                      : palette.icon ?? palette.text,
+                      : (palette.icon ?? palette.text),
                   },
                 ]}
               >
@@ -176,9 +176,9 @@ function createLogrosStyles(palette: ReturnType<typeof usePalette>) {
     },
     grid: {
       flexDirection: 'row',
-      flexWrap: 'nowrap',
+      flexWrap: 'wrap',
       gap: SLOT_GAP,
-      justifyContent: 'flex-start',
+      justifyContent: 'center',
     },
     slot: {
       width: SLOT_SIZE,
@@ -198,13 +198,13 @@ function createLogrosStyles(palette: ReturnType<typeof usePalette>) {
     },
     legend: {
       flexDirection: 'row',
-      flexWrap: 'nowrap',
+      flexWrap: 'wrap',
       gap: SLOT_GAP,
       marginTop: 12,
       paddingTop: 12,
       borderTopWidth: 1,
       borderTopColor: paperBorder,
-      justifyContent: 'flex-start',
+      justifyContent: 'center',
     },
     legendItem: {
       width: SLOT_SIZE,

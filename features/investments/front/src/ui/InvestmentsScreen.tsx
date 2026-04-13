@@ -345,7 +345,7 @@ export function InvestmentsScreen() {
                 <View style={styles.amountWrap}>
                   <Text
                     style={[
-                      Hierarchy.value,
+                      Hierarchy.titleModalLarge,
                       styles.amountValue,
                       { color: palette.text },
                     ]}
