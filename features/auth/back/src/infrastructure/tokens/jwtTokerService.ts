@@ -17,7 +17,8 @@ export class JwtTokenService implements TokenService {
 
   constructor(secret?: string, expiresInOverride?: string) {
     this.secret =
-      secret ?? authEnv.jwtSecret || process.env.AUTH_JWT_SECRET || 'dev-secret';
+      secret ??
+      (authEnv.jwtSecret || process.env.AUTH_JWT_SECRET || 'dev-secret');
     this.expiresInRaw = (expiresInOverride ?? authEnv.jwtExpiresIn ?? '').trim();
   }
 
