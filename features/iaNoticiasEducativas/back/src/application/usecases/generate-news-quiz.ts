@@ -1,3 +1,4 @@
+import { buildNewsQuizUserPrompt } from '@/shared/constants/ai-financial-voice';
 import type { AIProviderPort } from '../../domain/ports';
 import type { ExplainNews } from './explain-news';
 import type {
@@ -27,24 +28,7 @@ export class GenerateNewsQuiz {
 
     this.onExplainFetched?.(newsId, educationalNews);
 
-    const prompt = `Eres un profesor de inversión y mercados financieros.
-
-A partir del siguiente contenido educativo de una noticia, crea un cuestionario de exactamente 10 preguntas tipo test para evaluar si el lector ha entendido los conceptos clave.
-
-Reglas estrictas:
-- Exactamente 10 preguntas.
-- Cada pregunta tiene exactamente 4 opciones (A, B, C, D).
-- Solo UNA opción correcta por pregunta.
-- Las preguntas deben centrarse en conceptos financieros, no en datos anecdóticos.
-- Usa lenguaje claro y pedagógico.
-- Devuelve ÚNICAMENTE un JSON válido, sin markdown ni texto extra, con esta estructura exacta:
-
-{"questions":[{"question":"texto de la pregunta","options":["opción A","opción B","opción C","opción D"],"correctAnswerIndex":0}]}
-
-Donde correctAnswerIndex es 0, 1, 2 o 3 según la opción correcta.
-
-Contenido educativo:
-${educationalNews.content}`;
+    const prompt = buildNewsQuizUserPrompt(educationalNews.content);
 
     const rawQuiz = await this.aiProvider.rewriteEducational(prompt);
     const parsed = this.parseQuizJson(rawQuiz);

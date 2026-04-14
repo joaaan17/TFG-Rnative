@@ -90,11 +90,16 @@ export function createDashboardStyles(palette: Palette, screenWidth: number) {
       fontSize: 16,
       letterSpacing: -0.2,
     },
-    // Donut (diversificación): sin card, fondo igual que la pantalla
+    // Donut (diversificación): bloque con fondo suave y esquinas redondeadas (alineado con stat cards / resumen)
     donutCard: {
       padding: Spacing.md,
       marginBottom: Spacing.lg,
+      borderRadius: 16,
+      overflow: 'hidden' as const,
       backgroundColor: palette.mainBackground ?? palette.background,
+      borderWidth: 1,
+      borderColor: cardBorder,
+      ...(cardShadow as object),
     },
     /** Selector sector / geográfica / acciones: pill deslizante detrás de la pestaña activa. */
     donutTabsWrap: {

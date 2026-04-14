@@ -1,7 +1,7 @@
-import React from 'react';
-import { View } from 'react-native';
+import React, { useState } from 'react';
+import { Platform, TextInput, View } from 'react-native';
 
-import { Input } from '@/shared/components/ui/input';
+import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
 
 import { consultorioComposerStyles } from './ConsultorioComposer.styles';
@@ -20,6 +20,11 @@ export function ConsultorioComposer({
   editable = true,
 }: ConsultorioComposerProps) {
   const palette = usePalette();
+  const placeholderColor = `${palette.text}80`;
+  const primary = palette.primary ?? '#1D4ED8';
+  const [focused, setFocused] = useState(false);
+  const neutralBorder = palette.surfaceBorder ?? palette.surfaceMuted;
+
   return (
     <View style={consultorioComposerStyles.container}>
       <View
@@ -27,23 +32,32 @@ export function ConsultorioComposer({
           consultorioComposerStyles.inputWrapper,
           {
             backgroundColor: palette.inputBackground ?? palette.background,
-            borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
+            /** Solo con foco (usuario escribiendo / campo activo): azul corporativo. En reposo: borde neutro. */
+            borderColor: focused ? primary : neutralBorder,
           },
         ]}
       >
-        <Input
+        <TextInput
           placeholder="Escribe tu pregunta..."
+          placeholderTextColor={placeholderColor}
           value={value}
           onChangeText={onChangeText}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           editable={editable}
+          multiline
+          scrollEnabled
+          textAlignVertical="top"
           style={[
+            Hierarchy.body,
             consultorioComposerStyles.input,
             {
+              color: palette.text,
               backgroundColor: 'transparent',
-              borderWidth: 0,
-              shadowColor: 'transparent',
-              shadowOpacity: 0,
-              elevation: 0,
+              ...(Platform.OS === 'web' && {
+                outlineWidth: 0,
+                outlineStyle: 'none' as const,
+              }),
             },
           ]}
         />

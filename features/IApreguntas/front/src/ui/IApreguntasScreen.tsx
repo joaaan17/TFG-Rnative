@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -46,6 +46,15 @@ export function IApreguntasScreen() {
   }, [messages.length, loading]);
 
   const containerBg = palette.mainBackground ?? palette.background;
+  const [sendHovered, setSendHovered] = useState(false);
+  const webHoverHandlers =
+    Platform.OS === 'web'
+      ? {
+          onMouseEnter: () => setSendHovered(true),
+          onMouseLeave: () => setSendHovered(false),
+        }
+      : {};
+
   const atDailyLimit = consultorioRemainingToday === 0;
   const canSend =
     questionText.trim().length > 0 &&
@@ -165,11 +174,27 @@ export function IApreguntasScreen() {
             />
           </View>
           <Pressable
+            {...webHoverHandlers}
             onPress={ask}
             disabled={loading || !questionText.trim() || atDailyLimit}
-            style={[
+            style={({ pressed }) => [
               styles.sendButton,
               isSendActive ? styles.sendButtonActive : null,
+              Platform.OS === 'web' &&
+                sendHovered &&
+                !isSendActive &&
+                !loading &&
+                !atDailyLimit && {
+                  borderColor: palette.primary,
+                  backgroundColor: `${palette.primary}1A`,
+                },
+              Platform.OS === 'web' &&
+                sendHovered &&
+                isSendActive &&
+                !loading && {
+                  opacity: 0.92,
+                },
+              pressed && Platform.OS !== 'web' ? { opacity: 0.9 } : null,
             ]}
           >
             {loading ? (
@@ -180,7 +205,9 @@ export function IApreguntasScreen() {
                 color={
                   isSendActive
                     ? (palette.primaryText ?? '#FFF')
-                    : (palette.icon ?? palette.text)
+                    : sendHovered && Platform.OS === 'web'
+                      ? palette.primary
+                      : (palette.icon ?? palette.text)
                 }
               />
             )}

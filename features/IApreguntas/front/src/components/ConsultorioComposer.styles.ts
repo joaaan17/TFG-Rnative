@@ -11,16 +11,20 @@ export const consultorioComposerStyles = StyleSheet.create({
     paddingBottom: 0,
   },
   inputWrapper: {
-    minHeight: 44,
+    minHeight: 48,
     borderRadius: 12,
     borderWidth: 1,
-    overflow: 'hidden',
+    /** Permite que el TextInput multilínea crezca hasta maxHeight del input */
+    maxHeight: 200,
   },
   input: {
-    flex: 1,
+    width: '100%',
     paddingHorizontal: Spacing.md,
-    paddingVertical: 12,
-    minHeight: 44,
+    paddingTop: 12,
+    paddingBottom: 12,
+    minHeight: 48,
+    maxHeight: 200,
     borderRadius: 12,
+    lineHeight: 22,
   },
 });

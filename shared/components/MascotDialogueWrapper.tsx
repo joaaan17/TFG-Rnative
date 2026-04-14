@@ -25,6 +25,8 @@ const ENTRY_DELAY_MS = 1400;
 const FOREGROUND_MS_5 = 5 * 60 * 1000;
 const FOREGROUND_MS_15 = 15 * 60 * 1000;
 const TICK_MS = 2500;
+/** Debe coincidir con el cierre animado de `CardModal` (~180ms) para no desmontar antes. */
+const MODAL_UNMOUNT_AFTER_MS = 220;
 
 type QueuedKind = 'entry' | 'm5' | 'm15';
 
@@ -66,6 +68,8 @@ export function MascotDialogueWrapper({
     kind: QueuedKind;
     message: string;
   } | null>(null);
+  /** `CardModal` anima con `open`; si desmontamos al cerrar, no hay animación de salida. */
+  const [modalOpen, setModalOpen] = useState(false);
 
   const foregroundMsRef = useRef(0);
   const activeSinceRef = useRef<number | null>(null);
@@ -117,6 +121,7 @@ export function MascotDialogueWrapper({
       else if (key === 'm5') await persistFlags({ m5: true });
       else await persistFlags({ m15: true });
       setModal({ kind, message });
+      setModalOpen(true);
     },
     [persistFlags],
   );
@@ -129,7 +134,10 @@ export function MascotDialogueWrapper({
 
   const handleClose = useCallback(() => {
     visibleRef.current = false;
-    setModal(null);
+    setModalOpen(false);
+    setTimeout(() => {
+      setModal(null);
+    }, MODAL_UNMOUNT_AFTER_MS);
     setTimeout(() => {
       void drainQueue();
     }, 380);
@@ -142,7 +150,7 @@ export function MascotDialogueWrapper({
 
   const countdownValue: MascotCountdownValue = useMemo(() => {
     void tick;
-    const isOpen = Boolean(modal);
+    const isOpen = Boolean(modal && modalOpen);
     const flags = dailyRef.current;
     if (!ready || !flags) {
       return {
@@ -189,7 +197,7 @@ export function MascotDialogueWrapper({
     }
 
     return { phase: 'complete', remainingMs: null, isModalOpen: isOpen };
-  }, [tick, ready, modal, getForegroundMs]);
+  }, [tick, ready, modal, modalOpen, getForegroundMs]);
 
   /** Sincroniza AppState con ms acumulados en primer plano */
   useEffect(() => {
@@ -267,7 +275,7 @@ export function MascotDialogueWrapper({
       {children}
       {modal && data ? (
         <MascotDialogueModal
-          open
+          open={modalOpen}
           onClose={handleClose}
           mascotName={MASCOT_INVESTOR_DIALOGUES.mascot}
           bucket={bucketFor(modal.kind)}

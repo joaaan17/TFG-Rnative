@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { SYSTEM_MESSAGE_EDUCATIONAL_NEWS } from '@/shared/constants/ai-financial-voice';
 import type { AIProviderPort } from '../../domain/ports';
 
 /**
@@ -28,8 +29,7 @@ export class EducationalOpenAIProvider implements AIProviderPort {
           messages: [
             {
               role: 'system',
-              content:
-                'Eres un profesor experto en inversión y mercados financieros. Transforma noticias en textos educativos.',
+              content: SYSTEM_MESSAGE_EDUCATIONAL_NEWS,
             },
             { role: 'user', content: prompt },
           ],

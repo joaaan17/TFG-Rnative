@@ -1,17 +1,14 @@
+import { buildAskMarketUserEnvelope } from '@/shared/constants/ai-financial-voice';
 import type { AIProviderPort } from '../../domain/ports';
 
 /**
  * Caso de uso: preguntar a la IA sobre mercados.
- * Aquí es donde dominas la IA: límites, disclaimers, contexto financiero.
+ * La voz y estructura viven en `ai-financial-voice.ts` (sistema replicable).
  */
 export class AskMarketAI {
   constructor(private readonly aiProvider: AIProviderPort) {}
 
   async execute(userPrompt: string): Promise<string> {
-    const enrichedPrompt = `Eres un asistente financiero. Responde de forma educativa, clara y sin dar asesoramiento financiero directo.
-Pregunta del usuario:
-${userPrompt}`;
-
-    return this.aiProvider.ask(enrichedPrompt);
+    return this.aiProvider.ask(buildAskMarketUserEnvelope(userPrompt));
   }
 }

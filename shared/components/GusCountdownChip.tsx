@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CardModal } from '@/shared/components/card-modal';
+import { GusPortraitFrame } from '@/shared/components/GusPortraitFrame';
 import { ModalHeader } from '@/shared/components/modal-header';
 import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
@@ -107,7 +108,7 @@ export function GusCountdownChip() {
       <CardModal
         open={infoOpen}
         onClose={() => setInfoOpen(false)}
-        maxHeightPct={0.55}
+        maxHeightPct={0.99}
         closeOnBackdropPress
         scrollable
         contentNoPaddingTop
@@ -121,22 +122,28 @@ export function GusCountdownChip() {
         >
           <ModalHeader
             title="Temporizador de Gus"
-            subtitle={MASCOT_INVESTOR_DIALOGUES.mascot}
+            subtitle={`${MASCOT_INVESTOR_DIALOGUES.mascot} — tu fan número uno`}
             titleNumberOfLines={2}
             onClose={() => setInfoOpen(false)}
             closeAccessibilityLabel="Cerrar información"
           />
           <View style={styles.modalBody}>
+            <GusPortraitFrame
+              variant="compact"
+              style={{ marginBottom: 20 }}
+              accessibilityLabel={MASCOT_INVESTOR_DIALOGUES.mascot}
+            />
             <Text
               style={[
                 Hierarchy.body,
                 { color: palette.text, lineHeight: 22, marginBottom: 12 },
               ]}
             >
-              El tiempo que ves en la esquina es una{' '}
-              <Text style={{ fontWeight: '600' }}>cuenta atrás</Text> hasta el
-              próximo mensaje de {MASCOT_INVESTOR_DIALOGUES.mascot}, el
-              compañero que te da consejos y ánimo mientras usas INVESTIA.
+              Ese numerito en la esquina no es decoración: es{' '}
+              <Text style={{ fontWeight: '600' }}>la cuenta atrás oficial</Text>{' '}
+              hasta que {MASCOT_INVESTOR_DIALOGUES.mascot} vuelva a asomarse con
+              un consejo, un empujón de ánimo o un guiño de orgullo
+              inversor, como cuando celebras un nivel nuevo.
             </Text>
             <Text
               style={[
@@ -144,17 +151,20 @@ export function GusCountdownChip() {
                 { color: palette.text, lineHeight: 22, marginBottom: 12 },
               ]}
             >
-              Aparece cuando la app programa un recordatorio según el tiempo
-              que llevas en la sesión (por ejemplo, al entrar o tras varios
-              minutos de uso). No modifica tu cartera ni tus datos: solo
-              refuerza el hábito de aprender poco a poco.
+              INVESTIA programa esos recordatorios según cómo va tu sesión
+              (entrada, ratos de uso…). Tranquilo:{' '}
+              <Text style={{ fontWeight: '600' }}>
+                no toca tu cartera ni tus datos
+              </Text>
+              ; solo te recuerda que aprender un poco cada día también es un
+              buen hábito.
             </Text>
             <Text
               variant="muted"
               style={[Hierarchy.bodySmall, { lineHeight: 20 }]}
             >
-              Puedes volver a abrir esta explicación en cualquier momento
-              pulsando el temporizador.
+              ¿Quieres repetir la charla? Toca el temporizador cuando te apetezca:
+              {MASCOT_INVESTOR_DIALOGUES.mascot} no se ofende.
             </Text>
           </View>
         </ScrollView>

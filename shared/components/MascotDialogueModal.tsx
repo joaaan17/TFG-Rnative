@@ -1,5 +1,4 @@
 import React from 'react';
-import { Image } from 'expo-image';
 import {
   Platform,
   Pressable,
@@ -8,13 +7,12 @@ import {
   View,
 } from 'react-native';
 import { CardModal } from '@/shared/components/card-modal';
+import { GusPortraitFrame } from '@/shared/components/GusPortraitFrame';
 import { ModalHeader } from '@/shared/components/modal-header';
 import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
 import type { MascotDialogueBucket } from '@/shared/data/mascot-investor-dialogues';
-
-const MASCOT_IMAGE = require('@/shared/gus-images/Gemini_Generated_Image_9kyg439kyg439kyg-removebg-preview.png');
 
 export type MascotDialogueModalProps = {
   open: boolean;
@@ -96,18 +94,11 @@ export function MascotDialogueModal({
           closeAccessibilityLabel="Cerrar"
         />
         <View style={styles.content}>
-          <View
-            style={[
-              styles.imageWrap,
-              { backgroundColor: `${palette.primary}10` },
-            ]}
-          >
-            <Image
-              source={MASCOT_IMAGE}
-              style={styles.image}
-              contentFit="contain"
-            />
-          </View>
+          <GusPortraitFrame
+            variant="default"
+            style={{ marginBottom: 16 }}
+            accessibilityLabel={mascotName}
+          />
 
           <View
             style={[styles.sectionRow, { borderLeftColor: palette.primary }]}
@@ -208,19 +199,6 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     paddingBottom: 28,
-  },
-  imageWrap: {
-    alignSelf: 'center',
-    width: 132,
-    height: 132,
-    borderRadius: 66,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  image: {
-    width: 112,
-    height: 112,
   },
   sectionRow: {
     flexDirection: 'row',

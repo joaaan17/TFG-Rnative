@@ -1,5 +1,4 @@
 import React from 'react';
-import { Image } from 'expo-image';
 import {
   Platform,
   Pressable,
@@ -8,12 +7,11 @@ import {
   View,
 } from 'react-native';
 import { CardModal } from '@/shared/components/card-modal';
+import { GusPortraitFrame } from '@/shared/components/GusPortraitFrame';
 import { ModalHeader } from '@/shared/components/modal-header';
 import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
-
-const LEVEL_UP_IMAGE = require('@/shared/gus-images/Gemini_Generated_Image_9kyg439kyg439kyg-removebg-preview.png');
 
 export type LevelUpModalProps = {
   visible: boolean;
@@ -42,13 +40,6 @@ export function LevelUpModal({
   userName,
 }: LevelUpModalProps) {
   const palette = usePalette();
-  const [contentHeight, setContentHeight] = React.useState<
-    number | undefined
-  >();
-
-  React.useEffect(() => {
-    if (!visible) setContentHeight(undefined);
-  }, [visible]);
 
   const firstName = firstNameFromDisplay(userName);
 
@@ -80,10 +71,9 @@ export function LevelUpModal({
     <CardModal
       open={visible}
       onClose={onClose}
-      maxHeightPct={0.94}
+      maxHeightPct={0.99}
       closeOnBackdropPress
       scrollable
-      contentHeight={contentHeight}
       contentNoPaddingTop
       contentBackgroundColor={palette.cardBackground}
     >
@@ -93,7 +83,6 @@ export function LevelUpModal({
         showsVerticalScrollIndicator={false}
         bounces={false}
         nestedScrollEnabled
-        onContentSizeChange={(_, h) => setContentHeight(h)}
         contentContainerStyle={styles.scrollContent}
       >
         <ModalHeader
@@ -105,18 +94,11 @@ export function LevelUpModal({
           closeAccessibilityLabel="Cerrar"
         />
         <View style={styles.content}>
-          <View
-            style={[
-              styles.imageWrap,
-              { backgroundColor: `${palette.primary}08` },
-            ]}
-          >
-            <Image
-              source={LEVEL_UP_IMAGE}
-              style={styles.image}
-              contentFit="contain"
-            />
-          </View>
+          <GusPortraitFrame
+            variant="large"
+            style={{ marginBottom: 20 }}
+            accessibilityLabel="Guspresario celebra tu nuevo nivel"
+          />
 
           <View
             style={[styles.sectionRow, { borderLeftColor: palette.primary }]}
@@ -236,19 +218,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 32,
   },
-  imageWrap: {
-    alignSelf: 'center',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  image: {
-    width: 120,
-    height: 120,
-  },
   sectionRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -273,7 +242,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 15,
     paddingHorizontal: 8,
-    borderRadius: 999,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 50,

@@ -316,7 +316,7 @@ export function ProfileScreen() {
                 </View>
                 <View style={styles.summaryItem}>
                   <Text variant="h4" style={styles.summaryValue}>
-                    {getNivelFromExperience(profile?.experience ?? 0)}
+                    Nivel {getNivelFromExperience(profile?.experience ?? 0)}
                   </Text>
                 </View>
               </View>

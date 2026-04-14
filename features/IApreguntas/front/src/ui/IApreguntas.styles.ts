@@ -79,7 +79,7 @@ export function createIApreguntasStyles(palette: Palette) {
     },
     inputRow: {
       flexDirection: 'row',
-      alignItems: 'center',
+      alignItems: 'flex-end',
       gap: 12,
     },
     inputFlex: {

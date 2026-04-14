@@ -7,8 +7,12 @@ import {
   View,
 } from 'react-native';
 import { CardModal } from '@/shared/components/card-modal';
+import { GusPortraitFrame } from '@/shared/components/GusPortraitFrame';
 import { ModalHeader } from '@/shared/components/modal-header';
 import { Text } from '@/shared/components/ui/text';
+import { ACHIEVEMENT_LEVEL_CASH_USD } from '@/shared/constants/achievements';
+import { getAchievementInvestmentTip } from '@/shared/constants/achievement-investment-tips';
+import { MASCOT_INVESTOR_DIALOGUES } from '@/shared/data/mascot-investor-dialogues';
 import { Hierarchy } from '@/design-system/typography';
 import { usePalette } from '@/shared/hooks/use-palette';
 
@@ -20,7 +24,8 @@ export type AchievementRewardModalProps = {
 };
 
 /**
- * Modal al desbloquear logros de nivel con recompensa en efectivo para la cartera.
+ * Modal al desbloquear logros de nivel: Guspresario entrega el premio en efectivo
+ * y un consejo de inversión por cada hito desbloqueado.
  */
 export function AchievementRewardModal({
   open,
@@ -29,13 +34,13 @@ export function AchievementRewardModal({
   totalGrantedUsd,
 }: AchievementRewardModalProps) {
   const palette = usePalette();
-  const [contentHeight, setContentHeight] = React.useState<
-    number | undefined
-  >();
 
-  React.useEffect(() => {
-    if (!open) setContentHeight(undefined);
-  }, [open]);
+  const mascot = MASCOT_INVESTOR_DIALOGUES.mascot;
+
+  const sortedGrants = React.useMemo(
+    () => [...grants].sort((a, b) => a.level - b.level),
+    [grants],
+  );
 
   const cardBg =
     palette.background === '#070B14' || palette.background?.startsWith('#0')
@@ -53,19 +58,24 @@ export function AchievementRewardModal({
     },
   });
 
-  const title =
-    grants.length === 1
-      ? `¡Logro: nivel ${grants[0].level}!`
-      : `¡${grants.length} logros desbloqueados!`;
+  const title = `¡${mascot} te entrega tu premio!`;
+  const subtitle =
+    sortedGrants.length === 1
+      ? `Logro desbloqueado al alcanzar el nivel ${sortedGrants[0].level}`
+      : `${sortedGrants.length} logros desbloqueados de golpe`;
+
+  const formattedTotal = totalGrantedUsd.toLocaleString('es-ES', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
 
   return (
     <CardModal
       open={open}
       onClose={onClose}
-      maxHeightPct={0.88}
+      maxHeightPct={0.99}
       closeOnBackdropPress
       scrollable
-      contentHeight={contentHeight}
       contentNoPaddingTop
       contentBackgroundColor={palette.cardBackground}
     >
@@ -75,40 +85,59 @@ export function AchievementRewardModal({
         showsVerticalScrollIndicator={false}
         bounces={false}
         nestedScrollEnabled
-        onContentSizeChange={(_, h) => setContentHeight(h)}
         contentContainerStyle={styles.scrollContent}
       >
         <ModalHeader
           title={title}
-          subtitle="Recompensa en tu cartera para invertir"
+          subtitle={subtitle}
           titleNumberOfLines={3}
-          subtitleNumberOfLines={2}
+          subtitleNumberOfLines={3}
           onClose={onClose}
           closeAccessibilityLabel="Cerrar"
         />
         <View style={styles.content}>
+          <GusPortraitFrame
+            variant="large"
+            style={{ marginBottom: 20 }}
+            accessibilityLabel={`${mascot} te entrega la recompensa`}
+          />
+
           <View
             style={[
-              styles.totalCard,
+              styles.prizeCard,
               { backgroundColor: cardBg, ...cardShadow },
             ]}
           >
             <Text
               style={[
                 Hierarchy.caption,
-                { color: palette.icon ?? palette.text, marginBottom: 6 },
+                { color: palette.icon ?? palette.text, marginBottom: 8 },
               ]}
             >
-              TOTAL AÑADIDO AL EFECTIVO
+              ACABAS DE GANAR
             </Text>
             <Text
               style={[Hierarchy.valueSecondary, { color: palette.primary }]}
             >
-              {totalGrantedUsd.toLocaleString('es-ES', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              })}{' '}
-              US$
+              +{formattedTotal} US$
+            </Text>
+            <Text
+              style={[
+                Hierarchy.body,
+                {
+                  color: palette.text,
+                  textAlign: 'center',
+                  marginTop: 14,
+                  lineHeight: 22,
+                },
+              ]}
+            >
+              Ese importe{' '}
+              <Text style={{ fontWeight: '600' }}>
+                ya está depositado en tu cartera
+              </Text>{' '}
+              como efectivo disponible. Puedes invertirlo cuando quieras desde
+              Cartera.
             </Text>
           </View>
 
@@ -121,32 +150,49 @@ export function AchievementRewardModal({
                 { color: palette.icon ?? palette.text },
               ]}
             >
-              DETALLE
+              CONSEJO DE {mascot.toUpperCase()}
             </Text>
           </View>
 
-          <View
-            style={[
-              styles.listCard,
-              { backgroundColor: cardBg, ...cardShadow },
-            ]}
-          >
-            {grants.map((g) => (
-              <View key={g.level} style={styles.listRow}>
-                <Text style={[Hierarchy.body, { color: palette.text }]}>
-                  Nivel {g.level}
-                </Text>
+          {sortedGrants.map((g) => (
+            <View
+              key={g.level}
+              style={[
+                styles.tipCard,
+                { backgroundColor: cardBg, ...cardShadow },
+              ]}
+            >
+              <View style={styles.tipBadgeRow}>
                 <Text
                   style={[
                     Hierarchy.bodySmallSemibold,
                     { color: palette.primary },
                   ]}
                 >
+                  Nivel {g.level}
+                </Text>
+                <Text
+                  variant="muted"
+                  style={[Hierarchy.caption, { marginLeft: 8 }]}
+                >
                   +{g.amountUsd.toLocaleString('es-ES')} US$
                 </Text>
               </View>
-            ))}
-          </View>
+              <Text
+                style={[
+                  Hierarchy.body,
+                  {
+                    color: palette.text,
+                    lineHeight: 22,
+                    marginTop: 10,
+                    fontStyle: 'italic',
+                  },
+                ]}
+              >
+                “{getAchievementInvestmentTip(g.level)}”
+              </Text>
+            </View>
+          ))}
 
           <Text
             variant="muted"
@@ -155,12 +201,14 @@ export function AchievementRewardModal({
               {
                 color: palette.icon ?? palette.text,
                 lineHeight: 20,
+                marginTop: 8,
                 marginBottom: 18,
               },
             ]}
           >
-            El dinero ya está en tu efectivo disponible. Úsalo cuando quieras
-            desde Cartera.
+            Cada logro de nivel suma {ACHIEVEMENT_LEVEL_CASH_USD.toLocaleString('es-ES')}{' '}
+            US$ a tu efectivo. Sigue sumando XP: el siguiente consejo ya está
+            escrito para ti.
           </Text>
 
           <Pressable
@@ -216,32 +264,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 28,
   },
-  totalCard: {
+  prizeCard: {
     borderRadius: 14,
-    paddingVertical: 16,
+    paddingVertical: 18,
     paddingHorizontal: 18,
-    marginBottom: 16,
+    marginBottom: 20,
     alignItems: 'center',
   },
   sectionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
     paddingLeft: 10,
     borderLeftWidth: 3,
   },
-  listCard: {
+  tipCard: {
     borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    marginBottom: 14,
-    gap: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 12,
   },
-  listRow: {
+  tipBadgeRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 4,
+    flexWrap: 'wrap',
   },
   cta: {
     width: '100%',

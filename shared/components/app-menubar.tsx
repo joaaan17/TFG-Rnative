@@ -67,6 +67,7 @@ export function AppMenubar({
     Array(ITEM_COUNT).fill(null),
   );
   const [indicatorReady, setIndicatorReady] = React.useState(false);
+  const [hoveredTab, setHoveredTab] = React.useState<number | null>(null);
   const isInitialPosition = React.useRef(true);
 
   const centerXSv = useSharedValue(0);
@@ -250,10 +251,25 @@ export function AppMenubar({
     index: number;
   }) {
     const isActive = index === activeIndex;
-    const iconColor = isActive ? primary : (palette.icon ?? palette.text);
+    const isHovered = Platform.OS === 'web' && hoveredTab === index;
+    const iconColor = isActive
+      ? primary
+      : isHovered
+        ? primary
+        : (palette.icon ?? palette.text);
+
+    const webTabHover =
+      Platform.OS === 'web'
+        ? {
+            onMouseEnter: () => setHoveredTab(index),
+            onMouseLeave: () =>
+              setHoveredTab((h) => (h === index ? null : h)),
+          }
+        : {};
 
     return (
       <Pressable
+        {...webTabHover}
         accessibilityRole="button"
         accessibilityLabel={label}
         android_ripple={
@@ -263,6 +279,12 @@ export function AppMenubar({
         }
         style={({ pressed }) => [
           styles.item,
+          Platform.OS === 'web' &&
+            isHovered &&
+            !isActive && {
+              backgroundColor: withAlpha(primary, 0.1),
+              borderRadius: 10,
+            },
           Platform.OS === 'web' && pressed ? { opacity: 0.88 } : null,
           Platform.OS === 'ios' && pressed ? { opacity: 0.92 } : null,
         ]}
