@@ -220,8 +220,8 @@ AUTH_JWT_SECRET=tu_secreto_largo_y_aleatorio
 
 # Opcionales
 PORT=3000
-AUTH_JWT_EXPIRES_IN=1d
 AUTH_BCRYPT_ROUNDS=10
+# AUTH_JWT_EXPIRES_IN ya no existe: tokens sin expiración (sesión hasta signOut)
 
 # Email (desarrollo)
 MAIL_MODE=console

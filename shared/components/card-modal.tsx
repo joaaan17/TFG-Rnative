@@ -61,6 +61,11 @@ export type CardModalProps = {
    * Si no se pasa, se usa palette.cardBackground.
    */
   contentBackgroundColor?: string;
+  /**
+   * Si true (y `scrollable` es false), el sheet ocupa toda la `maxHeight` (p. ej. 100% de pantalla)
+   * en lugar de encogerse al contenido. Útil para modales de compra/venta a pantalla completa.
+   */
+  fillSheetHeight?: boolean;
 };
 
 // Overhead real de la Card encima del contentWrap:
@@ -78,6 +83,7 @@ export function CardModal({
   contentHeight,
   contentNoPaddingTop = false,
   contentBackgroundColor,
+  fillSheetHeight = false,
 }: CardModalProps) {
   const palette = usePalette();
   const sheetBg = contentBackgroundColor ?? palette.cardBackground;
@@ -371,7 +377,9 @@ export function CardModal({
               styles.sheet,
               scrollable
                 ? { height: fitContentHeight ?? maxHeight, maxHeight }
-                : { maxHeight },
+                : fillSheetHeight
+                  ? { height: maxHeight, maxHeight }
+                  : { maxHeight },
               webFullscreenSheet && styles.sheetWebFullscreen,
             ]}
           >
@@ -387,7 +395,9 @@ export function CardModal({
                     ? Platform.OS === 'android'
                       ? { height: fitContentHeight ?? maxHeight }
                       : { flex: 1 }
-                    : {}),
+                    : fillSheetHeight
+                      ? { height: maxHeight }
+                      : {}),
                   maxHeight,
                   ...(webFullscreenSheet ? { flex: 1, minHeight: 0 } : {}),
                   backgroundColor: sheetBg,
@@ -403,6 +413,9 @@ export function CardModal({
               <View
                 style={[
                   styles.dragHandleRow,
+                  fillSheetHeight && {
+                    paddingTop: 6 + Math.max(insets.top, 0),
+                  },
                   { pointerEvents: closeOnBackdropPress ? 'auto' : 'none' },
                 ]}
                 {...(closeOnBackdropPress ? panResponder.panHandlers : {})}
@@ -413,10 +426,13 @@ export function CardModal({
                 style={[
                   styles.contentWrap,
                   // scrollable: flex:1 para que el ScrollView se expanda.
-                  // no scrollable: paddingBottom solo, el contenido determina altura.
+                  // fillSheetHeight + no scrollable: flex:1 para llenar el sheet.
+                  // no scrollable sin fill: paddingBottom solo, el contenido determina altura.
                   scrollable
                     ? { flex: 1, minHeight: 0, paddingBottom }
-                    : { paddingBottom },
+                    : fillSheetHeight
+                      ? { flex: 1, minHeight: 0, paddingBottom }
+                      : { paddingBottom },
                 ]}
               >
                 {children}

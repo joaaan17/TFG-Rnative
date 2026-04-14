@@ -10,7 +10,6 @@ import { usePalette } from '@/shared/hooks/use-palette';
 import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
 import { useAwardExperience } from '@/features/profile/front/src/hooks/useAwardExperience';
 import { useCurrentQuotePrice } from '../hooks/useCurrentQuotePrice';
-import { useMarketCandles } from '../hooks/useMarketCandles';
 import { useMarketOverview } from '../hooks/useMarketOverview';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useBuyOrder } from '../hooks/useBuyOrder';
@@ -151,19 +150,6 @@ export function MarketCandlesModal({
     visible && !!symbol,
     5 * 60 * 1000,
   );
-  // Velas 6h solo para "Valor actual" en Tu posición: usamos el cierre de la última vela de 6h (más actualizado que 1D)
-  const { data: candles6h } = useMarketCandles(
-    symbol,
-    '6h',
-    visible && !!symbol,
-    '1mo',
-  );
-  const lastClose6h =
-    candles6h?.candles?.length &&
-    typeof candles6h.candles[candles6h.candles.length - 1]?.c === 'number'
-      ? candles6h.candles[candles6h.candles.length - 1].c
-      : undefined;
-
   const showChart = operarStep === 'chart';
   const showActions = operarStep === 'actions';
   const cashBalance = portfolioData?.cashBalance ?? 0;
@@ -171,15 +157,14 @@ export function MarketCandlesModal({
     (h) => h.symbol === symbol,
   );
   const quote = overviewData?.quote;
-  // Valor actual en Tu posición: prioridad velas 6h (más actualizado), luego quote, luego overview
+  // Precio actual: misma fuente que useHoldingsWithPrices (getQuotes → q.price)
+  // para que el beneficio coincida en la card y en el modal.
   const lastClose =
-    lastClose6h != null
-      ? lastClose6h
-      : currentQuotePrice != null
-        ? currentQuotePrice
-        : quote?.high != null && quote?.low != null
-          ? (quote.high + quote.low) / 2
-          : (quote?.high ?? quote?.low ?? undefined);
+    currentQuotePrice != null
+      ? currentQuotePrice
+      : quote?.high != null && quote?.low != null
+        ? (quote.high + quote.low) / 2
+        : (quote?.high ?? quote?.low ?? undefined);
   const positionAmount = (holdingForSymbol?.shares ?? 0) * (lastClose ?? 0);
 
   return (
@@ -187,12 +172,13 @@ export function MarketCandlesModal({
       <CardModal
         open={visible}
         onClose={onClose}
-        maxHeightPct={showActions ? 0.42 : 1}
+        maxHeightPct={1}
         closeOnBackdropPress
         scrollable={!showActions}
         contentNoPaddingTop
+        fillSheetHeight={showActions}
       >
-        <View style={showActions ? undefined : { flex: 1, minHeight: 0 }}>
+        <View style={{ flex: 1, minHeight: 0 }}>
           <ModalHeader
             title={asset?.name ?? ''}
             subtitle={asset?.symbol ?? ''}
@@ -229,7 +215,7 @@ export function MarketCandlesModal({
                       height={280}
                       containerStyle={{ paddingHorizontal: 0 }}
                       currentPrice={
-                        lastClose6h ?? currentQuotePrice ?? undefined
+                        currentQuotePrice ?? undefined
                       }
                     />
                   ) : null}
@@ -261,8 +247,9 @@ export function MarketCandlesModal({
                       </Text>
                       <View style={{ gap: 8 }}>
                         <Pressable
-                          onLongPress={() => openPosTooltip('Acciones')}
-                          delayLongPress={400}
+                          onPress={() => openPosTooltip('Acciones')}
+                          accessibilityRole="button"
+                          accessibilityHint="Toca para ver la explicación"
                           style={({ pressed }) => ({
                             flexDirection: 'row',
                             justifyContent: 'space-between',
@@ -290,8 +277,9 @@ export function MarketCandlesModal({
                           </Text>
                         </Pressable>
                         <Pressable
-                          onLongPress={() => openPosTooltip('Precio medio compra')}
-                          delayLongPress={400}
+                          onPress={() => openPosTooltip('Precio medio compra')}
+                          accessibilityRole="button"
+                          accessibilityHint="Toca para ver la explicación"
                           style={({ pressed }) => ({
                             flexDirection: 'row',
                             justifyContent: 'space-between',
@@ -321,8 +309,9 @@ export function MarketCandlesModal({
                           </Text>
                         </Pressable>
                         <Pressable
-                          onLongPress={() => openPosTooltip('Valor actual')}
-                          delayLongPress={400}
+                          onPress={() => openPosTooltip('Valor actual')}
+                          accessibilityRole="button"
+                          accessibilityHint="Toca para ver la explicación"
                           style={({ pressed }) => ({
                             flexDirection: 'row',
                             justifyContent: 'space-between',
@@ -353,8 +342,9 @@ export function MarketCandlesModal({
                         </Pressable>
                         {lastClose != null && (
                           <Pressable
-                            onLongPress={() => openPosTooltip('Beneficios')}
-                            delayLongPress={400}
+                            onPress={() => openPosTooltip('Beneficios')}
+                            accessibilityRole="button"
+                            accessibilityHint="Toca para ver la explicación"
                             style={({ pressed }) => ({
                               flexDirection: 'row',
                               justifyContent: 'space-between',
@@ -516,33 +506,39 @@ export function MarketCandlesModal({
                 paddingHorizontal: 16,
                 paddingTop: 12,
                 paddingBottom: Math.max(insets.bottom, 16),
-                borderTopWidth: 1,
-                borderTopColor:
-                  (palette.surfaceBorder ?? palette.surfaceMuted) + '60',
               }}
             >
               <View style={{ flex: 1 }}>
                 <Pressable
                   onPress={onOrdenes}
                   accessibilityRole="button"
-                accessibilityLabel="Historial"
-                android_ripple={{ color: palette.surfaceBorder ?? 'rgba(0,0,0,0.1)', borderless: false }}
-                style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
-              >
-                <View
-                  style={{
-                    height: 48,
-                    borderRadius: 12,
-                    backgroundColor: palette.surfaceMuted ?? '#f0f0f0',
-                    borderWidth: 1,
-                    borderColor: palette.surfaceBorder ?? palette.surfaceMuted,
-                    justifyContent: 'center',
-                    alignItems: 'center',
+                  accessibilityLabel="Historial"
+                  android_ripple={{
+                    color: 'rgba(255,255,255,0.2)',
+                    borderless: false,
                   }}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
                 >
-                  <Text style={[Hierarchy.action, { color: palette.primary }]}>
-                    Historial
-                  </Text>
+                  <View
+                    style={{
+                      height: 48,
+                      borderRadius: 16,
+                      backgroundColor: palette.primary,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text
+                      style={[
+                        Hierarchy.action,
+                        {
+                          color: palette.primaryText ?? '#FFF',
+                          fontWeight: '600',
+                        },
+                      ]}
+                    >
+                      Historial
+                    </Text>
                   </View>
                 </Pressable>
               </View>
@@ -557,7 +553,7 @@ export function MarketCandlesModal({
                   <View
                     style={{
                       height: 48,
-                      borderRadius: 12,
+                      borderRadius: 16,
                       backgroundColor: palette.primary,
                       justifyContent: 'center',
                       alignItems: 'center',
@@ -580,8 +576,10 @@ export function MarketCandlesModal({
           {showActions && (
             <Animated.View
               style={{
+                flex: 1,
+                justifyContent: 'center',
                 paddingHorizontal: 16,
-                paddingTop: 28,
+                paddingTop: 12,
                 paddingBottom: 24,
                 opacity: actionsOpacity,
               }}

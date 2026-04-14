@@ -30,7 +30,7 @@ export function RegisterScreen() {
   React.useEffect(() => {
     if (isRestoring) return;
     if (session) {
-      router.replace('/main');
+      router.replace('/investments');
     }
   }, [isRestoring, router, session]);
 

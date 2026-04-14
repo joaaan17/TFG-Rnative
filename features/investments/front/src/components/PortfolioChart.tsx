@@ -73,7 +73,7 @@ export type PortfolioChartProps = {
 };
 
 /**
- * Gráfico de evolución reutilizable: selector de rango, velas/línea, selector de timeframe y tipo.
+ * Gráfico de evolución reutilizable: selector de rango, línea (montaña) / velas, selector de timeframe y tipo.
  * Mismas características en pantalla principal de inversiones y en el modal de acciones.
  */
 export function PortfolioChart({
@@ -86,7 +86,7 @@ export function PortfolioChart({
   const palette = usePalette();
   const [range, setRange] = useState<CandleRange>('1mo');
   const [timeframe, setTimeframe] = useState<CandleTimeframe>('1d');
-  const [chartMode, setChartMode] = useState<ChartSeriesType>('candlestick');
+  const [chartMode, setChartMode] = useState<ChartSeriesType>('line');
 
   const [tooltip, setTooltip] = useState<{ title: string; desc: string } | null>(null);
   const openTooltip = useCallback((label: string) => {
@@ -277,6 +277,31 @@ export function PortfolioChart({
               }}
             >
               <Pressable
+                onPress={() => setChartMode('line')}
+                onLongPress={() => openTooltip('Gráfico de montaña')}
+                delayLongPress={400}
+                style={({ pressed }) => ({
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  opacity: pressed ? 0.7 : 1,
+                })}
+                accessibilityRole="button"
+                accessibilityLabel="Gráfico de montaña (línea)"
+              >
+                <LineChart
+                  size={18}
+                  color={
+                    chartMode === 'line'
+                      ? palette.primary
+                      : (palette.icon ?? palette.text)
+                  }
+                  strokeWidth={2}
+                />
+              </Pressable>
+              <Pressable
                 onPress={() => setChartMode('candlestick')}
                 onLongPress={() => openTooltip('Gráfico de velas')}
                 delayLongPress={400}
@@ -295,31 +320,6 @@ export function PortfolioChart({
                   size={18}
                   color={
                     chartMode === 'candlestick'
-                      ? palette.primary
-                      : (palette.icon ?? palette.text)
-                  }
-                  strokeWidth={2}
-                />
-              </Pressable>
-              <Pressable
-                onPress={() => setChartMode('line')}
-                onLongPress={() => openTooltip('Gráfico de línea')}
-                delayLongPress={400}
-                style={({ pressed }) => ({
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  opacity: pressed ? 0.7 : 1,
-                })}
-                accessibilityRole="button"
-                accessibilityLabel="Gráfico de línea"
-              >
-                <LineChart
-                  size={18}
-                  color={
-                    chartMode === 'line'
                       ? palette.primary
                       : (palette.icon ?? palette.text)
                   }

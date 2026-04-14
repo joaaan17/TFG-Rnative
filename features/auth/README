@@ -213,8 +213,7 @@ Después, en `back/src/config/auth.wiring.ts`, cablea tu repo real cambiando la 
 Para JWT:
 - variable de entorno recomendada: `AUTH_JWT_SECRET`
 
-Opcional:
-- `AUTH_JWT_EXPIRES_IN`
+Los tokens JWT se emiten **sin expiración** (la sesión dura hasta que el usuario cierre sesión).
 
 Para hashing:
 - asegúrate de que `user.passwordHash` en BD esté generado con el mismo algoritmo que `PasswordService.hash()` (aquí: `bcryptjs`).
@@ -241,9 +240,9 @@ En `.env` (o en el entorno del sistema) define como mínimo:
 - `AUTH_JWT_SECRET`: secreto para firmar/verificar JWT (obligatorio en producción)
 
 Opcionales:
-- `AUTH_JWT_EXPIRES_IN` (por defecto `1d`)
 - `AUTH_BCRYPT_ROUNDS` (por defecto `10`)
 - `PORT` (por defecto `3000`)
+- `AUTH_JWT_EXPIRES_IN` ya no existe: los tokens no expiran (sesión hasta signOut).
 
 ### Arranque
 Desde el proyecto destino (Node), ejecuta el entrypoint:

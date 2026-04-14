@@ -75,9 +75,9 @@ export function FundamentalsList({
         {ROWS.map(({ label, hint, getValue }) => (
           <Pressable
             key={label}
-            onLongPress={() => openTooltip(label)}
-            delayLongPress={400}
-            accessibilityHint="Mantén pulsado para ver la explicación"
+            onPress={() => openTooltip(label)}
+            accessibilityRole="button"
+            accessibilityHint="Toca para ver la explicación"
             style={({ pressed }) => ({
               flexDirection: 'row',
               justifyContent: 'space-between',

@@ -61,7 +61,7 @@ export async function requestController(req: Request, res: Response) {
       jsonError(res, e.message, 403);
       return;
     }
-    throw e;
+    jsonError(res, e instanceof Error ? e.message : 'Error interno', 500);
   }
 }
 
@@ -95,7 +95,7 @@ export async function acceptController(req: Request, res: Response) {
       jsonError(res, e.message, 403);
       return;
     }
-    throw e;
+    jsonError(res, e instanceof Error ? e.message : 'Error interno', 500);
   }
 }
 
@@ -129,7 +129,7 @@ export async function rejectController(req: Request, res: Response) {
       jsonError(res, e.message, 403);
       return;
     }
-    throw e;
+    jsonError(res, e instanceof Error ? e.message : 'Error interno', 500);
   }
 }
 
@@ -155,7 +155,7 @@ export async function deleteFriendController(req: Request, res: Response) {
       jsonError(res, e.message, 404);
       return;
     }
-    throw e;
+    jsonError(res, e instanceof Error ? e.message : 'Error interno', 500);
   }
 }
 
@@ -174,13 +174,17 @@ export async function listFriendsController(req: Request, res: Response) {
     jsonError(res, 'Search query too long', 400);
     return;
   }
-  const result = await listFriends({
-    currentUserId: userId,
-    search: search || undefined,
-    page: Number.isNaN(page) ? 1 : page,
-    limit: Math.min(50, Number.isNaN(limit) ? 20 : limit),
-  });
-  jsonOk(res, result);
+  try {
+    const result = await listFriends({
+      currentUserId: userId,
+      search: search || undefined,
+      page: Number.isNaN(page) ? 1 : page,
+      limit: Math.min(50, Number.isNaN(limit) ? 20 : limit),
+    });
+    jsonOk(res, result);
+  } catch (e) {
+    jsonError(res, e instanceof Error ? e.message : 'Error interno', 500);
+  }
 }
 
 export async function listPendingRequestsController(
@@ -192,8 +196,12 @@ export async function listPendingRequestsController(
     jsonError(res, 'Unauthorized', 401);
     return;
   }
-  const result = await listPendingRequests({ currentUserId: userId });
-  jsonOk(res, result);
+  try {
+    const result = await listPendingRequests({ currentUserId: userId });
+    jsonOk(res, result);
+  } catch (e) {
+    jsonError(res, e instanceof Error ? e.message : 'Error interno', 500);
+  }
 }
 
 /** Perfiles registrados para añadir amigos (excluye tú, amigos y pendientes). Respuesta plana `{ items }` para el cliente de perfil. */

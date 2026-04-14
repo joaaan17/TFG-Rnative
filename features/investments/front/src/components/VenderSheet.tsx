@@ -127,19 +127,28 @@ export function VenderSheet({
     <CardModal
       open={visible}
       onClose={onClose}
-      maxHeightPct={0.92}
+      maxHeightPct={1}
       closeOnBackdropPress
       scrollable={false}
       contentNoPaddingTop
+      fillSheetHeight
     >
-      <View>
+      <View style={{ flex: 1 }}>
         <ModalHeader
           title="Vender"
           onBack={onClose}
           onClose={onClose}
           backAccessibilityLabel="Volver atrás"
         />
-        <View style={{ paddingHorizontal: 20, paddingBottom: 24 }}>
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: 20,
+            paddingBottom: 24,
+            justifyContent: 'space-between',
+          }}
+        >
+        <View>
           <View
             style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}
           >
@@ -263,7 +272,9 @@ export function VenderSheet({
               </Text>
             </View>
           ) : null}
+        </View>
 
+        <View>
           <View
             style={{
               flexDirection: 'row',
@@ -372,6 +383,7 @@ export function VenderSheet({
           </View>
         </View>
       </View>
+    </View>
     </CardModal>
   );
 }

@@ -15,5 +15,4 @@ export type NewUser = Omit<User, 'id'>;
 
 export interface AuthToken {
   token: string;
-  expiresIn: number;
 }

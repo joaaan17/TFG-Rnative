@@ -1,6 +1,7 @@
 /**
  * Cache persistente para Inicio: noticias, explicaciones educativas y quizzes.
- * Usa AsyncStorage. TTL: 2 días para headlines y educational news, 7 días para quizzes.
+ * Usa AsyncStorage. Titulares: caché global al dispositivo (misma lista para todos los usuarios).
+ * TTL titulares alineado con el servidor (12 h); explicaciones/quizzes siguen por usuario.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,11 +12,9 @@ import type {
 } from '../types/inicio.types';
 
 const STORAGE_PREFIX = '@inicio_cache_';
-/** Headlines por usuario (antes era global: al cambiar de cuenta se veían las mismas noticias). */
-function headlinesKey(userId: string) {
-  return `${STORAGE_PREFIX}headlines_${userId}`;
-}
-const TTL_HEADLINES_MS = 2 * 24 * 60 * 60 * 1000; // 2 días
+/** Misma clave para todos los usuarios: todos deben ver las dos mismas noticias que el backend expone por ventana temporal. */
+const HEADLINES_GLOBAL_KEY = `${STORAGE_PREFIX}headlines_global`;
+const TTL_HEADLINES_MS = 12 * 60 * 60 * 1000; // alinear con servidor (renovación cada 12 h)
 const TTL_EDU_MS = 2 * 24 * 60 * 60 * 1000; // 2 días
 const TTL_QUIZ_MS = 7 * 24 * 60 * 60 * 1000; // 7 días (quizzes estables)
 
@@ -48,22 +47,16 @@ async function setCached<T>(key: string, data: T): Promise<void> {
   }
 }
 
-/** Obtiene headlines desde cache si son recientes (por usuario). */
-export async function getHeadlinesCached(
-  userId: string,
-): Promise<NewsPreview[] | null> {
-  const key = headlinesKey(userId);
-  const cached = await getCached<NewsPreview[]>(key);
+/** Obtiene titulares desde caché si son recientes (global al dispositivo). */
+export async function getHeadlinesCached(): Promise<NewsPreview[] | null> {
+  const cached = await getCached<NewsPreview[]>(HEADLINES_GLOBAL_KEY);
   if (!cached || !isFresh(cached.ts, TTL_HEADLINES_MS)) return null;
   return cached.data;
 }
 
-/** Guarda headlines en cache. */
-export async function setHeadlinesCached(
-  userId: string,
-  data: NewsPreview[],
-): Promise<void> {
-  await setCached(headlinesKey(userId), data);
+/** Guarda titulares en caché global. */
+export async function setHeadlinesCached(data: NewsPreview[]): Promise<void> {
+  await setCached(HEADLINES_GLOBAL_KEY, data);
 }
 
 /** Obtiene educational news desde cache si es reciente. */

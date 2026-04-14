@@ -112,6 +112,27 @@ export function createInvestmentsStyles(palette: Palette, screenWidth: number) {
     assetCardWrapper: {
       width: (screenWidth - 40 - 14) / 2,
     },
+    buyBar: {
+      position: 'absolute' as const,
+      bottom: 16,
+      left: 20,
+      right: 70,
+      zIndex: 10,
+      elevation: 10,
+    },
+    buyButton: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      gap: 8,
+      paddingVertical: 14,
+      borderRadius: 14,
+      shadowColor: '#000',
+      shadowOpacity: 0.12,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 6,
+    },
     errorText: {
       paddingVertical: 16,
       textAlign: 'center',

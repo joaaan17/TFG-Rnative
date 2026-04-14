@@ -67,9 +67,9 @@ export function QuoteGrid({ quote, palette }: QuoteGridProps) {
         {ROWS.map(({ label, getValue }) => (
           <Pressable
             key={label}
-            onLongPress={() => openTooltip(label)}
-            delayLongPress={400}
-            accessibilityHint="Mantén pulsado para ver la explicación"
+            onPress={() => openTooltip(label)}
+            accessibilityRole="button"
+            accessibilityHint="Toca para ver la explicación"
             style={({ pressed }) => ({
               minWidth: '30%',
               flex: 1,

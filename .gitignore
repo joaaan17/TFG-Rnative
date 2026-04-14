@@ -49,3 +49,6 @@ app-example
 .agents/skills/
 
 .vercel
+
+# Caché de titulares NewsAPI en el servidor
+/data/

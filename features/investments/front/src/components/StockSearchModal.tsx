@@ -17,30 +17,71 @@ import { getLogoUrlForSymbol } from '../utils/logoForSymbol';
 const DEBOUNCE_MS = 400;
 const SEARCH_LIMIT = 15;
 
-/** 7 magníficas + oro (GLD) + Bitcoin. Símbolos para la lista por defecto. */
+/** ~30 activos representativos: Mag-7, blue chips globales, ETFs, cripto y materias primas. */
 const DEFAULT_SYMBOLS = [
-  'AAPL', // Apple
-  'TSLA', // Tesla
-  'NVDA', // Nvidia
-  'MSFT', // Microsoft
-  'GOOGL', // Alphabet
-  'AMZN', // Amazon
-  'META', // Meta (7ª magnífica)
-  'GLD', // ETF oro (precio en USD)
-  'BTC-USD', // Bitcoin
+  'AAPL',
+  'MSFT',
+  'GOOGL',
+  'AMZN',
+  'NVDA',
+  'META',
+  'TSLA',
+  'BRK-B',
+  'JPM',
+  'V',
+  'JNJ',
+  'WMT',
+  'PG',
+  'MA',
+  'UNH',
+  'HD',
+  'DIS',
+  'NFLX',
+  'KO',
+  'PEP',
+  'COST',
+  'INTC',
+  'AMD',
+  'BA',
+  'NKE',
+  'SPY',
+  'QQQ',
+  'GLD',
+  'BTC-USD',
+  'ETH-USD',
 ];
 
-/** Nombre de empresa por símbolo para la lista por defecto (arriba el nombre, abajo el símbolo). */
 const DEFAULT_DISPLAY_NAMES: Record<string, string> = {
   AAPL: 'Apple Inc.',
-  TSLA: 'Tesla, Inc.',
-  NVDA: 'NVIDIA Corporation',
   MSFT: 'Microsoft Corporation',
   GOOGL: 'Alphabet Inc.',
   AMZN: 'Amazon.com, Inc.',
+  NVDA: 'NVIDIA Corporation',
   META: 'Meta Platforms, Inc.',
+  TSLA: 'Tesla, Inc.',
+  'BRK-B': 'Berkshire Hathaway B',
+  JPM: 'JPMorgan Chase & Co.',
+  V: 'Visa Inc.',
+  JNJ: 'Johnson & Johnson',
+  WMT: 'Walmart Inc.',
+  PG: 'Procter & Gamble',
+  MA: 'Mastercard Inc.',
+  UNH: 'UnitedHealth Group',
+  HD: 'The Home Depot',
+  DIS: 'The Walt Disney Co.',
+  NFLX: 'Netflix, Inc.',
+  KO: 'Coca-Cola Company',
+  PEP: 'PepsiCo, Inc.',
+  COST: 'Costco Wholesale',
+  INTC: 'Intel Corporation',
+  AMD: 'Advanced Micro Devices',
+  BA: 'The Boeing Company',
+  NKE: 'Nike, Inc.',
+  SPY: 'SPDR S&P 500 ETF',
+  QQQ: 'Invesco QQQ (Nasdaq-100)',
   GLD: 'Oro (ETF)',
   'BTC-USD': 'Bitcoin',
+  'ETH-USD': 'Ethereum',
 };
 
 const ASSET_AVATAR_SIZE = 40;

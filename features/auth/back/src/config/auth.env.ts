@@ -26,9 +26,8 @@ export const authEnv = {
   // 1. Base de Datos
   dbUri: requireEnv(process.env.AUTH_DB_URI || '', 'AUTH_DB_URI'),
 
-  // 2. Seguridad JWT (AUTH_JWT_EXPIRES_IN vacío = sin `exp`, sesión hasta cerrar sesión en el cliente)
+  // 2. Seguridad JWT (tokens sin expiración: la sesión dura hasta signOut en el cliente)
   jwtSecret: process.env.AUTH_JWT_SECRET || '',
-  jwtExpiresIn: (process.env.AUTH_JWT_EXPIRES_IN ?? '').trim(),
 
   // 3. Seguridad Hashing
   bcryptRounds: Number(process.env.AUTH_BCRYPT_ROUNDS) || 10,

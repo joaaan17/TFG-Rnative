@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { ClipboardList, Search } from 'lucide-react-native';
+import { ClipboardList, Plus, Search } from 'lucide-react-native';
 
 import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
 import {
@@ -473,6 +473,34 @@ export function InvestmentsScreen() {
           </>
         )}
       </ScrollView>
+
+      {tab === 0 && session && (
+        <View style={styles.buyBar}>
+          <Pressable
+            onPress={handleSearchPress}
+            accessibilityRole="button"
+            accessibilityLabel="Comprar Activo"
+            style={({ pressed }) => [
+              styles.buyButton,
+              {
+                backgroundColor: palette.primary,
+                opacity: pressed ? 0.92 : 1,
+                transform: [{ scale: pressed ? 0.985 : 1 }],
+              },
+            ]}
+          >
+            <Plus size={18} color={palette.primaryText ?? '#FFF'} strokeWidth={2.5} />
+            <Text
+              style={[
+                Hierarchy.action,
+                { color: palette.primaryText ?? '#FFF', fontWeight: '600' },
+              ]}
+            >
+              Comprar Activo
+            </Text>
+          </Pressable>
+        </View>
+      )}
 
       <View style={styles.bottomActions}>
         {tab === 0 && (

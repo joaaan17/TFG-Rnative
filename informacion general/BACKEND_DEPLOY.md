@@ -20,7 +20,7 @@ Guía para desplegar el **servidor Express** (API) en Railway o Render. Necesita
 | `AUTH_JWT_SECRET` | ✅ | Secreto para firmar JWT (cadena larga aleatoria) |
 | `OPENAI_API_KEY` | ✅ | Clave de OpenAI (Consultorio + quizzes) |
 | `NEWS_API_KEY` | ✅ | Clave de NewsAPI (headlines) |
-| `AUTH_JWT_EXPIRES_IN` | | Por defecto `1d` |
+| ~~`AUTH_JWT_EXPIRES_IN`~~ | — | **Eliminada**: los tokens JWT no expiran (sesión hasta signOut) |
 | `AUTH_BCRYPT_ROUNDS` | | Por defecto `10` |
 | `AUTH_ADMIN_EMAILS` | | Emails separados por coma (admins pueden borrar cuentas) |
 | `PORTFOLIO_INITIAL_CASH` | | Efectivo inicial por usuario (default 10000) |

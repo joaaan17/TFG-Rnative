@@ -75,7 +75,7 @@ export function useInicioViewModel(): UseInicioViewModelResult {
       if (!forceRefresh) setLoading(true);
       setError(null);
       try {
-        const headlines = await loadHeadlines(token, { forceRefresh, userId });
+        const headlines = await loadHeadlines(token, { forceRefresh });
         setNews(headlines);
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Error al cargar noticias';
@@ -87,19 +87,6 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     },
     [token, userId],
   );
-
-  /** Al cambiar de cuenta, las cachés locales son por usuario: forzar fetch de titulares nuevos. */
-  const prevUserIdRef = React.useRef<string | undefined>(undefined);
-  React.useEffect(() => {
-    if (!token || !userId) {
-      prevUserIdRef.current = userId;
-      return;
-    }
-    if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== userId) {
-      void fetchHeadlines(true);
-    }
-    prevUserIdRef.current = userId;
-  }, [token, userId, fetchHeadlines]);
 
   const openNews = React.useCallback(
     async (item: NewsPreview) => {

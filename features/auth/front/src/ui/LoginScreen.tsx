@@ -18,7 +18,7 @@ export function LoginScreen() {
 
   React.useEffect(() => {
     if (isRestoring) return;
-    if (session) router.replace('/main');
+    if (session) router.replace('/investments');
   }, [isRestoring, router, session]);
 
   return (

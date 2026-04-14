@@ -20,21 +20,20 @@ import type {
 export type { NewsPreview, EducationalNews, NewsQuiz };
 
 export type InicioLoadOptions = {
-  userId: string;
+  /** Usado para explicación/quiz; los titulares se cachean por dispositivo, no por usuario. */
+  userId?: string;
   forceRefresh?: boolean;
 };
 
-/** Headlines: cache 2 días por usuario. Pull-to-refresh fuerza API + bypass caché servidor. */
+/** Titulares: caché global al dispositivo (12 h). Pull-to-refresh fuerza API + bypass caché servidor. */
 export async function loadHeadlines(
   token: string,
   options: InicioLoadOptions,
 ): Promise<NewsPreview[]> {
   if (!token?.trim()) throw new Error('Token requerido');
-  const uid = options.userId?.trim();
-  if (!uid) throw new Error('userId requerido');
 
   if (!options.forceRefresh) {
-    const cached = await getHeadlinesCached(uid);
+    const cached = await getHeadlinesCached();
     if (cached != null && cached.length > 0) {
       return cached;
     }
@@ -42,7 +41,7 @@ export async function loadHeadlines(
   const data = await getHeadlines(token.trim(), {
     forceRefresh: options.forceRefresh,
   });
-  await setHeadlinesCached(uid, data);
+  await setHeadlinesCached(data);
   return data;
 }
 

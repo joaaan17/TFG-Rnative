@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '@/shared/components/ui/text';
 import { Hierarchy } from '@/design-system/typography';
 import type { Palette } from '@/shared/hooks/use-palette';
@@ -43,14 +43,20 @@ export function FinancialTooltipModal({
           >
             {title}
           </Text>
-          <Text
-            style={[
-              Hierarchy.bodySmall,
-              { color: palette.icon ?? palette.text, lineHeight: 20 },
-            ]}
+          <ScrollView
+            style={styles.descriptionScroll}
+            showsVerticalScrollIndicator={description.length > 280}
+            nestedScrollEnabled
           >
-            {description}
-          </Text>
+            <Text
+              style={[
+                Hierarchy.bodySmall,
+                { color: palette.icon ?? palette.text, lineHeight: 22 },
+              ]}
+            >
+              {description}
+            </Text>
+          </ScrollView>
           <Pressable
             onPress={onClose}
             style={({ pressed }) => [
@@ -98,5 +104,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  descriptionScroll: {
+    maxHeight: 280,
   },
 });

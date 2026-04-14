@@ -119,19 +119,28 @@ export function InvertirSheet({
     <CardModal
       open={visible}
       onClose={onClose}
-      maxHeightPct={0.92}
+      maxHeightPct={1}
       closeOnBackdropPress
       scrollable={false}
       contentNoPaddingTop
+      fillSheetHeight
     >
-      <View>
+      <View style={{ flex: 1 }}>
         <ModalHeader
           title="Invertir"
           onBack={onClose}
           onClose={onClose}
           backAccessibilityLabel="Volver atrás"
         />
-        <View style={{ paddingHorizontal: 20, paddingBottom: 24 }}>
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: 20,
+            paddingBottom: 24,
+            justifyContent: 'space-between',
+          }}
+        >
+        <View>
           <Pressable
             style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}
             accessibilityRole="button"
@@ -260,7 +269,9 @@ export function InvertirSheet({
               </Text>
             </View>
           ) : null}
+        </View>
 
+        <View>
           <View
             style={{
               flexDirection: 'row',
@@ -377,6 +388,7 @@ export function InvertirSheet({
           </View>
         </View>
       </View>
+    </View>
     </CardModal>
   );
 }

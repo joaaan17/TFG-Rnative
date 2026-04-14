@@ -20,7 +20,16 @@ export async function askAiController(req: Request, res: Response) {
     return;
   }
 
-  const reserve = await profileRepository.reserveConsultorioQuestion(userId);
+  let reserve: { ok: boolean; remainingAfter: number };
+  try {
+    reserve = await profileRepository.reserveConsultorioQuestion(userId);
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : 'Error al reservar cupo';
+    res.status(500).json({ error: message });
+    return;
+  }
+
   if (!reserve.ok) {
     res.status(429).json({
       error:
@@ -43,7 +52,7 @@ export async function askAiController(req: Request, res: Response) {
       consultorioRemainingToday: reserve.remainingAfter,
     });
   } catch (err) {
-    await profileRepository.releaseConsultorioQuestion(userId);
+    await profileRepository.releaseConsultorioQuestion(userId).catch(() => {});
     const message =
       err instanceof Error ? err.message : 'Error al consultar la IA';
     res.status(500).json({ error: message });
