@@ -8,13 +8,15 @@ import type {
 } from '../../domain/market.types';
 
 const MAX_CANDLES = 500;
+/** Con rango `max` el histórico puede ser muy largo; subimos el tope para ver más años en velas diarias. */
+const MAX_CANDLES_MAX_RANGE = 2500;
 const CACHE_TTL_MS = 30_000;
 const MAX_SYMBOL_LENGTH = 15;
 
 const VALID_TIMEFRAMES: CandleTimeframe[] = ['1h', '6h', '1d', '1mo'];
 
 /** Rangos que el usuario puede elegir (periodo de visualización). */
-const ALLOWED_RANGES: CandleRange[] = ['1wk', '1mo', '3mo', '6mo', '1y'];
+const ALLOWED_RANGES: CandleRange[] = ['1wk', '1mo', '3mo', '6mo', '1y', 'max'];
 
 /**
  * Yahoo Finance solo devuelve datos 1h para ~60 días. Para timeframe 6h (interval 1h)
@@ -117,7 +119,7 @@ export class GetCandlesByTimeframeUseCase {
     // Para velas 6h o 1h pedimos datos 1h al proveedor; Yahoo limita 1h a ~60 días.
     if (
       (timeframe === '6h' || timeframe === '1h') &&
-      (range === '6mo' || range === '1y')
+      (range === '6mo' || range === '1y' || range === 'max')
     ) {
       range = MAX_RANGE_FOR_1H;
     }
@@ -146,8 +148,10 @@ export class GetCandlesByTimeframeUseCase {
     // Para 1h no agregamos; devolvemos las velas 1h tal cual
 
     candles.sort((a, b) => a.t - b.t);
-    if (candles.length > MAX_CANDLES) {
-      candles = candles.slice(-MAX_CANDLES);
+    const cap =
+      range === 'max' ? MAX_CANDLES_MAX_RANGE : MAX_CANDLES;
+    if (candles.length > cap) {
+      candles = candles.slice(-cap);
     }
 
     const response: CandlesResponse = {

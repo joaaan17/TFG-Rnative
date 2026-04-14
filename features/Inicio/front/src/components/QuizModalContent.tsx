@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { SlideInRight, SlideOutLeft } from 'react-native-reanimated';
+import { X } from 'lucide-react-native';
 import { Hierarchy } from '@/design-system/typography';
 import { Text } from '@/shared/components/ui/text';
 import { Button } from '@/shared/components/ui/button';
@@ -25,11 +26,41 @@ export type QuizModalContentProps = {
   onClose: () => void;
   /** Se llama una vez cuando el usuario completa el test (todas las preguntas respondidas). Recibe el nº de aciertos. */
   onQuizComplete?: (correctCount: number) => void;
-  /** Callback para reportar la altura del contenido (para ajustar el modal) */
-  onContentSizeChange?: (width: number, height: number) => void;
 };
 
 const PASS_THRESHOLD = 0.5; // 50% para aprobar
+
+function QuizCloseBar({
+  onClose,
+  palette,
+}: {
+  onClose: () => void;
+  palette: ReturnType<typeof usePalette>;
+}) {
+  const insets = useSafeAreaInsets();
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        paddingTop: Math.max(insets.top, 8) + 4,
+        paddingHorizontal: 12,
+        paddingBottom: 8,
+      }}
+    >
+      <Pressable
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel="Cerrar test"
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
+      >
+        <X size={24} color={palette.text} strokeWidth={2.25} />
+      </Pressable>
+    </View>
+  );
+}
 
 export function QuizModalContent({
   quiz,
@@ -37,8 +68,8 @@ export function QuizModalContent({
   onAnswer,
   loading,
   error,
+  onClose,
   onQuizComplete,
-  onContentSizeChange,
 }: QuizModalContentProps) {
   const palette = usePalette();
   const styles = useMemo(() => createQuizStyles(palette), [palette]);
@@ -83,36 +114,29 @@ export function QuizModalContent({
     }
   };
 
-  const reportLayout = (w: number, h: number) =>
-    onContentSizeChange?.(w, h);
-
   if (loading) {
     return (
-      <View
-        style={[styles.container, styles.loadingContainer]}
-        onLayout={(e) =>
-          reportLayout(e.nativeEvent.layout.width, e.nativeEvent.layout.height)
-        }
-      >
-        <LoadingNewsOverlay visible messages={QUIZ_LOADING_MESSAGES} />
+      <View style={{ flex: 1, minHeight: 0 }}>
+        <QuizCloseBar onClose={onClose} palette={palette} />
+        <View style={[styles.container, styles.loadingContainer, { flex: 1 }]}>
+          <LoadingNewsOverlay visible messages={QUIZ_LOADING_MESSAGES} />
+        </View>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View
-        style={[styles.container, styles.errorContainer]}
-        onLayout={(e) =>
-          reportLayout(e.nativeEvent.layout.width, e.nativeEvent.layout.height)
-        }
-      >
-        <View style={styles.errorCard}>
-          <Text
-            style={[Hierarchy.body, { color: palette.icon ?? palette.text }]}
-          >
-            {error}
-          </Text>
+      <View style={{ flex: 1, minHeight: 0 }}>
+        <QuizCloseBar onClose={onClose} palette={palette} />
+        <View style={[styles.container, styles.errorContainer, { flex: 1 }]}>
+          <View style={styles.errorCard}>
+            <Text
+              style={[Hierarchy.body, { color: palette.icon ?? palette.text }]}
+            >
+              {error}
+            </Text>
+          </View>
         </View>
       </View>
     );
@@ -120,18 +144,16 @@ export function QuizModalContent({
 
   if (!quiz || !quiz.questions?.length) {
     return (
-      <View
-        style={[styles.container, styles.errorContainer]}
-        onLayout={(e) =>
-          reportLayout(e.nativeEvent.layout.width, e.nativeEvent.layout.height)
-        }
-      >
-        <View style={styles.errorCard}>
-          <Text
-            style={[Hierarchy.body, { color: palette.icon ?? palette.text }]}
-          >
-            No se pudo generar el quiz.
-          </Text>
+      <View style={{ flex: 1, minHeight: 0 }}>
+        <QuizCloseBar onClose={onClose} palette={palette} />
+        <View style={[styles.container, styles.errorContainer, { flex: 1 }]}>
+          <View style={styles.errorCard}>
+            <Text
+              style={[Hierarchy.body, { color: palette.icon ?? palette.text }]}
+            >
+              No se pudo generar el quiz.
+            </Text>
+          </View>
         </View>
       </View>
     );
@@ -151,7 +173,8 @@ export function QuizModalContent({
   // Modo repaso: mostrar pregunta seleccionada desde resultados
   if (allAnswered && isReviewing) {
     return (
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, minHeight: 0 }}>
+        <QuizCloseBar onClose={onClose} palette={palette} />
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={[
@@ -159,7 +182,6 @@ export function QuizModalContent({
             { paddingBottom: BUTTON_AREA_HEIGHT + 8 },
           ]}
           showsVerticalScrollIndicator={false}
-          onContentSizeChange={(w, h) => reportLayout(w, h)}
         >
           <View style={styles.sectionWrap}>
             <View style={styles.sectionAccent} />
@@ -229,12 +251,13 @@ export function QuizModalContent({
     const xpEarned = getQuizXpForCorrectCount(correctCount);
 
     return (
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.resultsContent}
-        showsVerticalScrollIndicator={false}
-        onContentSizeChange={(w, h) => reportLayout(w, h)}
-      >
+      <View style={{ flex: 1, minHeight: 0 }}>
+        <QuizCloseBar onClose={onClose} palette={palette} />
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.resultsContent}
+          showsVerticalScrollIndicator={false}
+        >
         <View style={styles.resultsSectionWrap}>
           <View style={styles.sectionAccent} />
           <Text
@@ -347,6 +370,7 @@ export function QuizModalContent({
           </Text>
         </View>
       </ScrollView>
+      </View>
     );
   }
 
@@ -354,7 +378,8 @@ export function QuizModalContent({
   const progressPct = total > 0 ? (currentIndex + 1) / total : 0;
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, minHeight: 0 }}>
+      <QuizCloseBar onClose={onClose} palette={palette} />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -362,7 +387,6 @@ export function QuizModalContent({
           { paddingBottom: BUTTON_AREA_HEIGHT + 8 },
         ]}
         showsVerticalScrollIndicator={false}
-        onContentSizeChange={(w, h) => reportLayout(w, h)}
       >
         <View style={styles.sectionWrap}>
           <View style={styles.sectionAccent} />

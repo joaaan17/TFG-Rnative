@@ -5,6 +5,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import Animated, { Easing, FadeIn, FadeOut } from 'react-native-reanimated';
 import { LightweightChartView } from '@/features/market-chart';
 import type { Candle } from '@/features/market-chart';
 import { Text } from '@/shared/components/ui/text';
@@ -115,6 +116,10 @@ function expandToHourlyPoints(
 
 /** Intervalo de refresco para que la línea del gráfico se actualice con el valor global (backend recalcula con precios actuales). */
 const CHART_REFRESH_INTERVAL_MS = 10 * 60 * 1000;
+
+/** Misma transición que en PortfolioChart al cambiar rango o modo (Invertido / Valor cartera). */
+const CHART_FADE_IN_MS = 240;
+const CHART_FADE_OUT_MS = 160;
 
 export type PortfolioPerformanceChartProps = {
   token: string | null;
@@ -273,21 +278,31 @@ export function PortfolioPerformanceChart({
 
       {candles.length > 0 && (
         <View style={{ position: 'relative', minHeight: height }}>
-          <LightweightChartView
+          <Animated.View
             key={`perf-${mode}-${range}`}
-            candles={candles}
-            height={height}
-            seriesType="line"
-            intraday={range === '1D'}
-            theme={{
-              layoutBackgroundColor:
-                palette.mainBackground ?? palette.background,
-              textColor: palette.text,
-              gridColor: palette.surfaceBorder ?? '#CBD5E1',
-              upColor: palette.primary,
-              fontSize: Hierarchy.captionSmall?.fontSize ?? 11,
-            }}
-          />
+            entering={FadeIn.duration(CHART_FADE_IN_MS).easing(
+              Easing.out(Easing.cubic),
+            )}
+            exiting={FadeOut.duration(CHART_FADE_OUT_MS).easing(
+              Easing.in(Easing.ease),
+            )}
+            style={{ overflow: 'hidden' }}
+          >
+            <LightweightChartView
+              candles={candles}
+              height={height}
+              seriesType="line"
+              intraday={range === '1D'}
+              theme={{
+                layoutBackgroundColor:
+                  palette.mainBackground ?? palette.background,
+                textColor: palette.text,
+                gridColor: palette.surfaceBorder ?? '#CBD5E1',
+                upColor: palette.primary,
+                fontSize: Hierarchy.captionSmall?.fontSize ?? 11,
+              }}
+            />
+          </Animated.View>
           {isLoading && (
             <View
               pointerEvents="none"

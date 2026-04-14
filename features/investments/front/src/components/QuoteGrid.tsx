@@ -22,13 +22,22 @@ function formatCompact(n: number | null): string {
   return n.toFixed(0);
 }
 
-const ROWS: { label: string; getValue: (q: QuoteSnapshot) => string }[] = [
-  { label: 'Open', getValue: (q) => formatPrice(q.open) },
-  { label: 'High', getValue: (q) => formatPrice(q.high) },
-  { label: 'Low', getValue: (q) => formatPrice(q.low) },
-  { label: 'Volume', getValue: (q) => formatCompact(q.volume) },
-  { label: 'Mkt Cap', getValue: (q) => formatCompact(q.marketCap) },
-  { label: 'Moneda', getValue: (q) => q.currency ?? EMPTY },
+/** `termKey` enlaza con FINANCIAL_TERMS; `label` es solo texto en pantalla. */
+const ROWS: {
+  label: string;
+  termKey: string;
+  getValue: (q: QuoteSnapshot) => string;
+}[] = [
+  { label: 'Apertura', termKey: 'Open', getValue: (q) => formatPrice(q.open) },
+  { label: 'Máximo', termKey: 'High', getValue: (q) => formatPrice(q.high) },
+  { label: 'Mínimo', termKey: 'Low', getValue: (q) => formatPrice(q.low) },
+  { label: 'Volumen', termKey: 'Volume', getValue: (q) => formatCompact(q.volume) },
+  {
+    label: 'Cap. mercado',
+    termKey: 'Mkt Cap',
+    getValue: (q) => formatCompact(q.marketCap),
+  },
+  { label: 'Moneda', termKey: 'Moneda', getValue: (q) => q.currency ?? EMPTY },
 ];
 
 export type QuoteGridProps = {
@@ -41,10 +50,12 @@ export function QuoteGrid({ quote, palette }: QuoteGridProps) {
   const mutedColor = palette.icon ?? palette.text;
   const borderColor = palette.surfaceBorder ?? palette.surfaceMuted;
 
-  const [tooltip, setTooltip] = useState<{ title: string; desc: string } | null>(null);
-  const openTooltip = useCallback((label: string) => {
-    const desc = FINANCIAL_TERMS[label];
-    if (desc) setTooltip({ title: label, desc });
+  const [tooltip, setTooltip] = useState<{ title: string; desc: string } | null>(
+    null,
+  );
+  const openTooltip = useCallback((title: string, termKey: string) => {
+    const desc = FINANCIAL_TERMS[termKey];
+    if (desc) setTooltip({ title, desc });
   }, []);
 
   return (
@@ -64,10 +75,10 @@ export function QuoteGrid({ quote, palette }: QuoteGridProps) {
           gap: 10,
         }}
       >
-        {ROWS.map(({ label, getValue }) => (
+        {ROWS.map(({ label, termKey, getValue }) => (
           <Pressable
-            key={label}
-            onPress={() => openTooltip(label)}
+            key={termKey}
+            onPress={() => openTooltip(label, termKey)}
             accessibilityRole="button"
             accessibilityHint="Toca para ver la explicación"
             style={({ pressed }) => ({

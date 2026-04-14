@@ -59,6 +59,10 @@ export const FINANCIAL_TERMS: Record<string, string> = {
     'Afina la comparación con competidores directos: empresas de la misma industria suelen tener modelos de negocio y márgenes más parecidos que empresas del mismo sector pero de otra industria.',
 
   // -- Tu posición (MarketCandlesModal) --
+  'Precio actual':
+    'Cotización por acción (o por unidad del activo) en este momento, según la fuente de datos de INVESTIA.\n\n' +
+    'Es el mismo valor que se usa para calcular el valor de tu posición y el beneficio no realizado. Puede variar ligeramente respecto al último punto del gráfico si el gráfico muestra el cierre de un periodo distinto o datos con otro retraso.',
+
   Acciones:
     'Número de acciones que posees de este activo en tu cartera de INVESTIA.\n\n' +
     'Se actualiza con cada compra (suma) y cada venta (resta). Si el número tiene decimales, es porque en alguna operación se permitió fracciones o el cálculo interno mantiene precisión. Para el valor de tu posición se multiplica este número por el precio de mercado actual.',
@@ -95,6 +99,10 @@ export const FINANCIAL_TERMS: Record<string, string> = {
   '1 a':
     'Rango de visualización: aproximadamente un año completo.\n\n' +
     'Ofrece perspectiva anual: estacionalidad, grandes subidas o caídas y cómo el activo se comportó frente a un año de referencia. Para inversión de largo plazo, es una vista muy habitual.',
+
+  Total:
+    'Rango de visualización: el máximo histórico disponible para el activo según el proveedor de datos (desde una fecha muy temprana hasta hoy).\n\n' +
+    'La granularidad la marca el selector inferior (1h, 6h, 1D, 1M): con velas diarias o mensuales verás más años; con intradía el proveedor suele limitar el periodo. En la app puede mostrarse una muestra recortada si el listado es muy largo, para mantener el gráfico fluido.',
 
   // -- Selector de timeframe (parte inferior del gráfico) --
   '1h':

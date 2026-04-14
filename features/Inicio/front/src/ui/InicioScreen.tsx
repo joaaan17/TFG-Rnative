@@ -328,10 +328,6 @@ export function InicioScreen() {
   } = useInicioViewModel();
 
   const [refreshing, setRefreshing] = useState(false);
-  const [quizContentHeight, setQuizContentHeight] = useState(0);
-  const handleQuizContentSize = useCallback((_w: number, h: number) => {
-    setQuizContentHeight(h);
-  }, []);
 
   const handleOpenQuizFromNews = useCallback(() => {
     openQuiz();
@@ -472,9 +468,10 @@ export function InicioScreen() {
       <CardModal
         open={isQuizModalOpen}
         onClose={closeQuizModal}
-        maxHeightPct={0.94}
+        maxHeightPct={1}
         scrollable
-        contentHeight={quizContentHeight}
+        contentNoPaddingTop
+        contentBackgroundColor={palette.background}
       >
         <QuizModalContent
           quiz={quiz}
@@ -484,7 +481,6 @@ export function InicioScreen() {
           loading={loadingQuiz}
           error={error}
           onClose={closeQuizModal}
-          onContentSizeChange={handleQuizContentSize}
         />
       </CardModal>
     </>

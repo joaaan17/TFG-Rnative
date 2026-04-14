@@ -67,10 +67,10 @@ export const searchMarketController = async (
 };
 
 const VALID_TIMEFRAMES: CandleTimeframe[] = ['1h', '6h', '1d', '1mo'];
-const VALID_RANGES: CandleRange[] = ['1wk', '1mo', '3mo', '6mo', '1y'];
+const VALID_RANGES: CandleRange[] = ['1wk', '1mo', '3mo', '6mo', '1y', 'max'];
 
 /**
- * GET /api/market/candles?symbol=XXX&timeframe=1h|6h|1d|1mo&range=1wk|1mo|3mo|6mo|1y
+ * GET /api/market/candles?symbol=XXX&timeframe=1h|6h|1d|1mo&range=1wk|1mo|3mo|6mo|1y|max
  * range es opcional; si no se envía se usa el rango por defecto del timeframe.
  */
 export const getCandlesController = async (

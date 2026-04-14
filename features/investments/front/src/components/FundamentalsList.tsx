@@ -16,28 +16,48 @@ function formatNum(n: number | null): string {
   return n.toFixed(2);
 }
 
+/** `termKey` enlaza con FINANCIAL_TERMS; `label` es solo texto en pantalla. */
 const ROWS: {
   label: string;
   hint: string;
+  termKey: string;
   getValue: (f: FundamentalsSnapshot) => string;
 }[] = [
-  { label: 'PER (P/E)', hint: 'Valoración', getValue: (f) => formatNum(f.pe) },
-  { label: 'EPS', hint: 'Ganancias', getValue: (f) => formatNum(f.eps) },
   {
-    label: 'Quick Ratio',
+    label: 'PER (cotización/beneficio)',
+    hint: 'Valoración',
+    termKey: 'PER (P/E)',
+    getValue: (f) => formatNum(f.pe),
+  },
+  {
+    label: 'BPA',
+    hint: 'Ganancias',
+    termKey: 'EPS',
+    getValue: (f) => formatNum(f.eps),
+  },
+  {
+    label: 'Liquidez inmediata',
     hint: 'Solidez',
+    termKey: 'Quick Ratio',
     getValue: (f) => formatNum(f.quickRatio),
   },
-  { label: 'Beta', hint: 'Riesgo', getValue: (f) => formatNum(f.beta) },
+  { label: 'Beta', hint: 'Riesgo', termKey: 'Beta', getValue: (f) => formatNum(f.beta) },
   {
-    label: 'Market Cap',
+    label: 'Cap. mercado',
     hint: 'Dimensión',
+    termKey: 'Market Cap',
     getValue: (f) => formatNum(f.marketCap),
   },
-  { label: 'Sector', hint: 'Área', getValue: (f) => f.sector ?? EMPTY },
+  {
+    label: 'Sector',
+    hint: 'Área',
+    termKey: 'Sector',
+    getValue: (f) => f.sector ?? EMPTY,
+  },
   {
     label: 'Industria',
     hint: 'Actividad',
+    termKey: 'Industria',
     getValue: (f) => f.industry ?? EMPTY,
   },
 ];
@@ -55,10 +75,12 @@ export function FundamentalsList({
   const mutedColor = palette.icon ?? palette.text;
   const borderColor = palette.surfaceBorder ?? palette.surfaceMuted;
 
-  const [tooltip, setTooltip] = useState<{ title: string; desc: string } | null>(null);
-  const openTooltip = useCallback((label: string) => {
-    const desc = FINANCIAL_TERMS[label];
-    if (desc) setTooltip({ title: label, desc });
+  const [tooltip, setTooltip] = useState<{ title: string; desc: string } | null>(
+    null,
+  );
+  const openTooltip = useCallback((title: string, termKey: string) => {
+    const desc = FINANCIAL_TERMS[termKey];
+    if (desc) setTooltip({ title, desc });
   }, []);
 
   return (
@@ -72,10 +94,10 @@ export function FundamentalsList({
         Fundamentales
       </Text>
       <View style={{ gap: 8 }}>
-        {ROWS.map(({ label, hint, getValue }) => (
+        {ROWS.map(({ label, hint, termKey, getValue }) => (
           <Pressable
-            key={label}
-            onPress={() => openTooltip(label)}
+            key={termKey}
+            onPress={() => openTooltip(label, termKey)}
             accessibilityRole="button"
             accessibilityHint="Toca para ver la explicación"
             style={({ pressed }) => ({

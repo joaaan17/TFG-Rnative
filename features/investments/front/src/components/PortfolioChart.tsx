@@ -6,6 +6,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import Animated, { Easing, FadeIn, FadeOut } from 'react-native-reanimated';
 import { BarChart3, LineChart } from 'lucide-react-native';
 import {
   LightweightChartView,
@@ -28,6 +29,7 @@ const RANGE_OPTIONS: { value: CandleRange; label: string }[] = [
   { value: '3mo', label: '3 m' },
   { value: '6mo', label: '6 m' },
   { value: '1y', label: '1 a' },
+  { value: 'max', label: 'Total' },
 ];
 
 const TIMEFRAME_OPTIONS: { value: CandleTimeframe; label: string }[] = [
@@ -38,6 +40,10 @@ const TIMEFRAME_OPTIONS: { value: CandleTimeframe; label: string }[] = [
 ];
 
 const CHART_PADDING_HORIZONTAL = 20;
+
+/** Transición suave al cambiar rango, timeframe o línea/velas. */
+const CHART_FADE_IN_MS = 240;
+const CHART_FADE_OUT_MS = 160;
 
 function apiCandlesToChartCandles(
   candles: {
@@ -84,7 +90,7 @@ export function PortfolioChart({
   currentPrice,
 }: PortfolioChartProps) {
   const palette = usePalette();
-  const [range, setRange] = useState<CandleRange>('1mo');
+  const [range, setRange] = useState<CandleRange>('6mo');
   const [timeframe, setTimeframe] = useState<CandleTimeframe>('1d');
   const [chartMode, setChartMode] = useState<ChartSeriesType>('line');
 
@@ -233,22 +239,32 @@ export function PortfolioChart({
       {/* Gráfico */}
       {!loading && !error && chartCandles.length > 0 && (
         <>
-          <LightweightChartView
-            key={`chart-${symbol}-${timeframe}-${range}`}
-            candles={chartCandles}
-            height={height}
-            seriesType={chartMode}
-            priceLines={priceLines}
-            theme={{
-              layoutBackgroundColor:
-                palette.mainBackground ?? palette.background,
-              textColor: palette.text,
-              gridColor: palette.surfaceBorder ?? '#D6DEE8',
-              upColor: palette.primary,
-              downColor: `${palette.primary}66`,
-              fontSize: Hierarchy.captionSmall?.fontSize ?? 11,
-            }}
-          />
+          <Animated.View
+            key={`chart-${symbol}-${timeframe}-${range}-${chartMode}`}
+            entering={FadeIn.duration(CHART_FADE_IN_MS).easing(
+              Easing.out(Easing.cubic),
+            )}
+            exiting={FadeOut.duration(CHART_FADE_OUT_MS).easing(
+              Easing.in(Easing.ease),
+            )}
+            style={{ overflow: 'hidden' }}
+          >
+            <LightweightChartView
+              candles={chartCandles}
+              height={height}
+              seriesType={chartMode}
+              priceLines={priceLines}
+              theme={{
+                layoutBackgroundColor:
+                  palette.mainBackground ?? palette.background,
+                textColor: palette.text,
+                gridColor: palette.surfaceBorder ?? '#D6DEE8',
+                upColor: palette.primary,
+                downColor: `${palette.primary}66`,
+                fontSize: Hierarchy.captionSmall?.fontSize ?? 11,
+              }}
+            />
+          </Animated.View>
           {/* Selector de timeframe + tipo (parte inferior) */}
           <View
             style={{
