@@ -97,24 +97,32 @@ export class PortfolioAnalyticsService {
     const cacheRange = RANGE_TO_CACHE[range];
 
     for (const symbol of symbols) {
-      const { candles, cacheStatus } =
-        await this.getHistoricalDaily.getHistoricalDaily(
-          symbol,
-          cacheRange,
-          requestId,
+      try {
+        const { candles, cacheStatus } =
+          await this.getHistoricalDaily.getHistoricalDaily(
+            symbol,
+            cacheRange,
+            requestId,
+          );
+        cacheStatuses.push(cacheStatus);
+        console.log(
+          `${LOG_PREFIX} priceHistory cache ${cacheStatus} por símbolo ${symbol}`,
         );
-      cacheStatuses.push(cacheStatus);
-      console.log(
-        `${LOG_PREFIX} priceHistory cache ${cacheStatus} por símbolo ${symbol}`,
-      );
-      const byDay = new Map<number, number>();
-      for (const c of candles) {
-        const tMs =
-          typeof c.t === 'number' && c.t < 1e12 ? c.t * 1000 : (c.t as number);
-        const d = dayStart(new Date(tMs));
-        byDay.set(d, c.c);
+        const byDay = new Map<number, number>();
+        for (const c of candles) {
+          const tMs =
+            typeof c.t === 'number' && c.t < 1e12 ? c.t * 1000 : (c.t as number);
+          const d = dayStart(new Date(tMs));
+          byDay.set(d, c.c);
+        }
+        priceBySymbolByDay.set(symbol, byDay);
+      } catch (err) {
+        console.warn(
+          `${LOG_PREFIX} getHistoricalDaily failed for ${symbol}, skipping:`,
+          err instanceof Error ? err.message : err,
+        );
+        cacheStatuses.push('ERROR');
       }
-      priceBySymbolByDay.set(symbol, byDay);
     }
 
     const txsBeforeStart = allTxs.filter(
@@ -178,21 +186,29 @@ export class PortfolioAnalyticsService {
     const priceBySymbolByHour = new Map<string, Map<number, number>>();
 
     for (const symbol of symbols) {
-      const { candles, cacheStatus } =
-        await this.getHistoricalHourly!.getHistoricalHourly(
-          symbol,
-          '5d',
-          requestId,
+      try {
+        const { candles, cacheStatus } =
+          await this.getHistoricalHourly!.getHistoricalHourly(
+            symbol,
+            '5d',
+            requestId,
+          );
+        cacheStatuses.push(cacheStatus);
+        const byHour = new Map<number, number>();
+        for (const c of candles) {
+          const tMs =
+            typeof c.t === 'number' && c.t < 1e12 ? c.t * 1000 : (c.t as number);
+          const h = hourStart(tMs);
+          byHour.set(h, c.c);
+        }
+        priceBySymbolByHour.set(symbol, byHour);
+      } catch (err) {
+        console.warn(
+          `${LOG_PREFIX} getHistoricalHourly failed for ${symbol}, skipping:`,
+          err instanceof Error ? err.message : err,
         );
-      cacheStatuses.push(cacheStatus);
-      const byHour = new Map<number, number>();
-      for (const c of candles) {
-        const tMs =
-          typeof c.t === 'number' && c.t < 1e12 ? c.t * 1000 : (c.t as number);
-        const h = hourStart(tMs);
-        byHour.set(h, c.c);
+        cacheStatuses.push('ERROR');
       }
-      priceBySymbolByHour.set(symbol, byHour);
     }
 
     const twentyFourHoursMs = 24 * 60 * 60 * 1000;

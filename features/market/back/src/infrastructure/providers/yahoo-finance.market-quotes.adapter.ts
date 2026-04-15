@@ -1,7 +1,9 @@
 import type { MarketQuotesPort } from '../../domain/market.ports';
 import type { QuoteItem } from '../../domain/market.types';
 
-const QUOTES_TIMEOUT_MS = 10_000;
+const QUOTES_TIMEOUT_MS = 15_000;
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 1_500;
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -18,6 +20,10 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
         reject(err);
       });
   });
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 export class YahooFinanceMarketQuotesAdapter implements MarketQuotesPort {
@@ -39,7 +45,19 @@ export class YahooFinanceMarketQuotesAdapter implements MarketQuotesPort {
     });
     const client = new YahooFinanceClass();
 
-    const raw = await withTimeout(client.quote(normalized), QUOTES_TIMEOUT_MS);
+    let raw: unknown;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        raw = await withTimeout(client.quote(normalized), QUOTES_TIMEOUT_MS);
+        break;
+      } catch (err) {
+        if (attempt === MAX_RETRIES) throw err;
+        console.warn(
+          `[YahooQuotes] attempt ${attempt + 1} failed (${err instanceof Error ? err.message : err}), retrying in ${RETRY_DELAY_MS}ms…`,
+        );
+        await sleep(RETRY_DELAY_MS);
+      }
+    }
 
     const list = Array.isArray(raw) ? raw : [];
     const results: QuoteItem[] = [];

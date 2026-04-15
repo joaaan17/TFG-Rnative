@@ -63,10 +63,22 @@ export class GetDashboardSummaryUseCase {
       );
     }
 
+    const fallbackOverview: PortfolioOverview = {
+      totalValue: 0,
+      allocation: [],
+      markers: [],
+    };
+
     const [portfolio, overview, transactions, performance1D] =
       await Promise.all([
         this.portfolioRepository.findByUserId(uid),
-        this.getPortfolioOverview(uid, '1d', '6mo'),
+        this.getPortfolioOverview(uid, '1d', '6mo').catch((err) => {
+          console.warn(
+            `${LOG} getPortfolioOverview failed, using fallback:`,
+            err instanceof Error ? err.message : err,
+          );
+          return fallbackOverview;
+        }),
         this.transactionRepository.findByUserId(uid, 500),
         this.getPerformance1D(uid).catch(() => ({ points: [] })),
       ]);
@@ -79,7 +91,8 @@ export class GetDashboardSummaryUseCase {
       (sum, h) => sum + h.shares * h.avgBuyPrice,
       0,
     );
-    const totalValue = overview.totalValue;
+    const totalValue =
+      overview.totalValue > 0 ? overview.totalValue : totalInvested + portfolio.cashBalance;
     const totalProfitability = this.computeProfitability(
       totalValue - totalInvested,
       totalInvested,

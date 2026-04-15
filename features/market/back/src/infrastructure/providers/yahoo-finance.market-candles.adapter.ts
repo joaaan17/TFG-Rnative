@@ -5,7 +5,9 @@ import type {
   CandleRange,
 } from '../../domain/market.types';
 
-const CANDLES_TIMEOUT_MS = 8_000;
+const CANDLES_TIMEOUT_MS = 12_000;
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 1_500;
 
 /** period1/period2 en ms para cada range (desde ahora hacia atrás). */
 function rangeToPeriods(range: CandleRange): { period1: Date; period2: Date } {
@@ -81,6 +83,10 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 export class YahooFinanceMarketCandlesAdapter implements MarketCandlesPort {
   async getCandles(
     symbol: string,
@@ -99,14 +105,26 @@ export class YahooFinanceMarketCandlesAdapter implements MarketCandlesPort {
     const { period1, period2 } = rangeToPeriods(range);
     const yahooInterval = toYahooInterval(interval);
 
-    const raw = await withTimeout(
-      client.chart(symbol, {
-        period1,
-        period2,
-        interval: yahooInterval as '1d' | '1wk' | '1mo' | '1h' | '5m',
-      }),
-      CANDLES_TIMEOUT_MS,
-    );
+    let raw: unknown;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        raw = await withTimeout(
+          client.chart(symbol, {
+            period1,
+            period2,
+            interval: yahooInterval as '1d' | '1wk' | '1mo' | '1h' | '5m',
+          }),
+          CANDLES_TIMEOUT_MS,
+        );
+        break;
+      } catch (err) {
+        if (attempt === MAX_RETRIES) throw err;
+        console.warn(
+          `[YahooCandles] attempt ${attempt + 1} failed for ${symbol} (${err instanceof Error ? err.message : err}), retrying in ${RETRY_DELAY_MS}ms…`,
+        );
+        await sleep(RETRY_DELAY_MS);
+      }
+    }
 
     const quotes =
       raw &&

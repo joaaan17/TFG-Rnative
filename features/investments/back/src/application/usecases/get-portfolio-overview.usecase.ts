@@ -109,13 +109,25 @@ export class GetPortfolioOverviewUseCase {
     }
 
     const symbols = holdings.map((h) => h.symbol.trim().toUpperCase());
-    const quotes = await this.getQuotes.getQuotes(symbols);
     const priceBySymbol: Record<string, number> = {};
-    quotes.forEach((q: { symbol: string; price: number | null }) => {
-      if (q.price != null && Number.isFinite(q.price)) {
-        priceBySymbol[q.symbol] = q.price;
+
+    try {
+      const quotes = await this.getQuotes.getQuotes(symbols);
+      quotes.forEach((q: { symbol: string; price: number | null }) => {
+        if (q.price != null && Number.isFinite(q.price)) {
+          priceBySymbol[q.symbol] = q.price;
+        }
+      });
+    } catch (err) {
+      console.warn(
+        '[PortfolioOverview] getQuotes failed, falling back to avgBuyPrice:',
+        err instanceof Error ? err.message : err,
+      );
+      for (const h of holdings) {
+        const sym = h.symbol.trim().toUpperCase();
+        if (h.avgBuyPrice > 0) priceBySymbol[sym] = h.avgBuyPrice;
       }
-    });
+    }
 
     const items: AllocationItem[] = holdings
       .map((h) => {
