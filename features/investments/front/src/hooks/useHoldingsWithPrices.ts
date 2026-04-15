@@ -6,6 +6,8 @@ export interface HoldingWithPrice extends PortfolioHolding {
   currentPrice?: number;
   currentValue?: number;
   changePercent?: number;
+  /** true when currentPrice comes from avgBuyPrice (market quote unavailable). */
+  isFallbackPrice?: boolean;
 }
 
 export function useHoldingsWithPrices(
@@ -15,7 +17,7 @@ export function useHoldingsWithPrices(
   const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const symbols = useMemo(
-    () => [...new Set((holdings ?? []).map((h) => h.symbol))],
+    () => [...new Set((holdings ?? []).map((h) => h.symbol.toUpperCase()))],
     [holdings],
   );
 
@@ -54,15 +56,23 @@ export function useHoldingsWithPrices(
   const holdingsWithPrice: HoldingWithPrice[] = useMemo(() => {
     if (!holdings?.length) return [];
     return holdings.map((h) => {
-      const currentPrice = prices[h.symbol];
+      const sym = h.symbol.toUpperCase();
+      const marketPrice = prices[sym];
+      const hasMarketPrice = marketPrice != null && Number.isFinite(marketPrice);
+      const currentPrice = hasMarketPrice
+        ? marketPrice
+        : h.avgBuyPrice > 0
+          ? h.avgBuyPrice
+          : undefined;
+      const isFallbackPrice = !hasMarketPrice && currentPrice != null;
       const currentValue =
         currentPrice != null
           ? Math.round(h.shares * currentPrice * 100) / 100
           : undefined;
       const changePercent =
-        currentPrice != null && h.avgBuyPrice > 0
+        hasMarketPrice && h.avgBuyPrice > 0
           ? Math.round(
-              ((currentPrice - h.avgBuyPrice) / h.avgBuyPrice) * 10000,
+              ((marketPrice - h.avgBuyPrice) / h.avgBuyPrice) * 10000,
             ) / 100
           : undefined;
       return {
@@ -70,6 +80,7 @@ export function useHoldingsWithPrices(
         currentPrice,
         currentValue,
         changePercent,
+        isFallbackPrice,
       };
     });
   }, [holdings, prices]);

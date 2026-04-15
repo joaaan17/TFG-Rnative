@@ -203,8 +203,23 @@ export class PriceCacheService {
 
     if (toFetch.length > 0) {
       const fetched = await this.fetchAndSetQuotes(toFetch, requestId);
+      const fetchedSymbols = new Set(fetched.map((f) => f.symbol.toUpperCase()));
       for (const item of fetched) {
         results.push(item);
+      }
+      for (const sym of toFetch) {
+        if (!fetchedSymbols.has(sym.toUpperCase())) {
+          log(`⚠️ Yahoo did not return ${sym}, adding placeholder`, {
+            requestId,
+          });
+          results.push({
+            symbol: sym,
+            name: sym,
+            price: undefined,
+            fetchedAt: now(),
+            cacheStatus: 'MISS_NO_DATA',
+          });
+        }
       }
     }
 

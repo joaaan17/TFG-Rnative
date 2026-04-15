@@ -202,6 +202,35 @@ export const getQuotesController = async (
     res.status(200).json({ quotes });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Quotes failed';
+    console.error('[market] Quotes error, trying cache-first fallback:', message);
+
+    const raw =
+      typeof req.query.symbols === 'string' ? req.query.symbols.trim() : '';
+    const fallbackSymbols = raw
+      ? raw
+          .split(',')
+          .map((s) => s.trim().toUpperCase())
+          .filter(Boolean)
+      : [];
+
+    if (fallbackSymbols.length > 0) {
+      try {
+        const { quotes: cached } = await priceCacheService.getQuotes(
+          fallbackSymbols,
+          'cache-first',
+        );
+        if (cached.length > 0) {
+          console.log(
+            `[market] Quotes fallback: serving ${cached.length}/${fallbackSymbols.length} from cache`,
+          );
+          res.status(200).json({ quotes: cached, partial: true });
+          return;
+        }
+      } catch {
+        // cache-first also failed
+      }
+    }
+
     const isBadGateway =
       message.includes('timeout') ||
       message.includes('Yahoo') ||
@@ -209,16 +238,14 @@ export const getQuotesController = async (
       message.includes('ECONNREFUSED') ||
       message.includes('ETIMEDOUT');
     if (isBadGateway) {
-      console.error('[market] Quotes upstream error:', err);
       res
         .status(502)
-        .json({ message: 'Quotes service temporarily unavailable.' });
+        .json({ message: 'Quotes service temporarily unavailable.', quotes: [] });
       return;
     }
-    console.error('[market] Quotes error:', err);
     res
       .status(500)
-      .json({ message: 'An error occurred while fetching quotes.' });
+      .json({ message: 'An error occurred while fetching quotes.', quotes: [] });
   }
 };
 

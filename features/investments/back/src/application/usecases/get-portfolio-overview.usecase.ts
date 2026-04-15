@@ -123,9 +123,12 @@ export class GetPortfolioOverviewUseCase {
         '[PortfolioOverview] getQuotes failed, falling back to avgBuyPrice:',
         err instanceof Error ? err.message : err,
       );
-      for (const h of holdings) {
-        const sym = h.symbol.trim().toUpperCase();
-        if (h.avgBuyPrice > 0) priceBySymbol[sym] = h.avgBuyPrice;
+    }
+
+    for (const h of holdings) {
+      const sym = h.symbol.trim().toUpperCase();
+      if (!(sym in priceBySymbol) && h.avgBuyPrice > 0) {
+        priceBySymbol[sym] = h.avgBuyPrice;
       }
     }
 

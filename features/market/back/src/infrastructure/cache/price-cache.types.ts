@@ -9,6 +9,7 @@ export type CacheStatus =
   | 'HIT_L1'
   | 'HIT_L2'
   | 'MISS_FETCH'
+  | 'MISS_NO_DATA'
   | 'STALE_SERVED_REFRESHING'
   | 'INFLIGHT_JOINED';
 

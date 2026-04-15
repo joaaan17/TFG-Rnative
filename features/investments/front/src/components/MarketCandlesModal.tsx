@@ -220,63 +220,65 @@ export function MarketCandlesModal({
                     />
                   ) : null}
 
-                  {holdingForSymbol && (
-                    <View style={{ marginTop: 20, marginBottom: 16 }}>
-                      {lastClose != null && (
-                        <Pressable
-                          onLongPress={() => openPosTooltip('Precio actual')}
-                          delayLongPress={400}
-                          style={({ pressed }) => ({
-                            marginBottom: 16,
-                            opacity: pressed ? 0.92 : 1,
-                          })}
-                          accessibilityRole="text"
-                          accessibilityLabel={`Precio actual ${lastClose.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} dólares`}
+                  {lastClose != null && (
+                    <Pressable
+                      onLongPress={() => openPosTooltip('Precio actual')}
+                      delayLongPress={400}
+                      style={({ pressed }) => ({
+                        marginTop: 20,
+                        marginBottom: holdingForSymbol ? 0 : 16,
+                        opacity: pressed ? 0.92 : 1,
+                      })}
+                      accessibilityRole="text"
+                      accessibilityLabel={`Precio actual ${lastClose.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} dólares`}
+                    >
+                      <View
+                        style={{
+                          borderRadius: 14,
+                          borderWidth: 0,
+                          backgroundColor:
+                            palette.surfaceMuted ?? `${palette.primary}0A`,
+                          paddingVertical: 14,
+                          paddingHorizontal: 16,
+                        }}
+                      >
+                        <Text
+                          style={[
+                            Hierarchy.caption,
+                            {
+                              color: palette.icon ?? palette.text,
+                              marginBottom: 6,
+                              letterSpacing: 1.2,
+                              textTransform: 'uppercase',
+                              opacity: 0.72,
+                            },
+                          ]}
                         >
-                          <View
-                            style={{
-                              borderRadius: 14,
-                              borderWidth: 0,
-                              backgroundColor:
-                                palette.surfaceMuted ?? `${palette.primary}0A`,
-                              paddingVertical: 14,
-                              paddingHorizontal: 16,
-                            }}
-                          >
-                            <Text
-                              style={[
-                                Hierarchy.caption,
-                                {
-                                  color: palette.icon ?? palette.text,
-                                  marginBottom: 6,
-                                  letterSpacing: 1.2,
-                                  textTransform: 'uppercase',
-                                  opacity: 0.72,
-                                },
-                              ]}
-                            >
-                              Precio actual
-                            </Text>
-                            <Text
-                              style={[
-                                Hierarchy.titleModalLarge,
-                                {
-                                  color: palette.primary,
-                                  fontWeight: '700',
-                                  letterSpacing: -0.5,
-                                  opacity: 0.88,
-                                },
-                              ]}
-                            >
-                              {lastClose.toLocaleString('es-ES', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}{' '}
-                              $
-                            </Text>
-                          </View>
-                        </Pressable>
-                      )}
+                          Precio actual
+                        </Text>
+                        <Text
+                          style={[
+                            Hierarchy.titleModalLarge,
+                            {
+                              color: palette.primary,
+                              fontWeight: '700',
+                              letterSpacing: -0.5,
+                              opacity: 0.88,
+                            },
+                          ]}
+                        >
+                          {lastClose.toLocaleString('es-ES', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}{' '}
+                          $
+                        </Text>
+                      </View>
+                    </Pressable>
+                  )}
+
+                  {holdingForSymbol && (
+                    <View style={{ marginTop: 16, marginBottom: 16 }}>
                       <Text
                         style={[
                           Hierarchy.titleSection,

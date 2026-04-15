@@ -394,6 +394,7 @@ export function InvestmentsScreen() {
             <View style={styles.assetsList}>
               {holdingsWithPrice.length > 0 ? (
                 holdingsWithPrice.map((h) => {
+                  const hasRealPrice = !h.isFallbackPrice && h.currentPrice != null;
                   const priceStr =
                     h.currentPrice != null
                       ? h.currentPrice.toLocaleString('es-ES', {
@@ -405,14 +406,18 @@ export function InvestmentsScreen() {
                     h.changePercent != null
                       ? `${h.changePercent >= 0 ? '+' : ''}${h.changePercent.toFixed(2)}%`
                       : '—';
-                  const changeVal =
-                    h.currentPrice != null
-                      ? (h.currentPrice - h.avgBuyPrice) * h.shares
-                      : 0;
-                  const changeStr = changeVal.toLocaleString('es-ES', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  });
+                  const changeVal = hasRealPrice
+                    ? (h.currentPrice! - h.avgBuyPrice) * h.shares
+                    : null;
+                  const changeStr =
+                    changeVal != null
+                      ? changeVal.toLocaleString('es-ES', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      : '—';
+                  const trend: 'up' | 'down' =
+                    changeVal != null && changeVal >= 0 ? 'up' : changeVal != null ? 'down' : 'up';
                   return (
                     <View key={h.symbol} style={styles.assetCardWrapper}>
                       <AssetCard
@@ -420,10 +425,10 @@ export function InvestmentsScreen() {
                         symbol={h.symbol}
                         shares={`${h.shares} ${h.symbol}`}
                         price={`${priceStr} $`}
-                        change={`${changeStr} $`}
+                        change={changeVal != null ? `${changeStr} $` : '— $'}
                         changePercent={changePercentStr}
-                        trend={changeVal >= 0 ? 'up' : 'down'}
-                        profits={`${changeStr} $`}
+                        trend={trend}
+                        profits={changeVal != null ? `${changeStr} $` : '— $'}
                         variant="primaryTransparent"
                         sparklineData={sparklines[h.symbol]}
                         logoUrl={getLogoUrlForSymbol(h.symbol)}

@@ -33,9 +33,18 @@ export async function getQuotes(
   });
   const url = `${getMarketBaseUrl()}/quotes?${params.toString()}`;
   const response = await fetch(url);
-  const data = await response.json();
+
+  let data: Record<string, unknown> | null = null;
+  try {
+    data = await response.json();
+  } catch {
+    // malformed JSON
+  }
 
   if (!response.ok) {
+    if (Array.isArray(data?.quotes)) {
+      return { quotes: data.quotes as MarketQuotesResponse['quotes'] };
+    }
     const message =
       typeof data?.message === 'string'
         ? data.message
@@ -43,5 +52,5 @@ export async function getQuotes(
     throw new Error(message);
   }
 
-  return data as MarketQuotesResponse;
+  return (data as unknown as MarketQuotesResponse) ?? { quotes: [] };
 }
