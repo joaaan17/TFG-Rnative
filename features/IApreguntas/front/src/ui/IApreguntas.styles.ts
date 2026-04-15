@@ -72,6 +72,13 @@ export function createIApreguntasStyles(palette: Palette) {
       lineHeight: 16,
       opacity: 0.85,
     },
+    /** Contador HH:MM:SS hasta la siguiente franja de 6 h (Europe/Madrid). */
+    quotaCountdown: {
+      fontSize: 15,
+      lineHeight: 22,
+      marginTop: 6,
+      letterSpacing: 0.4,
+    },
     inputArea: {
       paddingHorizontal: 20,
       paddingBottom: 20,

@@ -1,10 +1,11 @@
 /**
  * Cache persistente para Inicio: noticias, explicaciones educativas y quizzes.
- * Usa AsyncStorage. Titulares: caché global al dispositivo (misma lista para todos los usuarios).
- * TTL titulares alineado con el servidor (12 h); explicaciones/quizzes siguen por usuario.
+ * Usa AsyncStorage. Titulares: caché global al dispositivo; ventana horaria
+ * 08:30 / 15:00 Europe/Madrid (misma lógica que el backend).
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getHeadlinesSlotId } from '@/features/iaNoticiasEducativas/back/src/domain/headlines-refresh-schedule';
 import type {
   NewsPreview,
   EducationalNews,
@@ -12,9 +13,8 @@ import type {
 } from '../types/inicio.types';
 
 const STORAGE_PREFIX = '@inicio_cache_';
-/** Misma clave para todos los usuarios: todos deben ver las dos mismas noticias que el backend expone por ventana temporal. */
+/** Misma clave para todos los usuarios: mismas noticias que el backend por ventana temporal. */
 const HEADLINES_GLOBAL_KEY = `${STORAGE_PREFIX}headlines_global`;
-const TTL_HEADLINES_MS = 12 * 60 * 60 * 1000; // alinear con servidor (renovación cada 12 h)
 const TTL_EDU_MS = 2 * 24 * 60 * 60 * 1000; // 2 días
 const TTL_QUIZ_MS = 7 * 24 * 60 * 60 * 1000; // 7 días (quizzes estables)
 
@@ -47,16 +47,45 @@ async function setCached<T>(key: string, data: T): Promise<void> {
   }
 }
 
-/** Obtiene titulares desde caché si son recientes (global al dispositivo). */
-export async function getHeadlinesCached(): Promise<NewsPreview[] | null> {
-  const cached = await getCached<NewsPreview[]>(HEADLINES_GLOBAL_KEY);
-  if (!cached || !isFresh(cached.ts, TTL_HEADLINES_MS)) return null;
-  return cached.data;
+type HeadlinesStored = {
+  data: NewsPreview[];
+  slotId: string;
+  ts: number;
+};
+
+async function readHeadlinesRow(): Promise<HeadlinesStored | null> {
+  try {
+    const raw = await AsyncStorage.getItem(HEADLINES_GLOBAL_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as HeadlinesStored;
+    if (!parsed?.data || !Array.isArray(parsed.data)) return null;
+    if (typeof parsed.slotId !== 'string') return null;
+    return parsed;
+  } catch {
+    return null;
+  }
 }
 
-/** Guarda titulares en caché global. */
+/** Obtiene titulares desde caché si coinciden con la ventana horaria actual (Madrid). */
+export async function getHeadlinesCached(): Promise<NewsPreview[] | null> {
+  const row = await readHeadlinesRow();
+  if (!row) return null;
+  if (row.slotId !== getHeadlinesSlotId()) return null;
+  return row.data;
+}
+
+/** Guarda titulares en caché global con el slot horario actual. */
 export async function setHeadlinesCached(data: NewsPreview[]): Promise<void> {
-  await setCached(HEADLINES_GLOBAL_KEY, data);
+  try {
+    const payload: HeadlinesStored = {
+      data,
+      slotId: getHeadlinesSlotId(),
+      ts: Date.now(),
+    };
+    await AsyncStorage.setItem(HEADLINES_GLOBAL_KEY, JSON.stringify(payload));
+  } catch {
+    // Falla silenciosamente
+  }
 }
 
 /** Obtiene educational news desde cache si es reciente. */

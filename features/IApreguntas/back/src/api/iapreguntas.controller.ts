@@ -4,7 +4,7 @@ import { profileRepository } from '../../../../profile/back/src/config/profile.w
 import { askMarketAI } from '../config/iapreguntas.wiring';
 
 /**
- * Reserva cupo diario (2/día), llama a la IA y otorga XP solo si la respuesta es correcta.
+ * Reserva cupo del consultorio (2 por ventana de 6 h, Europe/Madrid), llama a la IA y otorga XP.
  */
 export async function askAiController(req: Request, res: Response) {
   const userId = req.auth?.userId;
@@ -33,7 +33,7 @@ export async function askAiController(req: Request, res: Response) {
   if (!reserve.ok) {
     res.status(429).json({
       error:
-        'Has alcanzado el límite de 2 preguntas al día en el consultorio. Vuelve mañana.',
+        'Has alcanzado el límite de 2 preguntas en esta ventana del consultorio (se renueva cada 6 horas, hora España).',
       consultorioRemainingToday: 0,
     });
     return;

@@ -25,7 +25,7 @@ export type InicioLoadOptions = {
   forceRefresh?: boolean;
 };
 
-/** Titulares: caché global al dispositivo (12 h). Pull-to-refresh fuerza API + bypass caché servidor. */
+/** Titulares: caché global por ventana 08:30 / 15:00 (Europe/Madrid). Pull-to-refresh fuerza API + bypass caché servidor. */
 export async function loadHeadlines(
   token: string,
   options: InicioLoadOptions,

@@ -32,7 +32,7 @@ export interface ProfileRepository {
     amount: number,
   ): Promise<{ awarded: boolean; newTotal: number }>;
   /**
-   * Reserva una pregunta al consultorio para el día actual (máx. 2).
+   * Reserva una pregunta al consultorio en la ventana actual de 6 h (Europe/Madrid, máx. 2).
    * Debe llamarse antes de invocar a la IA; si falla la IA, usar releaseConsultorioQuestion.
    */
   reserveConsultorioQuestion(

@@ -3,6 +3,10 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useWindowDimensions } from 'react-native';
 import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
 import { useAwardExperience } from '@/features/profile/front/src/hooks/useAwardExperience';
+import { getNextHeadlinesRefreshUtcMs } from '@/features/iaNoticiasEducativas/back/src/domain/headlines-refresh-schedule';
+import {
+  formatConsultorioResetCountdown,
+} from '@/features/profile/back/src/domain/consultorio-day.util';
 import {
   loadHeadlines,
   loadEducationalNews,
@@ -32,6 +36,8 @@ export type UseInicioViewModelResult = {
   closeQuizModal: () => void;
   onQuizComplete: (correctCount: number) => void;
   refreshHeadlines: () => Promise<void>;
+  /** HH:MM:SS hasta la próxima actualización (08:30 o 15:00, hora España). */
+  newsRefreshCountdownLabel: string | null;
 };
 
 export function useInicioViewModel(): UseInicioViewModelResult {
@@ -60,6 +66,9 @@ export function useInicioViewModel(): UseInicioViewModelResult {
   const [loadingNews, setLoadingNews] = React.useState(false);
   const [loadingQuiz, setLoadingQuiz] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [newsRefreshCountdownLabel, setNewsRefreshCountdownLabel] =
+    React.useState<string | null>(null);
+  const newsSilentRefreshRef = React.useRef(false);
 
   const scrollMaxHeight = React.useMemo(
     () => Math.max(200, windowHeight * 0.6),
@@ -70,9 +79,9 @@ export function useInicioViewModel(): UseInicioViewModelResult {
   const userId = session?.user?.id;
 
   const fetchHeadlines = React.useCallback(
-    async (forceRefresh = false) => {
+    async (forceRefresh = false, silent = false) => {
       if (!token || !userId) return;
-      if (!forceRefresh) setLoading(true);
+      if (!forceRefresh && !silent) setLoading(true);
       setError(null);
       try {
         const headlines = await loadHeadlines(token, { forceRefresh });
@@ -82,11 +91,34 @@ export function useInicioViewModel(): UseInicioViewModelResult {
         setError(msg);
         setNews([]);
       } finally {
-        if (!forceRefresh) setLoading(false);
+        if (!forceRefresh && !silent) setLoading(false);
       }
     },
     [token, userId],
   );
+
+  React.useEffect(() => {
+    if (news.length === 0) {
+      setNewsRefreshCountdownLabel(null);
+      return;
+    }
+
+    const tick = () => {
+      const nextAt = getNextHeadlinesRefreshUtcMs();
+      const ms = Math.max(0, nextAt - Date.now());
+      setNewsRefreshCountdownLabel(formatConsultorioResetCountdown(ms));
+      if (ms <= 0 && !newsSilentRefreshRef.current) {
+        newsSilentRefreshRef.current = true;
+        void fetchHeadlines(false, true).finally(() => {
+          newsSilentRefreshRef.current = false;
+        });
+      }
+    };
+
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [news.length, fetchHeadlines]);
 
   const openNews = React.useCallback(
     async (item: NewsPreview) => {
@@ -226,5 +258,6 @@ export function useInicioViewModel(): UseInicioViewModelResult {
     closeQuizModal,
     onQuizComplete,
     refreshHeadlines,
+    newsRefreshCountdownLabel,
   };
 }

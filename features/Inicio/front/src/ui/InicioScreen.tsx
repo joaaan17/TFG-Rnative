@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -325,6 +326,7 @@ export function InicioScreen() {
     closeQuizModal,
     onQuizComplete,
     refreshHeadlines,
+    newsRefreshCountdownLabel,
   } = useInicioViewModel();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -430,6 +432,44 @@ export function InicioScreen() {
                 cardHeight={cardHeight}
               />
             )}
+            ListFooterComponent={
+              news.length > 0 && newsRefreshCountdownLabel ? (
+                <View style={ui.newsRefreshFooter}>
+                  <Text
+                    style={[
+                      ui.newsRefreshLabel,
+                      { color: palette.icon ?? palette.text },
+                    ]}
+                  >
+                    Próxima actualización de noticias en
+                  </Text>
+                  <Text
+                    style={[
+                      ui.newsRefreshLabel,
+                      Hierarchy.bodySmallSemibold,
+                      {
+                        color: palette.primary,
+                        marginTop: 4,
+                        ...(Platform.OS === 'ios'
+                          ? { fontVariant: ['tabular-nums' as const] }
+                          : {}),
+                      },
+                    ]}
+                    selectable
+                  >
+                    {newsRefreshCountdownLabel}
+                  </Text>
+                  <Text
+                    style={[
+                      ui.newsRefreshHint,
+                      { color: palette.icon ?? palette.text },
+                    ]}
+                  >
+                    Actualización automática a las 08:30 y 15:00 (hora España).
+                  </Text>
+                </View>
+              ) : null
+            }
           />
         </View>
       )}

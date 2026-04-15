@@ -2,6 +2,7 @@ import {
   computeConsultorioRemainingToday,
   CONSULTORIO_PREGUNTAS_POR_DIA,
   getConsultorioDateKey,
+  getConsultorioSixHourSlotKey,
 } from '../../domain/consultorio-day.util';
 import {
   getDivisionFromExperience,
@@ -27,7 +28,17 @@ export class InMemoryProfileRepository implements ProfileRepository {
     const profile = InMemoryProfileRepository.profilesById.get(id) ?? null;
     if (!profile) return null;
     const experience = toExperienceNumber(profile.experience);
-    const c = InMemoryProfileRepository.consultorioByUser.get(id);
+    const dateKey = getConsultorioDateKey();
+    const slotKey = getConsultorioSixHourSlotKey();
+    let c = InMemoryProfileRepository.consultorioByUser.get(id);
+    if (
+      c &&
+      /^\d{4}-\d{2}-\d{2}$/.test(c.dayKey) &&
+      c.dayKey === dateKey
+    ) {
+      c = { dayKey: slotKey, count: c.count };
+      InMemoryProfileRepository.consultorioByUser.set(id, c);
+    }
     return {
       ...profile,
       nivel: getNivelFromExperience(experience),
@@ -136,10 +147,19 @@ export class InMemoryProfileRepository implements ProfileRepository {
   async reserveConsultorioQuestion(
     userId: string,
   ): Promise<{ ok: boolean; remainingAfter: number }> {
-    const todayKey = getConsultorioDateKey();
+    const dateKey = getConsultorioDateKey();
+    const slotKey = getConsultorioSixHourSlotKey();
     let state = InMemoryProfileRepository.consultorioByUser.get(userId);
-    if (!state || state.dayKey !== todayKey) {
-      state = { dayKey: todayKey, count: 0 };
+    if (
+      state &&
+      /^\d{4}-\d{2}-\d{2}$/.test(state.dayKey) &&
+      state.dayKey === dateKey
+    ) {
+      state = { dayKey: slotKey, count: state.count };
+      InMemoryProfileRepository.consultorioByUser.set(userId, state);
+    }
+    if (!state || state.dayKey !== slotKey) {
+      state = { dayKey: slotKey, count: 0 };
     }
     if (state.count >= CONSULTORIO_PREGUNTAS_POR_DIA) {
       return {
@@ -150,7 +170,7 @@ export class InMemoryProfileRepository implements ProfileRepository {
         ),
       };
     }
-    const next = { dayKey: todayKey, count: state.count + 1 };
+    const next = { dayKey: slotKey, count: state.count + 1 };
     InMemoryProfileRepository.consultorioByUser.set(userId, next);
     return {
       ok: true,

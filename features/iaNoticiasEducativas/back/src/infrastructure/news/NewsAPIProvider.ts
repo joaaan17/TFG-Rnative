@@ -1,16 +1,13 @@
 import type { NewsProviderPort } from '../../domain/ports';
 import type { RawNews } from '../../domain/iaNoticiasEducativas.types';
 import {
+  getHeadlinesSlotId,
+  HEADLINES_NEWS_PAGE_SIZE,
+} from '../../domain/headlines-refresh-schedule';
+import {
   readHeadlinesFromDisk,
   writeHeadlinesToDisk,
 } from './headlines-disk-cache';
-
-/** Tiempo entre refrescos desde NewsAPI (todos los usuarios ven las mismas noticias hasta entonces). */
-function getHeadlinesTtlMs(): number {
-  const hours = Number(process.env.NEWS_HEADLINES_TTL_HOURS);
-  if (Number.isFinite(hours) && hours > 0) return hours * 60 * 60 * 1000;
-  return 12 * 60 * 60 * 1000; // por defecto: cada 12 horas
-}
 
 /** Respuesta de NewsAPI v2 top-headlines */
 interface NewsAPIArticle {
@@ -30,8 +27,8 @@ interface NewsAPIResponse {
   articles: NewsAPIArticle[];
 }
 
-/** Caché en memoria; el TTL coincide con el de disco (misma ventana para todos los clientes). */
-let cache: { raw: RawNews[]; ts: number } | null = null;
+/** Caché en memoria por ventana horaria (08:30 / 15:00 Europe/Madrid). */
+let cache: { raw: RawNews[]; slotId: string } | null = null;
 
 function toRawNews(article: NewsAPIArticle, index: number): RawNews {
   const id = article.url || `news-${index}`;
@@ -63,10 +60,9 @@ export class NewsAPIProvider implements NewsProviderPort {
   ) {}
 
   async getHeadlines(options?: { bypassCache?: boolean }): Promise<RawNews[]> {
-    const ttlMs = getHeadlinesTtlMs();
-    const now = Date.now();
+    const slotId = getHeadlinesSlotId();
 
-    if (!options?.bypassCache && cache && now - cache.ts < ttlMs) {
+    if (!options?.bypassCache && cache && cache.slotId === slotId) {
       console.log(
         '[iaNoticias] 3. NewsAPIProvider: getHeadlines desde CACHE memoria (',
         cache.raw.length,
@@ -80,9 +76,9 @@ export class NewsAPIProvider implements NewsProviderPort {
       if (
         fromDisk &&
         fromDisk.raw.length > 0 &&
-        now - fromDisk.ts < ttlMs
+        fromDisk.slotId === slotId
       ) {
-        cache = { raw: fromDisk.raw, ts: fromDisk.ts };
+        cache = { raw: fromDisk.raw, slotId: fromDisk.slotId };
         console.log(
           '[iaNoticias] 3b. NewsAPIProvider: getHeadlines desde CACHE disco (',
           fromDisk.raw.length,
@@ -92,10 +88,11 @@ export class NewsAPIProvider implements NewsProviderPort {
       }
     }
 
+    const ps = HEADLINES_NEWS_PAGE_SIZE;
     // Una sola consulta determinista (evita que distintos usuarios/hitos en el tiempo
     // reciban el 2.º fallback distinto: economy vs top-headlines US).
-    const primaryUrl = `${this.baseUrl}/everything?q=stock+market&pageSize=2&sortBy=publishedAt&apiKey=${this.apiKey}`;
-    const fallbackUrl = `${this.baseUrl}/top-headlines?country=us&pageSize=2&apiKey=${this.apiKey}`;
+    const primaryUrl = `${this.baseUrl}/everything?q=stock+market&pageSize=${ps}&sortBy=publishedAt&apiKey=${this.apiKey}`;
+    const fallbackUrl = `${this.baseUrl}/top-headlines?country=us&pageSize=${ps}&apiKey=${this.apiKey}`;
 
     console.log('[iaNoticias] 3. NewsAPIProvider: getHeadlines llamando a NewsAPI...');
     let res = await fetch(primaryUrl);
@@ -136,7 +133,7 @@ export class NewsAPIProvider implements NewsProviderPort {
       .filter((a) => a.title)
       .map((a, i) => toRawNews(a, i));
 
-    const payload = { raw, ts: Date.now() };
+    const payload = { raw, slotId };
     cache = payload;
     void writeHeadlinesToDisk(payload).catch((err) =>
       console.warn('[iaNoticias] NewsAPIProvider: no se pudo escribir caché disco', err),

@@ -19,6 +19,8 @@ import { ChatMessageBubble } from '../components/ChatMessageBubble';
 import { ConsultorioComposer } from '../components/ConsultorioComposer';
 import { LoadingMessagesOverlay } from '../components/LoadingMessagesOverlay';
 import { ConsultorioXpRewardModal } from '../components/ConsultorioXpRewardModal';
+import { CONSULTORIO_VENTANA_HORAS } from '@/features/profile/back/src/domain/consultorio-day.util';
+import { CONSULTORIO_MAX_DAILY } from '../types/iapreguntas.types';
 
 export function IApreguntasScreen() {
   const palette = usePalette();
@@ -36,6 +38,7 @@ export function IApreguntasScreen() {
     lastAwardedXp,
     dismissXpReward,
     consultorioRemainingToday,
+    consultorioResetCountdownLabel,
     nombreUsuario,
   } = useIApreguntasViewModel();
 
@@ -55,7 +58,12 @@ export function IApreguntasScreen() {
         }
       : {};
 
-  const atDailyLimit = consultorioRemainingToday === 0;
+  /** Solo true con valor numérico 0 (cupo agotado: 0 de CONSULTORIO_MAX_DAILY restantes). */
+  const atDailyLimit =
+    typeof consultorioRemainingToday === 'number' &&
+    consultorioRemainingToday === 0;
+  const showQuotaResetCountdown =
+    atDailyLimit && consultorioResetCountdownLabel != null;
   const canSend =
     questionText.trim().length > 0 &&
     !loading &&
@@ -124,19 +132,39 @@ export function IApreguntasScreen() {
               { color: palette.icon ?? palette.text },
             ]}
           >
-            Comprobando preguntas disponibles hoy…
+            Comprobando cupo del consultorio…
           </Text>
         ) : atDailyLimit ? (
-          <Text
-            style={[
-              Hierarchy.bodySmallSemibold,
-              styles.quotaLine,
-              { color: palette.destructive },
-            ]}
-          >
-            Has usado las 2 preguntas de hoy. Vuelve mañana para seguir
-            consultando.
-          </Text>
+          <View>
+            <Text
+              style={[
+                Hierarchy.bodySmallSemibold,
+                styles.quotaLine,
+                { color: palette.destructive },
+              ]}
+            >
+              Has usado las {CONSULTORIO_MAX_DAILY} preguntas en esta ventana de{' '}
+              {CONSULTORIO_VENTANA_HORAS} horas (hora España). Podrás volver a
+              preguntar cuando termine el tiempo indicado abajo.
+            </Text>
+            {showQuotaResetCountdown ? (
+              <Text
+                style={[
+                  Hierarchy.bodySmallSemibold,
+                  styles.quotaCountdown,
+                  {
+                    color: palette.primary,
+                    ...(Platform.OS === 'ios'
+                      ? { fontVariant: ['tabular-nums' as const] }
+                      : {}),
+                  },
+                ]}
+                selectable
+              >
+                Tiempo restante: {consultorioResetCountdownLabel}
+              </Text>
+            ) : null}
+          </View>
         ) : (
           <>
             <Text
@@ -147,8 +175,8 @@ export function IApreguntasScreen() {
               ]}
             >
               {consultorioRemainingToday === 1
-                ? 'Te queda 1 pregunta disponible hoy.'
-                : `Te quedan ${consultorioRemainingToday} preguntas disponibles hoy.`}
+                ? `Te queda 1 pregunta en esta ventana de ${CONSULTORIO_VENTANA_HORAS} h.`
+                : `Te quedan ${consultorioRemainingToday} preguntas en esta ventana de ${CONSULTORIO_VENTANA_HORAS} h.`}
             </Text>
             <Text
               style={[

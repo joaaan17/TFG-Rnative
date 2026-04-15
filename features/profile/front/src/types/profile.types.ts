@@ -18,7 +18,7 @@ export interface ProfileUser {
   cashBalance?: number;
   /** Experiencia acumulada (XP) por bonos: compra, venta, test, noticia. */
   experience?: number;
-  /** Preguntas al consultorio disponibles hoy (máx. 2 por día). */
+  /** Preguntas al consultorio en la ventana actual de 6 h (máx. 2, hora España). */
   consultorioRemainingToday?: number;
   /**
    * Solo en la respuesta GET propio: recompensas de logros de nivel abonadas en esta petición.

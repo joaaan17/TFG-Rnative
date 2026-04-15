@@ -3,6 +3,7 @@ import {
   computeConsultorioRemainingToday,
   CONSULTORIO_PREGUNTAS_POR_DIA,
   getConsultorioDateKey,
+  getConsultorioSixHourSlotKey,
 } from '../../../domain/consultorio-day.util';
 import {
   getDivisionFromExperience,
@@ -23,8 +24,21 @@ function escapeRegex(str: string): string {
 
 export class MongoProfileRepository implements ProfileRepository {
   async findById(id: string): Promise<Profile | null> {
-    const doc = await ProfileModel.findById(id).exec();
+    const doc = await ProfileModel.findById(id).lean().exec();
     if (!doc) return null;
+    const dateKey = getConsultorioDateKey();
+    const slotKey = getConsultorioSixHourSlotKey();
+    const dk = doc.consultorioDayKey;
+    if (typeof dk === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dk) && dk === dateKey) {
+      await ProfileModel.updateOne(
+        { _id: id, consultorioDayKey: dk },
+        { $set: { consultorioDayKey: slotKey } },
+      ).exec();
+      return this.mapDocToProfile({
+        ...doc,
+        consultorioDayKey: slotKey,
+      });
+    }
     return this.mapDocToProfile(doc);
   }
 
@@ -167,18 +181,25 @@ export class MongoProfileRepository implements ProfileRepository {
   async reserveConsultorioQuestion(
     userId: string,
   ): Promise<{ ok: boolean; remainingAfter: number }> {
-    const todayKey = getConsultorioDateKey();
+    const dateKey = getConsultorioDateKey();
+    const slotKey = getConsultorioSixHourSlotKey();
+
+    /** Legado `YYYY-MM-DD` → misma ventana actual sin tocar el contador. */
+    await ProfileModel.updateOne(
+      { _id: userId, consultorioDayKey: dateKey },
+      { $set: { consultorioDayKey: slotKey } },
+    ).exec();
 
     const afterNewDay = await ProfileModel.findOneAndUpdate(
       {
         _id: userId,
         $or: [
-          { consultorioDayKey: { $ne: todayKey } },
+          { consultorioDayKey: { $ne: slotKey } },
           { consultorioDayKey: { $exists: false } },
         ],
       },
       {
-        $set: { consultorioDayKey: todayKey, consultorioConsultCount: 1 },
+        $set: { consultorioDayKey: slotKey, consultorioConsultCount: 1 },
       },
       { new: true, upsert: false },
     )
@@ -199,7 +220,7 @@ export class MongoProfileRepository implements ProfileRepository {
     const afterSameDay = await ProfileModel.findOneAndUpdate(
       {
         _id: userId,
-        consultorioDayKey: todayKey,
+        consultorioDayKey: slotKey,
         consultorioConsultCount: { $lt: CONSULTORIO_PREGUNTAS_POR_DIA },
       },
       { $inc: { consultorioConsultCount: 1 } },
@@ -228,7 +249,7 @@ export class MongoProfileRepository implements ProfileRepository {
       const created = await ProfileModel.create({
         _id: userId,
         name: 'Usuario',
-        consultorioDayKey: todayKey,
+        consultorioDayKey: slotKey,
         consultorioConsultCount: 1,
       });
       return {

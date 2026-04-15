@@ -17,9 +17,9 @@ export type ProfileDocument = mongoose.Document & {
   experience?: number;
   /** IDs de noticias ya reclamadas (1 XP por noticia y usuario, evita farm). */
   claimedNewsIds?: string[];
-  /** Día civil (Europe/Madrid, YYYY-MM-DD) del contador de consultorio. */
+  /** Ventana de consultorio (Europe/Madrid): `YYYY-MM-DDThh` con hh 00, 06, 12 o 18. */
   consultorioDayKey?: string;
-  /** Preguntas al consultorio consumidas ese día (máx. 2). */
+  /** Preguntas consumidas en esa ventana de 6 h (máx. 2). */
   consultorioConsultCount?: number;
   /** Último día civil (Europe/Madrid, YYYY-MM-DD) en que se contó actividad para la racha. */
   lastStreakDayKey?: string;

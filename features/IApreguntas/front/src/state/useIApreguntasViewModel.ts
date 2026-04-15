@@ -1,6 +1,10 @@
 import React from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuthSession } from '@/features/auth/front/src/state/AuthContext';
+import {
+  formatConsultorioResetCountdown,
+  getMsUntilConsultorioSixHourReset,
+} from '@/features/profile/back/src/domain/consultorio-day.util';
 import { profileService } from '@/features/profile/front/src/services/profileService';
 import { applyXpFromServerAward } from '@/features/profile/front/src/utils/applyXpFromServerAward';
 import {
@@ -30,6 +34,11 @@ export type UseIApreguntasViewModelResult = {
   dismissXpReward: () => void;
   /** Preguntas que puedes hacer hoy (null = cargando). */
   consultorioRemainingToday: number | null;
+  /**
+   * Texto del contador hasta la siguiente franja de 6 h (Europe/Madrid).
+   * Solo tiene valor cuando el cupo de la ventana está agotado.
+   */
+  consultorioResetCountdownLabel: string | null;
   /** Nombre del usuario autenticado para el saludo del consultorio. */
   nombreUsuario: string;
 };
@@ -51,6 +60,8 @@ export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
   const [lastAwardedXp, setLastAwardedXp] = React.useState<number | null>(null);
   const [consultorioRemainingToday, setConsultorioRemainingToday] =
     React.useState<number | null>(null);
+  const [consultorioResetCountdownLabel, setConsultorioResetCountdownLabel] =
+    React.useState<string | null>(null);
 
   const nombreUsuario = React.useMemo(() => {
     const n = session?.user?.name?.trim();
@@ -100,6 +111,35 @@ export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
     }, [loadConsultorioQuota]),
   );
 
+  /**
+   * Temporizador solo cuando el cupo de la ventana de 6 h está **agotado**:
+   * `consultorioRemainingToday === 0` (0 restantes = 2 usadas en la ventana),
+   * nunca con `null` (cargando) ni sin sesión.
+   */
+  React.useEffect(() => {
+    const exhausted =
+      Boolean(session?.user?.id) &&
+      typeof consultorioRemainingToday === 'number' &&
+      consultorioRemainingToday === 0;
+
+    if (!exhausted) {
+      setConsultorioResetCountdownLabel(null);
+      return;
+    }
+
+    const tick = () => {
+      const ms = getMsUntilConsultorioSixHourReset();
+      setConsultorioResetCountdownLabel(formatConsultorioResetCountdown(ms));
+      if (ms <= 0) {
+        void loadConsultorioQuota();
+      }
+    };
+
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [consultorioRemainingToday, loadConsultorioQuota, session?.user?.id]);
+
   const dismissXpReward = React.useCallback(() => {
     setLastAwardedXp(null);
   }, []);
@@ -115,7 +155,7 @@ export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
 
     if (consultorioRemainingToday !== null && consultorioRemainingToday <= 0) {
       setError(
-        'Has alcanzado el límite de 2 preguntas al día. Vuelve mañana.',
+        'Has alcanzado el límite de 2 preguntas en esta ventana (se renueva cada 6 horas, hora España).',
       );
       return;
     }
@@ -191,6 +231,7 @@ export function useIApreguntasViewModel(): UseIApreguntasViewModelResult {
     lastAwardedXp,
     dismissXpReward,
     consultorioRemainingToday,
+    consultorioResetCountdownLabel,
     nombreUsuario,
   };
 }

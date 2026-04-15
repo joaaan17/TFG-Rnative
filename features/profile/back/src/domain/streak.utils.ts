@@ -1,15 +1,9 @@
-import { getConsultorioDateKey } from './consultorio-day.util';
+import {
+  addDaysToDateKey,
+  getConsultorioDateKey,
+} from './consultorio-day.util';
 
-/** Suma o resta días a una clave YYYY-MM-DD (calendario civil coherente con getConsultorioDateKey). */
-export function addDaysToDateKey(dateKey: string, deltaDays: number): string {
-  const [y, m, d] = dateKey.split('-').map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  dt.setUTCDate(dt.getUTCDate() + deltaDays);
-  const yy = dt.getUTCFullYear();
-  const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
-  const dd = String(dt.getUTCDate()).padStart(2, '0');
-  return `${yy}-${mm}-${dd}`;
-}
+export { addDaysToDateKey };
 
 export function getYesterdayDateKey(now = new Date()): string {
   const today = getConsultorioDateKey(now);

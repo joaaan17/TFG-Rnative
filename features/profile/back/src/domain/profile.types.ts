@@ -14,6 +14,6 @@ export interface Profile {
   cashBalance?: number;
   /** Experiencia acumulada (XP) por bonos: compra, venta, test, noticia. */
   experience?: number;
-  /** Preguntas disponibles hoy en el consultorio (máx. 2 por día civil en Europe/Madrid). */
+  /** Preguntas disponibles en la ventana actual del consultorio (máx. 2 cada 6 h, Europe/Madrid). */
   consultorioRemainingToday?: number;
 }

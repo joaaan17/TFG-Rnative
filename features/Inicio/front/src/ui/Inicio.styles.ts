@@ -42,6 +42,25 @@ export function createInicioStyles(palette: Palette) {
       letterSpacing: 0.3,
       opacity: 0.6,
     },
+    newsRefreshFooter: {
+      marginTop: 4,
+      paddingTop: 16,
+      paddingBottom: 8,
+      alignItems: 'center',
+    },
+    newsRefreshLabel: {
+      fontSize: 13,
+      lineHeight: 18,
+      textAlign: 'center',
+      letterSpacing: 0.2,
+    },
+    newsRefreshHint: {
+      fontSize: 11,
+      lineHeight: 15,
+      textAlign: 'center',
+      marginTop: 4,
+      opacity: 0.65,
+    },
     header: {
       paddingHorizontal: 20,
       paddingTop: 16,

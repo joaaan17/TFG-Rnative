@@ -2,7 +2,7 @@
  * Tipos compartidos de la feature IAPreguntas.
  */
 
-/** Preguntas al consultorio permitidas por día civil. Mantenida en sync con el backend. */
+/** Preguntas al consultorio permitidas por ventana de 6 h (Europe/Madrid). Sync con backend. */
 export const CONSULTORIO_MAX_DAILY = 2;
 
 /** XP otorgado por cada pregunta al consultorio. Sync con BONUS_XP.ASK_CONSULTORIO del backend. */
