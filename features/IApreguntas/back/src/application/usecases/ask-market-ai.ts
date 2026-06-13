@@ -1,4 +1,4 @@
-import { buildAskMarketUserEnvelope } from '@/shared/constants/ai-financial-voice';
+import { buildAskMarketUserEnvelope } from '../../../../../../shared/constants/ai-financial-voice';
 import type { AIProviderPort } from '../../domain/ports';
 
 /**

@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { SYSTEM_MESSAGE_EDUCATIONAL_NEWS } from '@/shared/constants/ai-financial-voice';
+import { SYSTEM_MESSAGE_EDUCATIONAL_NEWS } from '../../../../../../shared/constants/ai-financial-voice';
 import type { AIProviderPort } from '../../domain/ports';
 
 /**

@@ -1,4 +1,4 @@
-import { buildExplainNewsUserPrompt } from '@/shared/constants/ai-financial-voice';
+import { buildExplainNewsUserPrompt } from '../../../../../../shared/constants/ai-financial-voice';
 import type { AIProviderPort, NewsProviderPort } from '../../domain/ports';
 import type { EducationalNews } from '../../domain/iaNoticiasEducativas.types';
 
